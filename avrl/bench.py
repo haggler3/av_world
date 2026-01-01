@@ -100,6 +100,9 @@ POLICIES = {  # name -> checkpoint (None = the rule-based AV, the bar to clear)
     "PPO + barrier teacher (phase 1)": "results/unaided/phase1/policy.npz",
     "PPO + barrier teacher, then no filter (phase 2)": "results/unaided/phase2/policy.npz",
     "PPO + barrier teacher, speed + jaywalkers (phase 3)": "results/unaided/phase3/policy.npz",
+    "PPO + barrier teacher (phase 1, GPU retrain)": "results/unaided/gpu/phase1/policy.npz",  # same recipe, another run: seed spread
+    "PPO + barrier teacher, then no filter (phase 2, GPU retrain)": "results/unaided/gpu/phase2/policy.npz",
+    "PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain)": "results/unaided/gpu/phase3/policy.npz",
     "latent world-model planner (wm-mpc)": "wmplan",
 }
 # the latent planner replans every AV every step (~10 min per run here), so it runs on the junction-heavy scenarios it was built
@@ -190,12 +193,23 @@ def evaluate(policy, scenarios=("nominal",)):
     return {"av_score": float(np.mean([v["av_score"] for v in out.values()])), "scenarios": out}
 
 
+def _load(path_out):
+    """A scenario file with every row aligned to the current X.METRICS (rows saved under an older metric list are remapped, so
+    rewriting the file with the current header never mislabels them)."""
+    d = json.load(open(path_out))
+    names = d.get("metrics", X.METRICS)
+    if list(names) != list(X.METRICS):
+        d["runs"] = {p: {k: _align(v, names).tolist() for k, v in r.items()} for p, r in d["runs"].items()}
+        d["metrics"] = X.METRICS
+    return d
+
+
 def run_wm(name, mode):
     """One mode of the latent planner in one scenario (~10 min)."""
     from wmplan import model as M
     from wmplan import planner as PL
     path_out = f"{OUT}/{name}.json"
-    d = json.load(open(path_out))
+    d = _load(path_out)
     row = d["runs"].setdefault(WM, {})
     if mode in row:
         return
@@ -213,7 +227,7 @@ def run(name):
     area, over = SCENARIOS[name]
     t0 = time.time()
     path_out = f"{OUT}/{name}.json"
-    rows = json.load(open(path_out))["runs"] if os.path.exists(path_out) else {}
+    rows = _load(path_out)["runs"] if os.path.exists(path_out) else {}
     rows = {RENAME.get(k, k): v for k, v in rows.items()}
     todo = [p for p in POLICIES if p not in rows and p != WM]
     if not todo:
