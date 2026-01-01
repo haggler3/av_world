@@ -1,42 +1,46 @@
 [
  {
   "av_share": 0.0,
-  "crashes_per_MEV": 0.5902655410766602,
-  "rear-end": 0.39351036071777346,
-  "angle": 0.0655850601196289,
-  "left-turn": 0.0655850601196289,
-  "sideswipe": 0.0655850601196289,
-  "crashes": 9,
-  "mev": 0.6098949909210205
+  "amplification": 18.4932038922906,
+  "crashes_per_MEV": 0.6189719117433845,
+  "rear-end": 0.39791051008780903,
+  "angle": 0.04421228033111509,
+  "left-turn": 0.1326368409933453,
+  "sideswipe": 0.04421228033111509,
+  "crashes": 14,
+  "mev": 1.2230520248413086
  },
  {
   "av_share": 0.25,
-  "crashes_per_MEV": 0.3935271453857422,
-  "rear-end": 0.1967635726928711,
+  "amplification": 18.4932038922906,
+  "crashes_per_MEV": 0.7517421614998037,
+  "rear-end": 0.5306415287980324,
   "angle": 0.0,
-  "left-turn": 0.1967635726928711,
+  "left-turn": 0.22110063270177124,
   "sideswipe": 0.0,
-  "crashes": 6,
-  "mev": 0.6098690032958984
+  "crashes": 17,
+  "mev": 1.2228349447250366
  },
  {
   "av_share": 0.5,
-  "crashes_per_MEV": 0.06558409214019775,
-  "rear-end": 0.06558409214019775,
-  "angle": 0.0,
-  "left-turn": 0.0,
+  "amplification": 18.4932038922906,
+  "crashes_per_MEV": 0.6192027728489473,
+  "rear-end": 0.2653726169352631,
+  "angle": 0.04422876948921052,
+  "left-turn": 0.30960138642447366,
   "sideswipe": 0.0,
-  "crashes": 1,
-  "mev": 0.6099039912223816
+  "crashes": 14,
+  "mev": 1.2225960493087769
  },
  {
   "av_share": 1.0,
+  "amplification": 18.4932038922906,
   "crashes_per_MEV": 0.0,
   "rear-end": 0.0,
   "angle": 0.0,
   "left-turn": 0.0,
   "sideswipe": 0.0,
   "crashes": 0,
-  "mev": 0.6098660230636597
+  "mev": 1.2220289707183838
  }
 ]
