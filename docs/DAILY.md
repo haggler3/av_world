@@ -18,11 +18,78 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 11. **Why does the AV advantage vanish at speed but not on slick roads?** (2026-11-10) AV / human pedestrian+bicycle strike ratio is 0.33 at friction 0.4 (28 of 139) but 0.91 at limit x1.3 (25 of 61). Split by crash site (crossing vs mid-block) and by the AV's time headway; repeat at 96+ copies at friction 1.0 (only 10 strikes today).
 12. ~~Confirm the knee at 0.7~~ (answered 2026-11-11: replicated on a fresh random stream, extra slope 3.4, one-sided p 0.004). Next: a third stream at 0.8 / 0.75 / 0.65 to place the knee more finely (the replication's searched hinge was 0.85 on a 3-point grid).
 13. ~~Is the speed-limit elasticity also a knee?~~ (answered 2026-11-11: no, search-corrected p 0.54; a plain power law, b 4.5, is enough.)
-14. ~~Why a knee at 0.7?~~ (answered 2026-11-12: not the onset of braking at the cap. Capped braking rises smoothly, ~mu^-2.1 with no bend at 0.7, but half the cars in crashes braked at the cap in the second before.) Next: **which of friction's two channels makes the knee?** Friction caps braking (`acc` clip) and decides whether a car can still stop before a line (`stoppable`, `xnet/sim.py:528`). Count the overruns (cars that may not enter but cannot stop) per friction cell: if they start near 0.7, the knee is the stop-line channel.
+14. ~~Why a knee at 0.7?~~ (answered 2026-11-12: not the onset of braking at the cap.) ~~Which of friction's channels makes the knee?~~ (2026-11-13: not the stop line, not the commitment rule; both are almost absent before crashes. By elimination the braking cap carries it, but its rate has no bend.) Next: **the knee may be in what the cap *fails to stop*, not in how often it is hit**: for each car braking at the cap, record the speed it still had when it hit (impact speed) or stopped; test whether the share of cap-braking episodes that end in contact bends at 0.7.
 15. ~~A results index~~ (done 2026-11-12: `python -m avlab.resultsindex`, [RESULTS_INDEX.md](RESULTS_INDEX.md); 375 of 479 tracked files are mentioned by no doc or code path, most of them written through a directory variable).
-16. **Friction tomography** (wild card, 2026-11-12): the braking histogram has a spike at 9 mu in every cell, so the road's friction can be read off the braking alone. How few car-seconds does it take to infer mu within 0.05? A detector for "hidden road friction" in ROADMAP item 1.
+16. ~~Friction tomography~~ (done 2026-11-13: within 0.05 in every copy after 10 s exact, 20 s with 0.3 m/s^2 noise.) Next: **give the AVs that estimate** (ROADMAP item 1, hidden road friction): a policy or the rule-based AV that reads `mu_hat` from the fleet and adapts its headway; and a harder test with friction varying by street.
+17. **Crash-rate knee, third stream** (2026-11-13 run, seed 3, 16 copies per cell): 8.6, 6.6, 15.6, 13.2, 23.8, 56.5 per 1000 vehicle-h from 1.0 to 0.4; pool with the earlier streams in `avlab.knee` (not done today).
 
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-13 - Is the friction knee the stop-line rule? And friction tomography: reading the road from braking
+
+**Ideas kept** (14 candidates; [search](../results/daily/2026-11-13/search.json)): (1) count the cars in each of friction's three channels in the simulator, with a dry-road counterfactual computed on the same state, and ask which channel the crash-involved cars had just been in (next step 14); (2) friction tomography: estimate the road's friction from the braking of the fleet alone, with and without sensor noise (next step 16). Both come from one run (shared sub-result). Tools: `avlab/stopline.py`, `avlab/stopline_plot.py`.
+Prior art: the dilemma zone, where a driver can neither stop before the line nor clear the junction, depends on approach speed and the maximum deceleration ([FHWA EAR 15082](https://www.fhwa.dot.gov/publications/research/ear/15082/002.cfm)), and wet pavement changes both deceleration and reaction (Rakha et al., Virginia Tech, [thesis](https://vtechworks.lib.vt.edu/server/api/core/bitstreams/625e7311-0884-49d9-ae3b-40ec6645f6bb/content)). Fleet friction maps aggregate per-vehicle friction estimates from connected vehicles ([RSS 2022](https://www.nrso.ntua.gr/rss2022/wp-content/uploads/2022/06/RSS2022_Presentation_141.pdf), [NSF PAR](https://par.nsf.gov//servlets/purl/10395516)); a patent estimates friction from a short brake pulse until ABS engages ([US 9156447](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9156447)). I found no work that reads friction off the *fleet's* braking histogram (search snippets only).
+
+### Pseudocode (what `avlab/stopline.py` does)
+
+```
+friction enters xnet/sim.py three times (grep): braking cap clip(acc, -9 mu, .); can_stop (commitment) uses min(4, 9 mu),
+    so it is identical to the dry road for every mu >= 4/9; stoppable (overrun) uses 9 mu
+for mu in 1.0 0.85 0.7 0.6 0.5 0.4: 16 copies of humans-only Oakland, calibrated drivers, seed 3 (fresh stream), warm 120 s, count 480 s
+    each 0.1 s step (X.step(..., diag=True); xnet/ untouched), human moving cars (as on 2026-11-12):
+        told_stop    = at a link end with a next movement, not allowed to enter, not distracted
+        overrun      = told_stop & ~stoppable(mu);     fric_overrun = overrun & stoppable(mu = 1)     (would have stopped on a dry road)
+        blind_commit = entered without a clear gap because ~can_stop(mu); fric_commit = blind_commit & can_stop(mu = 1)
+        sat          = braking at the cap
+        per slot: seconds since the car was last in each channel; crash-involved cars: in that channel within 2 s?
+        per copy and per 10 s: histogram of braking in 0.05 m/s^2 bins
+tomography, per copy, using the first W seconds of its city (W = 10 ... 320):
+    exact:  mu_hat = (upper edge of the hardest braking bin) / 9
+    noisy:  jitter every braking sample by N(0, sigma), sigma = 0.3 or 0.5 m/s^2; mu_hat = argmax over >= 3 m/s^2 of
+            log(narrow Gaussian smoothing) - log(wide smoothing) (the spike at the cap over its background) / 9
+    share of copies within 0.05 of the true mu
+```
+
+The noisy estimator was tuned on the 2-copy probe (seed 0): the first two versions failed there (they picked the histogram's cut at 2 m/s^2), so the full run (seed 3) is the held-out test.
+
+### Predictions, written before the full run ([file](../results/daily/2026-11-13/predictions.md))
+
+* P1: friction-caused overruns bend at 0.7 (log-log slope below 0.7 steeper than above by >= 1).
+* P2: crash-involved cars were in a friction-caused overrun within 2 s far more often than moving cars (mu <= 0.6: enrichment lower bound > 1, share >= 10 %).
+* P3 (code check): the commitment channel adds no blind entries for mu >= 0.5.
+* P4: Spearman(friction-overrun rate, crash rate) >= 0.8.
+* P5: exact estimator within 0.05 for >= 95 % of copies after 10 s at every mu; with 0.3 m/s^2 noise, >= 90 % by 80 s.
+
+### Results ([stopline.json](../results/stopline/stopline.json))
+
+| friction | 1.0 | 0.85 | 0.7 | 0.6 | 0.5 | 0.4 |
+|---|---|---|---|---|---|---|
+| crashes (per 1000 vehicle-h) | 8 (8.6) | 6 (6.6) | 14 (15.6) | 12 (13.2) | 22 (23.8) | 51 (56.5) |
+| braking at the cap, per 100,000 moving car-steps | 145 | 199 | 285 | 395 | 588 | 1002 |
+| overruns (any), per 100,000 | 9.9 | 16.2 | 26.1 | 37.5 | 56.6 | 110.8 |
+| friction-caused overruns, per 100,000 | 0 | 4.1 | 12.4 | 22.6 | 40.0 | 89.9 |
+| friction-caused blind commitments, per 100,000 | 0 | 0 | 0 | 0 | 0 | 0.31 |
+| crash-involved human cars | 12 | 10 | 20 | 19 | 34 | 79 |
+
+| test | result | p (Holm over P2, P4) |
+|---|---|---|
+| P1 overruns bend at 0.7 | **failed**: log-log slope -5.7 above 0.7 and -3.5 below (steeper *above*, from a near-zero start); no bend | - |
+| P2 crash cars in a friction overrun within 2 s | **failed**: mu <= 0.6, 1 of 132 (0.8 %) vs 0.20 % of moving car-steps, enrichment 3.9 (0.55-27); any overrun 3 of 132 | 0.23 (Holm 0.23) |
+| P3 no blind commitment above 0.44 | held: exactly 0 for mu >= 0.5, 0.31 per 100,000 at 0.4, 0 crash cars | - |
+| P4 Spearman(overrun rate, crash rate) | held, rho 0.89, but uninformative: braking at the cap has the same rho, as both are monotone in mu | 0.019 (Holm 0.038) |
+| P5 tomography | held on the held-out run: exact, 16 of 16 copies within 0.05 after 10 s at every mu; 0.3 m/s^2 noise, 14 to 16 of 16 at 10 s and 16 of 16 from 20 s; 0.5 m/s^2 noise, 11 to 16 at 10 s, 16 of 16 by 80 s | - |
+
+![stopline](img/stopline.png)
+
+![friction tomography GIF](img/tomography.gif)
+
+(GIF: one copy per friction, braking with 0.3 m/s^2 sensor noise, accumulating 10 s per frame; orange is the estimate, dotted the truth.)
+
+**The knee is not the stop-line rule, and not the commitment rule.** Cars told to stop that physically cannot do so on a slick road become more common smoothly (4 to 90 per 100,000 moving car-steps from 0.85 to 0.4), but only 1 of 132 crash-involved human cars at friction <= 0.6 had been in one in the 2 s before, while 77 of 132 (58 %) had braked at the cap, which replicates 2026-11-12's "half" on a fresh stream (17 of 42 at mu >= 0.7). The commitment rule is identical to a dry road above 0.44 by construction. So of friction's three channels only the braking cap is present before crashes, yet its rate has no bend: the knee must be in what capped braking *fails to prevent*, which this run did not measure. **Friction is easy to read from braking**: because the simulator clips braking at 9 mu, the hardest braking seen by a city's fleet gives mu exactly within 10 s, and a spike detector still finds it within 20 s with 0.3 m/s^2 sensor noise. This is easier than in reality, where braking is not clipped this cleanly (ABS, tyres, slopes). Caveats: one network, 16 copies per cell, 113 crashes; the 2 s window is a choice; the tomography uses only what the simulator logs (no measurement model beyond Gaussian noise).
+
+**Tests**: `tests/test_daily_1113.py` (the commitment rule is dry above 4/9, stoppable is monotone in mu, both estimators recover mu on a synthetic clipped histogram, the ratio interval and the log-log slopes).
 
 ---
 

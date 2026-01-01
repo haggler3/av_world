@@ -1,0 +1,181 @@
+{
+ "date": "2026-11-13",
+ "method": "PUCT on paper: Q=(novelty*relevance*visual*holds)/sqrt(min); score=Q+1.2*P*sqrt(N_total)/(1+N_i); 3 probe rounds",
+ "rounds": [
+  {
+   "round": 1,
+   "picked": "stopline",
+   "probe": "grep xnet/sim.py for friction uses -> 3 channels; commitment channel inactive above 0.444"
+  },
+  {
+   "round": 2,
+   "picked": "stopline",
+   "probe": "--quick run 2 copies x 3 mu, 60 s: overruns rise steeply, crash counts too small to say"
+  },
+  {
+   "round": 3,
+   "picked": "tomography",
+   "probe": "tomography on the quick run: exact estimator perfect; noisy estimator failed until a log-ratio spike detector with reflect padding (tuned on the probe; full run is held out)"
+  }
+ ],
+ "candidates": [
+  {
+   "id": "stopline",
+   "idea": "Which friction channel makes the knee: count stop-line overruns and blind commitments vs dry counterfactual (next step 14)",
+   "prior": 0.6,
+   "prior_norm": 0.096,
+   "compute_min": 6,
+   "Q": 0.245,
+   "N": 2,
+   "probe": "grep: stoppable at xnet/sim.py:528, can_stop at :374 uses min(4,9mu) -> commitment channel off above mu 0.444; quick probe: friction overruns 0/1.4/65 per 1e5 at mu 1/0.7/0.4",
+   "decision": "kept"
+  },
+  {
+   "id": "tomography",
+   "idea": "Friction tomography: infer road mu from fleet braking histograms; car-seconds needed with/without sensor noise (next step 16)",
+   "prior": 0.55,
+   "prior_norm": 0.088,
+   "compute_min": 1,
+   "Q": 0.55,
+   "N": 1,
+   "probe": "shares the stopline run (fine histograms per copy per 10 s); exact max estimator perfect at 10 s in probe; noisy estimator needed a log-ratio spike detector",
+   "decision": "kept (merged with stopline run)"
+  },
+  {
+   "id": "knee3",
+   "idea": "Third random stream at 0.8/0.75/0.65 to place the knee (next step 12)",
+   "prior": 0.4,
+   "prior_norm": 0.064,
+   "compute_min": 9,
+   "Q": 0.133,
+   "N": 0,
+   "probe": "not probed; a pure replication with ~9 min compute",
+   "decision": "dropped: lower novelty, compute"
+  },
+  {
+   "id": "twin_junction",
+   "idea": "Is junction-box handoff the general twin-divergence cause (next step 3)",
+   "prior": 0.35,
+   "prior_norm": 0.056,
+   "compute_min": 10,
+   "Q": 0.111,
+   "N": 0,
+   "probe": "not probed",
+   "decision": "dropped: compute near cap"
+  },
+  {
+   "id": "ped_yield",
+   "idea": "Pedestrian yield behaviour x speed limit (next step 6)",
+   "prior": 0.4,
+   "prior_norm": 0.064,
+   "compute_min": 10,
+   "Q": 0.126,
+   "N": 0,
+   "probe": "grep: yield params exist in Behaviour, but a sweep needs 3+ cells",
+   "decision": "dropped: compute"
+  },
+  {
+   "id": "whostrike_mid",
+   "idea": "Split AV/human strikes by crossing vs mid-block (next step 11)",
+   "prior": 0.35,
+   "prior_norm": 0.056,
+   "compute_min": 10,
+   "Q": 0.111,
+   "N": 0,
+   "probe": "needs 96 copies to beat 10 strikes",
+   "decision": "dropped: compute"
+  },
+  {
+   "id": "rng_l4",
+   "idea": "Which random stream did the L4 leaderboard use (next step 1)",
+   "prior": 0.3,
+   "prior_norm": 0.048,
+   "compute_min": 8,
+   "Q": 0.106,
+   "N": 0,
+   "probe": "GPU row metadata absent",
+   "decision": "dropped: needs GPU info"
+  },
+  {
+   "id": "bench_seeds",
+   "idea": "Seeds with intervals on leaderboard rows (next step 2)",
+   "prior": 0.5,
+   "prior_norm": 0.08,
+   "compute_min": 45,
+   "Q": 0.075,
+   "N": 0,
+   "probe": "",
+   "decision": "dropped: >12 min"
+  },
+  {
+   "id": "ttc_hist",
+   "idea": "Surrogate safety (TTC/DRAC) histograms per friction cell vs crash rate",
+   "prior": 0.4,
+   "prior_norm": 0.064,
+   "compute_min": 6,
+   "Q": 0.163,
+   "N": 0,
+   "probe": "overlaps 2026-11-12 brakedemand (DRAC>MADR is the cap)",
+   "decision": "dropped: duplicates"
+  },
+  {
+   "id": "sobol_beh",
+   "idea": "Sobol sensitivity of crash rate to 8 driver parameters",
+   "prior": 0.35,
+   "prior_norm": 0.056,
+   "compute_min": 15,
+   "Q": 0.09,
+   "N": 0,
+   "probe": "",
+   "decision": "dropped: >12 min"
+  },
+  {
+   "id": "cf_replay",
+   "idea": "Counterfactual crash replay with friction raised at t-2 s",
+   "prior": 0.45,
+   "prior_norm": 0.072,
+   "compute_min": 8,
+   "Q": 0.159,
+   "N": 0,
+   "probe": "needs state edit mid-run; feasible but would duplicate stopline attribution",
+   "decision": "dropped: merged idea into stopline dry counterfactual"
+  },
+  {
+   "id": "readme_quick",
+   "idea": "README 'what we found' digest and guide refresh",
+   "prior": 0.8,
+   "prior_norm": 0.128,
+   "compute_min": 0,
+   "Q": 1.131,
+   "N": 0,
+   "probe": "",
+   "decision": "done as cleanup"
+  },
+  {
+   "id": "gif_live_tomography",
+   "idea": "Live GIF of the friction estimate converging",
+   "prior": 0.5,
+   "prior_norm": 0.08,
+   "compute_min": 1,
+   "Q": 0.5,
+   "N": 0,
+   "probe": "child of tomography",
+   "decision": "kept as tomography's GIF"
+  },
+  {
+   "id": "wild_reverse",
+   "idea": "Wild card: infer the speed-limit scale from speed histograms",
+   "prior": 0.3,
+   "prior_norm": 0.048,
+   "compute_min": 3,
+   "Q": 0.173,
+   "N": 0,
+   "probe": "speed in congestion barely moves (2026-11-04: 15.7 vs 16.3 km/h)",
+   "decision": "dropped: probe shows little signal"
+  }
+ ],
+ "kept": [
+  "stopline",
+  "tomography"
+ ]
+}
