@@ -1,0 +1,25 @@
+{
+ "date": "2026-11-11",
+ "method": "PUCT on paper, c=1.2, 3 rounds. Probes: a 52 s timing run (48 copies x 180 s, seed 1 -> ~4 ms per copy-second, so ~180 copies fit in 10 min), a 2 s bootstrap on the saved friction pool (B=99, p 0.01), a load of the per-copy speed-limit files (196 human-only copies exist), two web searches (friction thresholds; Davies' test). Final N: replication 2, search-corrected knee 2, speed-limit knee 1 (merged into the knee tool), the rest 0-1.",
+ "candidates": [
+  {"idea": "pre-registered out-of-sample replication of the friction knee at 0.7 (fresh seed stream, hinge fixed)", "artefact": "results/knee/replicate.json, figure, GIF", "minutes": 10, "prior": 0.6, "probe": "timing: 180 copies x 720 s fit in ~10 min; hinge fixed so no search", "Q": 1.0, "N": 2, "outcome": "KEPT (idea 1)"},
+  {"idea": "search-corrected (Davies-style parametric bootstrap) p-value for the pooled hinge", "artefact": "avlab/knee.py, p-value", "minutes": 1, "prior": 0.7, "probe": "B=99 in 2 s: p 0.01 (nominal 0.003)", "Q": 1.2, "N": 2, "outcome": "KEPT (idea 2, shares the tool with ideas 1 and 3)"},
+  {"idea": "is the speed-limit elasticity also a knee? pool the speed-limit runs (next step 13)", "artefact": "panel (b) of knee.png", "minutes": 1, "prior": 0.5, "probe": "per-copy crashes and veh_s saved for 160 + 36 human copies", "Q": 0.9, "N": 1, "outcome": "MERGED into idea 2 (same test, knee above)"},
+  {"idea": "AV vs human strikes at friction 1.0 with 96+ copies (next step 11)", "artefact": "rate ratio", "minutes": 12, "prior": 0.4, "probe": "10 strikes per 48 copies -> 96 copies gives ~20, still a wide interval", "Q": 0.4, "N": 1, "outcome": "dropped: underpowered at budget"},
+  {"idea": "strikes split by crossing vs mid-block", "artefact": "table", "minutes": 8, "prior": 0.3, "probe": "no crash-location counter in xnet METRICS", "Q": 0.1, "N": 1, "outcome": "dropped: needs an xnet change"},
+  {"idea": "twin kicks on every seed, count junction handoffs (next step 3)", "artefact": "table, GIF", "minutes": 25, "prior": 0.4, "probe": "none", "Q": 0.3, "N": 0, "outcome": "dropped: over budget"},
+  {"idea": "seeds with intervals on every leaderboard row (next step 2)", "artefact": "leaderboard with CIs", "minutes": 45, "prior": 0.7, "probe": "none", "Q": 0.2, "N": 0, "outcome": "dropped: over budget"},
+  {"idea": "L4 leaderboard random-stream check (next step 1)", "artefact": "one row", "minutes": 10, "prior": 0.2, "probe": "GPU run's key not recorded", "Q": 0.1, "N": 0, "outcome": "dropped"},
+  {"idea": "pedestrian fatality-weighted speed-limit exponent (logistic risk of impact speed)", "artefact": "exponent", "minutes": 10, "prior": 0.4, "probe": "only the SUM of impact speeds per copy is stored, not the distribution", "Q": 0.2, "N": 1, "outcome": "dropped: needs per-event speeds"},
+  {"idea": "conformal / bootstrap intervals for AVBench scores", "artefact": "table", "minutes": 20, "prior": 0.4, "probe": "needs restreamed bench runs", "Q": 0.2, "N": 0, "outcome": "dropped: over budget"},
+  {"idea": "sequential (anytime-valid) test of the knee as copies arrive (e-values)", "artefact": "GIF of evidence vs copies", "minutes": 1, "prior": 0.4, "probe": "reuses idea 1's per-copy data", "Q": 0.6, "N": 1, "outcome": "MERGED into idea 1's GIF as a plain p-value-vs-copies animation (not anytime-valid; said so)"},
+  {"idea": "results/ index: which doc cites which results file", "artefact": "docs table", "minutes": 3, "prior": 0.6, "probe": "grep works", "Q": 0.4, "N": 0, "outcome": "dropped for time; listed for tomorrow"},
+  {"idea": "wild: calibrate friction so the dry/wet crash ratio matches real-world wet-pavement ratios", "artefact": "figure", "minutes": 10, "prior": 0.2, "probe": "no real per-friction data in the repo", "Q": 0.1, "N": 0, "outcome": "dropped"},
+  {"idea": "wild: adversarial scenario search for the friction at which AV advantage flips", "artefact": "curve", "minutes": 20, "prior": 0.2, "probe": "none", "Q": 0.1, "N": 0, "outcome": "dropped: over budget"}
+ ],
+ "prior_art": [
+  "Davies (1987), Biometrika 74:33-43, testing when a nuisance parameter is present only under the alternative; segmented::davies.test docs https://rdrr.io/cran/segmented/man/davies.test.html",
+  "FDOT BE385 friction-threshold study https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/research/reports/fdot-be385-rpt.pdf",
+  "FHWA, Characterizing road safety performance using pavement friction https://highways.dot.gov/sites/fhwa.dot.gov/files/2023-06/FHWA%20Characterizing%20Road%20Safety%20Performance%20Using%20Pavement%20Friction.pdf"
+ ]
+}
