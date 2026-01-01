@@ -22,6 +22,8 @@ honest account of what it can and cannot do.**
 The learned policies pass more checks, but the rule-based AV keeps the best core score: unaided, they crash 1.3-1.6x as often.
 Retraining one recipe moves scores by up to 10 points. The latent world-model planner v2 went from 0.8 to 46 on its 3
 scenarios (0 red runs) but does not beat the policy it plans around ([wmplan](wmplan/README.md)).
+Forked at the policy's own crash moments, the world model's converged plan averts 18 % of them, against 75 % for simply
+braking harder ([the GIF and the test](wmplan/README.md#many-futures-converging-and-where-it-really-helps-convergepy-2026-10-23)).
 
 ## What it is
 

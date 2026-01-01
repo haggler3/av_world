@@ -174,6 +174,37 @@ python -m wmplan.v3 screen d         # ~4 min
 Sources: Think2Drive (Li et al., ECCV 2024), SafeDreamer (Huang et al., ICLR 2024), MOPO (Yu et al., 2020), one-step offline
 improvement (Brandfonbrener et al., 2021), and the repo's own fork-at-danger (`avrl/fork.py`).
 
+## Many futures converging, and where it really helps (`converge.py`, 2026-10-23)
+
+![many imagined futures converging, then the real replay](../docs/img/wm_converge.gif)
+
+*A red-light-runner junction. First, the v3 world model's 256 imagined futures for one AV over 5 rounds of search, narrowing
+onto the green band: low speed and low crash risk. Pink dashed is the policy's own plan. Then the same 6 seconds replayed for
+real, with the same random numbers: the policy alone crashes, the converged plan does not.
+[A blind-jaywalker case](../docs/img/wm_converge_blind.gif).*
+
+**The crash-aversion test.** The barrier-teacher phase 3 policy drives the AVBench scenarios. At every AV crash the simulator
+is forked 2-4 s before the impact and the same seconds are replayed three ways, with identical random numbers:
+- the policy alone, which reproduced all 91 crashes, so the replay is exact;
+- a naive fix: the crashing AV brakes harder for 4 s;
+- the world model planning for that AV every 0.2 s for 4 s (256 futures x 5 rounds).
+
+| crashes of the policy | count | naive brake averts | world-model plan averts | crashes caused elsewhere (policy / brake / plan) |
+|---|---|---|---|---|
+| hazard visible (red runners, cut-ins, inattentive, dart-outs, jaywalkers, nominal) | 31 | **25 (81 %)** | 5 (16 %) | 2 / 2 / 2 |
+| perception faults (blind jaywalker, sun glare) | 60 | **43 (72 %)** | 11 (18 %) | 16 / 8 / 14 |
+
+The GIFs show real averted crashes, but **the plan averts far fewer of them than simply braking harder**. Both fixes are told
+*when* to act, which is information neither has in normal driving. Braking all the time costs speed and invites rear-end
+crashes (v3 one-step, gate 0.5). The planner does not brake because its counterfactual data taught it that braking rarely helps.
+Those branches perturbed only 2 s of action, at moments picked by a rough risk rule, and there braking harder changed nothing.
+The next data collection should fork at real near-crash moments and perturb for 4 s.
+
+```bash
+python -m wmplan.converge                                    # the test and the GIF (~25 min per pass on an L4)
+python -m wmplan.converge gif results/wmplan/v3/converge_event.pkl docs/img/wm_converge.gif
+```
+
 ## Next
 
 - **Amortise the planner into the policy** (Dreamer / TD-MPC style). Train the PPO actor on imagined rollouts with
