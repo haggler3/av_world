@@ -13,9 +13,61 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 6. **Pedestrian crashes carry the speed effect (38 of 57 at x1.3).** Rerun the sweep with pedestrian crossings' yield behaviour varied, or at crossings only.
 
 7. **Friction cliff** (2026-11-08): the finer grid shows no step and the crashes are merge / pedestrian / bicycle, not rear-end. Next: more copies at 0.7 and 0.6 to see whether 0.7->0.6 really doubles, and why bicycle crashes only appear at friction <= 0.5.
-10. **Does the AV planner read friction and the speed limit?** (2026-11-08) grep the AV policy for `friction`; if not, "AVs do not adapt" explains the half-AV city's steeper limit slope (7.1 vs 4.4, n.s.). Rerun with 48 copies per cell.
+10. ~~Does the AV planner read friction?~~ (answered 2026-11-10: no, `friction` appears only in the braking cap, `xnet/sim.py:231`; the AVs' time headway, speed and comfortable braking are fixed.)
 8. **Why does a half-AV city lose its advantage when the road is slick?** Rate ratio 0.55 (dry) to 0.95 (friction 0.3), but no single interval excludes 1; ~4x the copies at friction 1.0, 0.6 and 0.3 would decide it (AVBench's wet_road is the rule-based AV's worst scenario).
+11. **Why does the AV advantage vanish at speed but not on slick roads?** (2026-11-10) AV / human pedestrian+bicycle strike ratio is 0.33 at friction 0.4 (28 of 139) but 0.91 at limit x1.3 (25 of 61). Split by crash site (crossing vs mid-block) and by the AV's time headway; repeat at 96+ copies at friction 1.0 (only 10 strikes today).
+12. **Confirm the knee at 0.7**: 48 more copies each at 0.9, 0.8, 0.75, 0.7, 0.65 with a new seed stream; the pooled hinge (p 0.003 in sample) is not yet confirmed out of sample.
+13. **Is the speed-limit elasticity also a knee?** Pool the speed-limit runs the same way (`avlab/frictionpool.py` is a template).
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-10 - Do AVs strike fewer road users than humans on the same roads? And is the friction cliff real?
+
+**Ideas kept** (14 candidates; [search](../results/daily/2026-11-10/search.json)): (1) in a half-AV Oakland, compare AV and human drivers on pedestrian and bicycle strikes per vehicle-hour at friction 1.0 / 0.6 / 0.4 and at a x1.3 speed limit (merges next steps 8 and 10 of 2026-11-08); (2) pool the two human-only friction runs and test a cliff against a power law (no new simulation).
+Prior art: an observational California matched case-control study finds highly automated vehicles about a third as likely to crash in rain and pedestrians in 3 % of AV crashes against 15 % for humans, though as shares and not per-mile rates ([Nature Communications 2024](https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41467-024-48526-4/MediaObjects/41467_2024_48526_MOESM1_ESM.pdf), snippet only); skid-resistance studies report thresholds in wet crash rates ([Texas CRR thesis](https://tdl-ir.tdl.org/handle/2152/23567), a Spanish SCRIM threshold near 55 by Mayora and Pina, 2008, via [SWOV](https://swov.nl/en/publicatie/assessment-skid-resistance-effect-traffic-safety-under-wet-pavement-conditions)). I found no simulation study that compares AV and human strike rates inside one mixed city.
+
+### Pseudocode (what the code does)
+
+```
+1. avlab/whocrashes.py   for (mu, s) in (1.0,1) (0.6,1) (0.4,1) (1.0,1.3):   # friction, speed-limit scale (a copy of the net dict; xnet/ untouched)
+                           48 copies of Oakland, calibrated humans, p_av=0.5, warm 120 s, count 600 s (one compiled run per scale)
+                           strikes = pedestrian + bicycle crashes; AV strikes = av_pedestrian + av_bicycle; AV hours = sum av_veh_s / 3600
+                           AV rate = AV strikes / AV hours; human rate = (strikes - AV strikes) / (hours - AV hours)
+                           ratio with exact conditional interval (binomial on the AV share); Holm over the four cells
+2. avlab/frictionpool.py  per-copy (crashes, hours, friction, run) from results/friction and results/cliffcause, humans only: 152 copies, 496 crashes, 9 frictions
+                           quasi-Poisson fits with a run indicator: power law, + quadratic, + hinge (best of 0.45-0.8), exponential in mu
+                           F-type test of each bend against the power law; leave-one-friction-out predicted deviance
+```
+
+### Predictions, written before the runs ([file](../results/daily/2026-11-10/predictions.md))
+
+* P1: at friction 1.0 the AV strike rate is lower than the humans' (upper bound < 1). P2: the ratio moves to 1 on slick roads (AVs do not read friction). P3: the AV advantage persists at limit x1.3.
+* P4: pooled data support no cliff (no bend passes an F-test at 0.05; the power law is within 10 % of the best leave-one-out deviance). P5: the two runs' elasticities agree within 2 SE.
+
+### Results ([who](../results/whocrashes/who.json), [pool](../results/frictionpool/pool.json))
+
+| cell | AV strikes / all | AV rate | human rate (per 1000 vehicle-h) | ratio AV / human (95 % interval) | Holm p |
+|---|---|---|---|---|---|
+| friction 1.0, limit x1 | 2 / 10 | 1.2 | 3.8 | 0.32 (0.03-1.62) | 0.61 |
+| friction 0.6 | 11 / 29 | 6.8 | 8.6 | 0.79 (0.34-1.77) | 1 |
+| friction 0.4 | 28 / 139 | 17.4 | 52.9 | **0.33 (0.21-0.50)** | < 0.001 |
+| friction 1.0, limit x1.3 | 25 / 61 | 16.0 | 17.6 | 0.91 (0.53-1.56) | 1 |
+
+![who crashes](img/whocrashes.png)
+
+![black box, AV crash at friction 0.4](img/whocrashes.gif)
+
+(GIF: one AV crash on a slick road, a left-turn crash at 59 km/h closing speed; one case, not the statistic.)
+
+**P1, P2 and P3 all failed as stated.** At friction 1.0 the ratio is 0.32 but only 10 strikes occurred, so the interval (0.03 to 1.62) includes 1. P2 failed the other way: on the slickest road (0.4) AVs still strike 3x fewer road users per vehicle-hour (28 of 139 strikes with 43 % of the hours). Instead the advantage vanishes at a x1.3 speed limit (0.91, interval 0.53 to 1.56). The 0.6 cell (0.79) sits between, with wide intervals, so the ratio is not a smooth function of friction here. Reading: whatever helps the AV (0.3 s reaction, 1.3 s headway) matters on slick roads, and a fast city makes pedestrian conflicts so frequent that it is swamped, but the data do not test that mechanism. Caveats: one network, one seed stream, 10-139 events per cell, strikes are all severities, and the AV and human drivers share the same roads but not the same decisions per vehicle (AVs have a different car-following parameter set, so this is a comparison of the two driver models, not of the real world).
+
+**Pooled friction** (152 copies, 496 crashes): elasticity -3.05 (SE 0.17); the two runs give -2.95 (SE 0.19) and -3.69 (SE 0.48), so **P5 held** (difference 0.74, SE 0.52). **P4 failed in sample, held out of sample.** A hinge at 0.7 (flat above, extra slope -3.5, SE 1.1 below) beats the power law (F-test p = 0.003, 0.017 after multiplying by the 6 hinge positions tried; quadratic p = 0.03); but in leave-one-friction-out prediction the plain power law is best (deviance 29 against 43 for the hinge, 283 for the quadratic, 141 for an exponential), partly because held-out end points make the bends extrapolate. So: the data are flat from 1.0 to 0.7 (8.8, 12, 8.6 per 1000 vehicle-h) and then rise as friction^-3.5; a bend near 0.7 is likely, a "cliff" (step) is not, and 8-15 crashes per dry cell cannot settle it.
+
+![pooled friction](img/frictionpool.png)
+
+**Tests**: `tests/test_daily_1110.py` (rate ratio, Holm, hinge recovery).
 
 ---
 
