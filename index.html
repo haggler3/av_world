@@ -297,6 +297,21 @@
           <li>A 3&nbsp;m/s kick to one car displaced 514 of 656 vehicles in ten minutes, doubling every 54&nbsp;s; the first other car moved at 32&nbsp;s, from a junction rather than behind the kicked car.</li>
         </ul>
       </div>
+
+    <div class="result">
+      <figure><img width="576" height="608" src="img/friction_blackice.gif" alt="Black box replay: a left-turning car hits a pedestrian on a slick road, braking at the road's limit" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>The friction cliff</h3>
+          <p>Road friction from dry to snow, in a human-only and a half-AV Oakland (16 copies per cell).
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> ·
+            <a href="img/friction.png">friction figure</a> · <a href="img/minibench.png">mini-benchmark figure</a>.</p></div>
+        <ul>
+          <li>Crash rate goes as friction to the power <b>&minus;3.0</b> (SE 0.19), but not smoothly: 8.8 per 1000 vehicle-hours when dry, 13.8 at 0.6, <span class="big">47.7</span> at 0.45, 176 at 0.3.</li>
+          <li>A half-AV city's dry-road advantage (rate ratio 0.55, interval 0.17&ndash;1.62) is not significant and is gone at 0.6 and below. Four AVBench scenarios predict the board's mean to about 5 points, but picking them on 15 drivers overfits.</li>
+        </ul>
+      </div>
+    </div>
+
     </div>
 
     <div class="result">
