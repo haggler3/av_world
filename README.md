@@ -1,15 +1,101 @@
 # av_world
 
-A fast, batched **intersection and city-area world** for AV research, in pure JAX. It covers:
+One repository for AV research in pure JAX, from the world to the driver:
 
-- signalised and stop-controlled intersections with turn lanes;
-- human drivers who run reds, don't look, don't signal and get distracted;
-- crash rates **calibrated to published intersection crash data**;
-- **whole map areas built from OpenStreetMap** (here: Oakland, Pittsburgh), with car following, lane changes, zipper
-  merges, right of way at every conflict point, pedestrians, buses, double-parked deliveries, breakdowns and
-  congestion-aware routing.
+| package | what it is |
+|---|---|
+| `xworld/` | a batched intersection simulator: turn lanes, signals, risky human drivers, crash rates calibrated to published data |
+| `pgh/` | 10,205 real Pittsburgh intersections auto-mined from OpenStreetMap (Overture Maps) |
+| `xnet/` | a whole map area (Oakland, Pittsburgh): car following, lane changes, zipper merges, right of way at every conflict point, pedestrians, buses, double-parked vans, breakdowns, routing that adapts to congestion. About 380x real time for 8 copies on 4 CPU cores |
+| `avrl/` | driving policies (details: [docs/RL.md](docs/RL.md)): multi-agent PPO in `xnet` (one shared policy drives every AV), the corridor driver exported to Rust, evaluation, the dynamics ladder |
+| `dwm/` | generative world models (diffusion, flow matching) of the traffic around an AV, trained on simulator logs, with scaling laws |
 
-Many copies run in parallel (`jax.vmap`), so rare events like crashes can be measured.
+```bash
+pip install -e . && python -m pgh.fetch && export JAX_DEFAULT_PRNG_IMPL=unsafe_rbg && python -m pytest -q tests
+```
+
+Every experiment below is a set of jobs of 5 minutes or less on 4 CPU cores.
+
+## Does a more dynamic world train a better driver?
+
+![dynamics ladder](docs/img/dynamics_ladder.png)
+
+**The experiment (`avrl/ladder.py`).** Five training worlds on the same Oakland map. Each adds one source of
+dynamics to the one before:
+
+1. AVs alone on light-traffic streets;
+2. careful human drivers around 25 % AVs;
+3. pedestrians;
+4. buses, double-parked vans and breakdowns;
+5. risky humans, with demand, AV share and risk randomised per copy.
+
+Every policy starts from the same imitation of the rule-based AV and gets the same PPO budget. Every checkpoint is
+scored in one held-out test world with all of it switched on (humans 5x riskier than calibrated). The score is the
+training reward per AV decision: progress, comfort, jerk, headway, speeding, safety-envelope corrections, near
+misses, red runs and crashes.
+
+**How to read it:**
+
+- **A, the learning curves.** PPO's first updates shake the imitated driver loose (the dip). Then every world climbs
+  back, and the more dynamic worlds climb back first.
+- **B, the same data at fixed budgets.** At 15 updates (7,800 simulator steps) the gain over the empty-streets world
+  grows rung by rung, to **+12 % for the full world**. At 30 updates every richer world is still 5-8 % ahead. From
+  31,000 steps on, the curves meet within 3 %.
+- **C, the world as the only teacher** (no imitation start). The full world is **+20 % ahead after 7,800 steps**. By
+  62,000 steps both reach about 0.070.
+
+**What it means.** Dynamics buy *sample efficiency*: each pedestrian, bus, breakdown and red runner is a situation the
+policy learns from in its first few thousand steps. Where the policy ends up is set by the number of simulation
+steps. Two things explain this:
+
+- **The observation.** Pedestrians, buses, signals and right of way all reach the policy as a stop target, a leader
+  or an arrival time, so a skill learned from one transfers to the others.
+- **The safety envelope** absorbs the rest.
+
+## Scaling laws
+
+![scaling laws](docs/img/scaling_laws.png)
+
+**World models (`dwm/scaling.py`).** The models are trained on 2.8 M AV decisions logged in the Oakland simulator
+(1 s of history, 3 s of future at 5 Hz), each predicting 5 control points. Error is CRPS on speed and gap at
+1/2/3 s relative to a physics model, on held-out vehicles. Fits are error = a·x^(-b) in log-log space:
+
+| architecture | exponent vs training steps | exponent vs simulated data |
+|---|---|---|
+| flow matching, MLP | 0.153 (R² 0.94) | 0.074 (R² 0.63) |
+| MLP 128x2 | 0.171 (R² 0.94) | 0.021 (R² 0.93) |
+| MLP 256x3 | 0.113 (R² 0.91) | 0.047 (R² 0.93) |
+| transformer 64x2 | 0.014 (R² 0.21) | 0.019 (R² 0.60) |
+
+**How to read it:**
+
+- **Compute (A).** The MLPs and flow matching follow clean power laws (b = 0.11-0.17, R² > 0.9). The small MLP has
+  the steepest compute law because it starts furthest behind. The transformer is the fastest early learner: best of
+  all at 250 steps. It is flat after that (b = 0.01) at this size.
+- **Data (B).** Capacity decides how much a model gains from more simulation. The 1M-parameter MLP's data exponent
+  (0.047) is **more than twice** the 0.2M MLP's (0.021). The small model is capacity-bound; the large one keeps
+  improving across the whole range.
+- **Projection.** By its fitted law, the large MLP reaches the physics model's error at about 4,400 steps on 200 k
+  windows. Longer runs on all 740 k windows go well past it: 0.70 after 18,200 steps, 0.72 with the DCT basis after
+  14,500.
+
+**The driving policy (C).** The score rises as a power law in simulation steps, with nearly the same exponent from
+the empty-streets world and the full world (b = 0.76 and 0.77). Same law, different offset early on.
+
+## What's next
+
+1. **Scale the simulation.** The power laws are fitted up to 62 k simulator steps (RL) and 18 k (world-model data).
+   Next: 4-16x longer runs on a GPU to test them, where JAX should push `xnet` well past 380x real time.
+2. **Train the driver inside the world model.** The diffusion model samples 3 s futures in 0.06 ms each. Use it as a
+   learned simulator for imagined rollouts (Dreamer-style) and compare steps-to-score with the dynamics ladder.
+3. **A curriculum up the ladder.** Dynamics speed up early learning, so start in the full world and anneal toward
+   the hardest cases: risky humans x15, rare events oversampled.
+4. **Bigger worlds.** Squirrel Hill and Downtown are already defined in `xnet/network.py`. Train one policy across
+   areas and measure transfer to an unseen neighbourhood.
+5. **Close the loop with Rust.** Port the 28-feature observation to `small_av_world`, so the city-area policy runs in
+   the Rust AV stack the way the corridor driver does.
+
+## The simulators
 
 ![Oakland, Pittsburgh, every vehicle](docs/xnet_oakland_overview.gif)
 
@@ -296,10 +382,15 @@ xnet/network.py      a whole map area: links, lanes, junction boxes, moves, conf
 xnet/sim.py          the batched area simulator (following, lane changes, merges, right of way, pedestrians, buses, ...)
 xnet/experiment.py   clean / risky drivers / pedestrians in one area
 xnet/render.py       overview and street-view GIFs
+avrl/xppo.py         multi-agent PPO in xnet (one shared policy drives every AV); xeval.py, xviz.py
+avrl/ladder.py       the dynamics ladder (training worlds of increasing dynamics, scored in one test world); ladder_plot.py
+avrl/env.py, ppo.py  the corridor driver (small_av_world), export.py: weights and parity vectors for Rust
+dwm/                 diffusion / flow world models; DWM_SOURCE=city | xnet; xnet_data.py (logs from the area simulator)
+dwm/scaling.py       scaling laws across architectures (compute, simulated data); scaling_plot.py
 tests/               geometry, conflict-free signal plans, zero crashes without risky behaviour (default and
                      real-world-like layouts), behaviour -> crash type, determinism; area network consistency,
                      routes, flow, distraction -> rear-ends, determinism
-results/             calibration.json, av_sweep.json, pgh_survey.json, xnet_oakland.json
+results/             calibration.json, av_sweep.json, pgh_survey.json, xnet_oakland.json, ladder/, scaling/, xnet*/ (policies), dwm/, final/
 ```
 
 Sources: [Overture Maps](https://docs.overturemaps.org/) (transportation theme, release 2026-09-23.1;

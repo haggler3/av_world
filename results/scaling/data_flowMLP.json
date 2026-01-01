@@ -1,0 +1,41 @@
+{
+ "rows": [
+  {
+   "arch": "flow matching, MLP",
+   "windows": 10000,
+   "sim_steps": 243.71651436641153,
+   "skill": 1.723555783181383,
+   "train_s": 22.981123685836792
+  },
+  {
+   "arch": "flow matching, MLP",
+   "windows": 30000,
+   "sim_steps": 731.1495430992346,
+   "skill": 1.249694282145419,
+   "train_s": 21.402764320373535
+  },
+  {
+   "arch": "flow matching, MLP",
+   "windows": 100000,
+   "sim_steps": 2437.165143664115,
+   "skill": 1.2068087579655584,
+   "train_s": 23.84804344177246
+  },
+  {
+   "arch": "flow matching, MLP",
+   "windows": 300000,
+   "sim_steps": 7311.495430992346,
+   "skill": 1.1712952746562424,
+   "train_s": 25.900859117507935
+  },
+  {
+   "arch": "flow matching, MLP",
+   "windows": 730000,
+   "sim_steps": 17791.30554874804,
+   "skill": 1.1990133800373932,
+   "train_s": 34.144556283950806
+  }
+ ],
+ "fits": null,
+ "form": "skill = c + a * x^-b"
+}

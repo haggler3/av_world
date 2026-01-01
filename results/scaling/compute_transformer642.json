@@ -1,0 +1,34 @@
+{
+ "rows": [
+  {
+   "arch": "transformer 64x2",
+   "steps": 250,
+   "skill": 1.2619406419617158,
+   "train_s": 23.915560960769653,
+   "params": 173510
+  },
+  {
+   "arch": "transformer 64x2",
+   "steps": 600,
+   "skill": 1.1919852878901118,
+   "train_s": 29.43520450592041,
+   "params": 173510
+  },
+  {
+   "arch": "transformer 64x2",
+   "steps": 1500,
+   "skill": 1.154727015032776,
+   "train_s": 76.99736404418945,
+   "params": 173510
+  },
+  {
+   "arch": "transformer 64x2",
+   "steps": 4000,
+   "skill": 1.217806540617928,
+   "train_s": 159.80253148078918,
+   "params": 173510
+  }
+ ],
+ "fits": null,
+ "form": "skill = c + a * x^-b"
+}
