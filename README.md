@@ -489,6 +489,12 @@ rates: red-runner and left-turn crashes, cut-in rear-ends, an occasional pile-up
 dart-outs, sensor-blackout crashes. Phantom braking never gets an AV rear-ended here (2,300 ghosts, no crash): the following
 drivers keep their headway. Not representable: wrong-way drivers, emergency vehicles, debris, animals.
 
+**Famous events as scenarios** ([docs/FAMOUS_EVENTS.md](docs/FAMOUS_EVENTS.md)): ten mechanisms from public reports (a misclassified
+jaywalker, dart-out from behind a bus, a stalled vehicle the sensor misses, phantom braking, sun glare, tight cut-ins, red-light
+runners, unprotected lefts, close passes, black ice). They are where trained policies still fail (0.25-0.4 crashes per AV-hour in
+the jaywalker and glare scenarios against ~0 in ordinary traffic), but mixing them into training did not help: two seeds, 0.077/0.172
+for the mix against 0.084/0.093 for nominal training.
+
 **Adversarial humans** (`avlab/adversary.py`, optional). Evolution strategies over three multipliers, scored on the AV crash
 rate of the unfiltered start policy (common random numbers), with caps (mistakes aimed up to 1000x, a cut-in accepting a gap
 down to a quarter). Held-out seeds: 0.424 -> 0.523 crashes per AV-hour (123 -> 151 crashes, 290 AV-hours each). The cut-in
