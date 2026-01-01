@@ -92,6 +92,18 @@ class Behaviour(NamedTuple):
     # its mean plus learned_noise x its own predicted spread) instead of IDM's. Stop lines, parked and courtesy gaps stay IDM.
     learned: float = 0.0
     learned_noise: float = 1.0
+    # sim-to-real patches (see realism/; all off by default, so stored results are unchanged):
+    # bank: share of human car drivers whose (T, s0, amax, b) are a row of a trait table fitted to real car following (needs
+    # set_trait_bank(table) before tracing); s0_scale multiplies everyone else's standstill gap; ou_sigma / ou_tau add a smooth,
+    # per-driver acceleration residual with the covariance sigma^2 exp(-|dt| / tau) of an Ornstein-Uhlenbeck process, drawn without
+    # state as random Fourier features (Bochner: a Cauchy spectrum of scale 1 / tau), so it costs no State field and keeps CRN pairing.
+    bank: float = 0.0
+    s0_scale: float = 1.0
+    ou_sigma: float = 0.0
+    ou_tau: float = 2.0
+    # IDM+ (Schakel et al. 2010) for human drivers: a = amax min(1 - (v / v0)^4, 1 - (s* / s)^2) instead of the sum, so the equilibrium gap
+    # is s* = s0 + v T at every speed; plain IDM inflates it by 1 / sqrt(1 - (v / v0)^4) as v nears v0 (urban followers then hang back).
+    idm_plus: float = 0.0
 
 
 class Reward(NamedTuple):
@@ -208,6 +220,27 @@ def set_learned_follower(params):
     LEARNED = None if params is None else jax.tree.map(jnp.asarray, params)
 
 
+BANK = None  # trait table [M, 4] (T, s0, amax, b), read at trace time: set with set_trait_bank BEFORE building a Sim or tracing step
+OU_K = 8     # random Fourier features per driver for the smooth acceleration residual
+
+
+def set_trait_bank(table):
+    global BANK
+    BANK = None if table is None else jnp.asarray(np.asarray(table, np.float32)[:, :4])
+
+
+def ou_residual(uid, t, tau):
+    """A unit-variance stationary process per driver with correlation exp(-|dt| / tau): sqrt(2 / K) sum_k cos(w_k t + phi_k), with
+    w_k ~ Cauchy(0, 1 / tau) and phi_k ~ U(0, 2 pi) drawn from the driver's id, so a driver keeps their residual in every world."""
+    c = jnp.uint32(0x5EED)
+    out = 0.0
+    for k in range(OU_K):
+        w = jnp.tan(jnp.pi * (hash_uniform(c, uid, 40 + k) - 0.5)) / tau
+        w = jnp.clip(w, -12.0, 12.0)                     # above the 0.2 s step's Nyquist frequency the tail only aliases
+        out = out + jnp.cos(w * t + 2.0 * jnp.pi * hash_uniform(c, uid, 60 + k))
+    return out * jnp.sqrt(2.0 / OU_K)
+
+
 def learned_accel(params, v, prev_a, gap, v_lead, z, noise):
     """Longitudinal acceleration [m/s^2] from the wm2 leader-variant token model: self token (car, speed, last acceleration) and one
     neighbour token (the leader, ahead in lane). gap is the bumper gap; z a standard-normal draw per vehicle."""
@@ -243,6 +276,11 @@ def hash_normal(seed, uid, stream):
 def idm(v, v0, gap, vl, amax, b, T, s0):
     s_star = s0 + jnp.maximum(0.0, v * T + v * (v - vl) / (2.0 * jnp.sqrt(amax * b)))
     return amax * (1.0 - (v / jnp.maximum(v0, 0.1)) ** 4 - (s_star / jnp.maximum(gap, 0.1)) ** 2)
+
+
+def idm_plus(v, v0, gap, vl, amax, b, T, s0):
+    s_star = s0 + jnp.maximum(0.0, v * T + v * (v - vl) / (2.0 * jnp.sqrt(amax * b)))
+    return amax * jnp.minimum(1.0 - (v / jnp.maximum(v0, 0.1)) ** 4, 1.0 - (s_star / jnp.maximum(gap, 0.1)) ** 2)
 
 
 def signal_state(net, t):
@@ -513,6 +551,8 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     vl_eff = jnp.where(ghost & (g_eff > 12.0), 0.0, vl_eff)
     g_eff = jnp.where(ghost, jnp.minimum(g_eff, 12.0), g_eff)
     acc = jnp.where(g_eff < 1e8, idm(st.v, v0, g_eff, vl_eff, st.amax, st.b, st.T, st.s0), st.amax * (1 - (st.v / jnp.maximum(v0, 0.1)) ** 4))
+    acc_p = jnp.where(g_eff < 1e8, idm_plus(st.v, v0, g_eff, vl_eff, st.amax, st.b, st.T, st.s0), st.amax * (1 - (st.v / jnp.maximum(v0, 0.1)) ** 4))
+    acc = jnp.where((beh.idm_plus > 0.5) & ~st.av, acc_p, acc)
     if LEARNED is not None:
         z_l = jnp.where(crn, hash_normal(seed, st.uid, 13), jax.random.normal(jax.random.fold_in(st.key, 13), (N,)))
         a_l = learned_accel(LEARNED, st.v, st.acc, jnp.minimum(gap_lead_c, 1e3), v_lead, z_l, beh.learned_noise)
@@ -525,6 +565,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     pulse_start = human_drv & (st.pulse_t <= 0) & (st.v > 3.0) & (jnp.where(crn, hash_uniform(seed, st.uid, 8), jax.random.uniform(jax.random.fold_in(st.key, 11), (N,))) < beh.pulse_rate * DT)
     pulse_t = jnp.where(pulse_start, 1.0, jnp.maximum(st.pulse_t - DT, 0.0))
     acc = jnp.where(human_drv, acc + beh.accel_noise * jnp.where(crn, hash_normal(seed, st.uid, 9), jax.random.normal(jax.random.fold_in(st.key, 10), (N,))), acc)
+    acc = jnp.where(human_drv & ~distracted, acc + beh.ou_sigma * ou_residual(st.uid, st.t, jnp.maximum(beh.ou_tau, 0.05)), acc)
     acc = jnp.where(human_drv & (pulse_t > 0), jnp.minimum(acc, -beh.pulse_a), acc)
     acc = jnp.clip(acc, a_min, st.amax)
     halted = (st.stop_t > 0) | wreck
@@ -797,7 +838,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
         nxt=jnp.where(src == net["dest_link"][dst], -1, nh[src, dst]), kind=jnp.where(is_bus, BUS, jnp.where(is_van, VAN, jnp.where(is_bike, BIKE, CAR))),
         v0f=jnp.where(is_bus, 0.85, jnp.where(is_av, 1.0, 0.9 + 0.3 * u_sp[7])), T=jnp.where(is_av, 1.3, jnp.where(is_bus, 1.6, jnp.where(beh.T_med > 0.0, jnp.clip(beh.T_med * jnp.exp(beh.T_sigma * jax.random.normal(jax.random.fold_in(st.key, 9), (u_sp.shape[1],))), 0.25, 3.0), jnp.where(jnp.mod(u_sp[2] * 97.0, 1.0) < beh.p_tailgate, 0.35 + 0.35 * u_sp[5], 1.0 + 0.8 * u_sp[5])))),
         amax=jnp.where(is_bus | is_van | is_bike, 1.0, jnp.where(is_av, 1.6, 1.2 + 0.8 * u_sp[2])), b=jnp.where(is_av, 2.0, 1.5 + 1.0 * u_sp[4]),
-        s0=1.5 + 1.0 * u_sp[8], length=length,
+        s0=(1.5 + 1.0 * u_sp[8]) * beh.s0_scale, length=length,
         runner=human & (u_sp[9] < beh.p_red), nolook=human & (u_sp[10] < beh.p_nolook),
         nosignal=human & (u_sp[11] < beh.p_nosignal), aggr=human & (u_sp[12] < beh.p_aggressive), av=is_av,
         react=jnp.where(is_av, 0.3, 0.7 + 0.8 * u_sp[13]), dist_t=jnp.zeros(S), stop_t=jnp.zeros(S),
@@ -813,6 +854,11 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
                wait_t=wait_t, red_t=red_t, ydec=ydec, ran_red=ran_red, stuck_t=stuck_t, behind_t=behind_t, lc_t=lc_t, t0=st.t0,
                acc=jnp.where(alive, acc, 0.0), gsc=gsc, blind_t=jnp.where(alive, blind_t, 0.0), pulse_t=jnp.where(alive, pulse_t, 0.0),
                uid=st.uid)
+    if BANK is not None:  # sim-to-real: a share `bank` of human car drivers take a row of the fitted trait table
+        from_bank = human & (vals["kind"] == CAR) & (jnp.mod(u_sp[8] * 613.0, 1.0) < beh.bank)
+        row = jnp.minimum((jnp.mod(u_sp[13] * 7919.0, 1.0) * BANK.shape[0]).astype(jnp.int32), BANK.shape[0] - 1)
+        for f, c in (("T", 0), ("s0", 1), ("amax", 2), ("b", 3)):
+            vals[f] = jnp.where(from_bank, BANK[row, c], vals[f])
     new = {k: cur[k].at[slots].set(jnp.where(ok_sp, vals[k], cur[k][slots])) for k in cur}
 
     lk = jnp.where(st.alive & on_link, link, L)

@@ -521,3 +521,18 @@ class _Tag:
 
 tag = _Tag()
 
+
+class _Realism:
+    """easy.realism: where the simulator differs from real Argoverse 2 logs and the patch (docs/SIM2REAL.md).
+    run(quick=False), report(), results(), preset() -> a Behaviour with the patched human drivers (loads their trait bank)."""
+
+    def __getattr__(self, name):
+        from realism import api
+        return getattr(api, name)
+
+    def __repr__(self):
+        return "easy.realism: run(quick) | explain() | report() | results() | preset()   (docs/SIM2REAL.md)"
+
+
+realism = _Realism()
+
