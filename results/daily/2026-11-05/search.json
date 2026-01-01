@@ -1,0 +1,24 @@
+{
+ "date": "2026-11-05",
+ "method": "PUCT, c=1.2, 3 rounds; Q=(novelty*relevance*visual*holds-up)/sqrt(minutes); prior normalised",
+ "web": "Nilsson power model / ITF speed-and-crash-risk searched; no source found on AV share x speed limit (a 2025 review says mixed-traffic effects on the power model are neglected)",
+ "candidates": [
+  {"idea": "speed limit x AV share: does the elasticity fall with 50 % AVs (next-step 5)", "artefact": "figure+table", "minutes": 12, "prior": 0.6,
+   "probe": "p_av hook confirmed (Behaviour.p_av); 4-copy x 2-scale probe ran in 30 s; AVs at x0.7 gave 5 vs 4 crashes (no visible effect at low speed)", "outcome": "KEPT"},
+  {"idea": "per-crash-type elasticities with Holm (next-step 6)", "artefact": "table", "minutes": 0.1, "prior": 0.7,
+   "probe": "by_type totals per scale are stored in results/speedlimit; per-copy counts are not -> totals-based SE with the all-type dispersion", "outcome": "KEPT (merged into idea 1: same data)"},
+  {"idea": "pedestrian crash at x1.3 as a zoomed black-box GIF", "artefact": "GIF", "minutes": 4, "prior": 0.6,
+   "probe": "blackbox.hunt needed a 'types' filter (3-line change, default unchanged)", "outcome": "KEPT (visual for idea 1)"},
+  {"idea": "junction-handoff census over many twin kicks (next-step 3)", "artefact": "table", "minutes": 15, "prior": 0.4,
+   "probe": "only 1 of 16 single-car kicks diverged in the stored twin run; +1 m/s to every car displaces everything by >1 m within 1 s, so the 1 m threshold is meaningless there", "outcome": "dropped: too few events / ill-defined"},
+  {"idea": "seeds with intervals on every leaderboard row", "artefact": "table", "minutes": 45, "prior": 0.8, "probe": "cost", "outcome": "dropped: over budget"},
+  {"idea": "re-score AVBench with unsafe_rbg stream", "artefact": "table", "minutes": 10, "prior": 0.4, "probe": "one draw per scenario is uninformative", "outcome": "dropped"},
+  {"idea": "H4 AV-share curve shape", "artefact": "figure", "minutes": 60, "prior": 0.5, "probe": "FIXES.md: needs ~18x data", "outcome": "dropped: GPU-sized"},
+  {"idea": "wet-road threshold H3", "artefact": "figure", "minutes": 40, "prior": 0.4, "probe": "GPU-sized per docs", "outcome": "dropped"},
+  {"idea": "pedestrian yield behaviour sweep at crossings", "artefact": "figure", "minutes": 20, "prior": 0.4, "probe": "needs new knob wiring in the behaviour", "outcome": "dropped: over budget, kept as next step"},
+  {"idea": "impact-speed weighting of crashes (Nilsson exponent 4)", "artefact": "figure", "minutes": 25, "prior": 0.4, "probe": "impact speed not recorded in counters; would need xnet change", "outcome": "dropped"},
+  {"idea": "100 % AV city point on the speed-limit curve", "artefact": "table", "minutes": 12, "prior": 0.5, "probe": "same code path, only p_av=1", "outcome": "dropped for time (next step)"},
+  {"idea": "wild card: Lyapunov exponent from twin doubling time", "artefact": "number", "minutes": 20, "prior": 0.2, "probe": "54 s doubling time is one twin", "outcome": "dropped"}
+ ],
+ "final": "2 ideas kept: (1) speed limit x AV share with per-type breakdown, (2) pedestrian crash GIF at x1.3. The PUCT scores were worked on paper and were not saved numerically; the probes listed per candidate are what was actually run."
+}
