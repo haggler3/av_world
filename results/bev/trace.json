@@ -1,0 +1,152 @@
+{
+ "source": "/tmp/claude-0/-home-user/55bcdaf2-8ef3-51cf-9658-ec3ffd940c9e/scratchpad/bevdata/new_york_s0.npz",
+ "frame": 129,
+ "stages": [
+  {
+   "stage": "1 sample",
+   "what": "6 rendered camera images (uint8 RGB), the ego's world pose",
+   "shape": [
+    6,
+    96,
+    176,
+    3
+   ],
+   "ms": null,
+   "note": "pose [915.4099731445312, 816.7999877929688, 2.640000104904175]"
+  },
+  {
+   "stage": "2 labels",
+   "what": "3-D boxes in the ego frame: x, y, z, l, w, h, yaw, vx, vy + class + occluded",
+   "shape": [
+    20,
+    9
+   ],
+   "ms": null,
+   "note": "car: 18, cyclist: 2; occluded 13"
+  },
+  {
+   "stage": "3 calibration",
+   "what": "ego2img = K [R | t] per camera (BEVFormer's lidar2img)",
+   "shape": [
+    6,
+    4,
+    4
+   ],
+   "ms": null,
+   "note": "K: f = 88.0 px"
+  },
+  {
+   "stage": "4a features (scratch CNN)",
+   "what": "stride 8, 64 channels, trained with the model",
+   "shape": [
+    1,
+    6,
+    12,
+    22,
+    64
+   ],
+   "ms": 3.8,
+   "note": "49200 params"
+  },
+  {
+   "stage": "4b features (BEVFormer-tiny R50 stem + layer1-2, frozen)",
+   "what": "stride 8, 512 channels, folded batch norm",
+   "shape": [
+    1,
+    6,
+    12,
+    22,
+    512
+   ],
+   "ms": 28.2,
+   "note": "1.44 M params, identical to PyTorch within 2e-5"
+  },
+  {
+   "stage": "5 BEV queries + pillars",
+   "what": "32x32 cells of 2 m, each lifted to 4 heights (0.4, 1.0, 1.6, 2.6) m",
+   "shape": [
+    1024,
+    4,
+    3
+   ],
+   "ms": null,
+   "note": ""
+  },
+  {
+   "stage": "6 projection (hit views)",
+   "what": "pillar points -> every camera's feature map; a camera is a hit view if any point lands in it",
+   "shape": [
+    6,
+    1024,
+    4,
+    2
+   ],
+   "ms": null,
+   "note": "cells seen by 0 / 1 / 2 / 3+ cameras: 0% / 72% / 27% / 0%"
+  },
+  {
+   "stage": "7 temporal alignment",
+   "what": "previous BEV warped by the ego motion (R, t) into the current frame",
+   "shape": [
+    1024,
+    64
+   ],
+   "ms": null,
+   "note": "ego moved 1.18 m, turned 0.0 deg; label heatmaps correlate 0.72 unwarped -> 0.90 warped"
+  },
+  {
+   "stage": "8 BEV encoder",
+   "what": "2 x (temporal self-attn -> spatial cross-attn -> FFN), 4 heads, 64 channels",
+   "shape": [
+    1024,
+    64
+   ],
+   "ms": 36.2,
+   "note": "235520 params"
+  },
+  {
+   "stage": "9 head",
+   "what": "class heatmaps + 10 regression channels per cell",
+   "shape": [
+    [
+     32,
+     32,
+     5
+    ],
+    [
+     32,
+     32,
+     10
+    ]
+   ],
+   "ms": null,
+   "note": "37903 params"
+  },
+  {
+   "stage": "10 targets + loss",
+   "what": "Gaussian heatmaps at object centres (focal loss) + L1 regression where mask = 1",
+   "shape": [
+    16
+   ],
+   "ms": null,
+   "note": "untrained: loss 4.73 (heat 2.18, reg 5.09)"
+  },
+  {
+   "stage": "11 decode + metrics",
+   "what": "3x3 peak picking -> boxes; nuScenes-style mAP / NDS",
+   "shape": [
+    16,
+    9
+   ],
+   "ms": null,
+   "note": "labels -> targets -> decode round trip: mAP 1.00, NDS 1.00 (must be 1.00)"
+  },
+  {
+   "stage": "12 smoke fit",
+   "what": "overfit one batch of 4 pairs for 80 steps (plumbing, not training)",
+   "shape": [],
+   "ms": 499.8,
+   "note": "loss 4.87 -> 0.93; mAP on that batch 0.13"
+  }
+ ]
+}

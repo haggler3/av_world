@@ -364,13 +364,13 @@ def _ego_pose(scene, k, ego, smooth=4):
     return None
 
 
-def _agent_meshes(scene, k, near):
+def _agent_meshes(scene, k, near, hide=None):
     """The agents at frame k as pyvista meshes, merged per colour."""
     import pyvista as pv
     parts = {}
     for v in scene["vehicles"]:
         j = k - v["start"]
-        if not 0 <= j < len(v["x"]) or not near(v["x"][j], v["y"][j]):
+        if v["id"] == hide or not 0 <= j < len(v["x"]) or not near(v["x"][j], v["y"][j]):
             continue
         x, y, yaw = v["x"][j], v["y"][j], v["yaw"][j]
         c, s_ = math.cos(yaw), math.sin(yaw)
@@ -451,10 +451,20 @@ class Renderer:
 
     def frame(self, scene, k, ego=None, view="street", lights=None):
         """The image (h, w, 3) at frame k. `lights`: 0 red / 1 yellow / 2 green per link (xnet.sim.signal_state), else the heads stay dark."""
+        self.set_agents(scene, k, lights)
+        pose = _ego_pose(scene, k, ego) if ego is not None else None
+        if view == "street" and pose is not None:
+            x, y, yaw = pose
+            return self.shoot((x - 10 * math.cos(yaw), y - 10 * math.sin(yaw), 3.4), (x + 30 * math.cos(yaw), y + 30 * math.sin(yaw), 2.0), 65)
+        fx, fy = (pose[0], pose[1]) if pose is not None else (self.fx, self.fy)
+        return self.shoot((fx - 230, fy - 280, 240), (fx, fy, 0), 40)
+
+    def set_agents(self, scene, k, lights=None, hide=None):
+        """Put the agents (and signal lights) of frame k into the scene; `hide`: a vehicle id left out (an ego whose cameras sit inside it)."""
         import pyvista as pv
         for a in self.actors:
             self.p.remove_actor(a)
-        self.actors = [self.p.add_mesh(m, color=c) for c, m in _agent_meshes(scene, k, self.near).items()]
+        self.actors = [self.p.add_mesh(m, color=c) for c, m in _agent_meshes(scene, k, self.near, hide).items()]
         if lights is not None and self.sig_on.any():
             st = np.asarray(lights)[self.world.signal_links]
             for s in range(3):
@@ -462,15 +472,14 @@ class Renderer:
                 if on.any():
                     pts = pv.PolyData(np.c_[self.sig_xy[on], np.full(on.sum(), 4.9)])
                     self.actors.append(self.p.add_mesh(pts.glyph(geom=pv.Sphere(radius=0.32), orient=False, scale=False), color=LIGHTS[s]))
-        pose = _ego_pose(scene, k, ego) if ego is not None else None
-        if view == "street" and pose is not None:
-            x, y, yaw = pose
-            self.p.camera_position = [(x - 10 * math.cos(yaw), y - 10 * math.sin(yaw), 3.4), (x + 30 * math.cos(yaw), y + 30 * math.sin(yaw), 2.0), (0, 0, 1)]
-            self.p.camera.view_angle = 65
-        else:
-            fx, fy = (pose[0], pose[1]) if pose is not None else (self.fx, self.fy)
-            self.p.camera_position = [(fx - 230, fy - 280, 240), (fx, fy, 0), (0, 0, 1)]
-            self.p.camera.view_angle = 40
+
+    def shoot(self, eye, target, vfov_deg, up=(0, 0, 1), fresh=False):
+        """The image (h, w, 3) from a camera at `eye` looking at `target`, `vfov_deg` vertical field of view (VTK's view angle).
+        fresh: render first; needed when several cameras shoot the same agents (moving only the camera does not trigger a render)."""
+        self.p.camera_position = [tuple(eye), tuple(target), tuple(up)]
+        self.p.camera.view_angle = vfov_deg
+        if fresh:
+            self.p.render()
         return self.p.screenshot(return_img=True)
 
     def close(self):

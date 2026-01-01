@@ -87,6 +87,7 @@ print(env.metrics(state)["av_crash"])
 
 | | |
 |---|---|
+| [docs/BEV.md](docs/BEV.md) | camera BEV perception: a CPU-sized BEVFormer on rendered av_world cities, traced front to back |
 | [docs/TESTING.md](docs/TESTING.md) | What AV behaviour you can test, the knobs, metrics and suites, how to plug in your stack, and the limits |
 | [docs/METRICS.md](docs/METRICS.md) | AVBench: fixed bars the rule-based AV can fail, the scorecard and av_world score, results on 18 scenarios ([leaderboard](results/bench/leaderboard.md)) |
 | [docs/NVIDIA.md](docs/NVIDIA.md) | OpenUSD stages and Cosmos-style control videos from long-tail scenes, side-by-side clips, filming crashes |
@@ -113,6 +114,7 @@ print(env.metrics(state)["av_crash"])
 | `xnet/` | the area simulator, road network builder, the extra cities, the NVIDIA exporter, OSM and log importers, junction detector, CARLA export, sensor model |
 | `xworld/`, `pgh/` | the calibrated intersection simulator; 10,205 mined Pittsburgh intersections |
 | `avrl/` | PPO, AVBench, ladder, unaided training, famous-event training, multi-device trainer |
+| `bev/` | camera BEV perception: 6-camera rig, rendered data, BEVFormer-tiny's backbone ported to JAX, MiniBEVFormer, nuScenes-style metrics |
 | `dwm/`, `wmplan/` | diffusion / flow world models with scaling laws; latent world model and planner |
 | `avlab/` | stress lab, tail scenarios, incident audit, adversary, rare events, the five long-tail methods |
 | `tests/` | 80 tests: dynamics, safety, importers, junctions, sensor model, estimators |
