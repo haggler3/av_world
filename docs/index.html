@@ -328,6 +328,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="700" height="280" src="img/frictionav.png" alt="Crash rate at friction 0.45 with half AVs for four AV settings, and the AV speed each costs" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Should AVs read the road friction?</h3>
+          <p>Half-AV Oakland at friction 0.45 (16 copies per cell): AVs told to slow down and keep a longer gap, from outside the simulator.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a>.</p></div>
+        <ul>
+          <li>Capping AV desired speed at sqrt(friction) cuts AV-involved crashes to <span class="big">0.12</span> of base (95&nbsp;% 0.02 to 0.40) for 11&nbsp;% lower AV speed; a longer headway alone gives 0.67 (0.33 to 1.32).</li>
+          <li>Kicked twins: only 3 of 24 spread across the city within 300 s.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="700" height="392" src="img/twins.gif" alt="Two copies of Oakland, one nudged: a single car given +3 m/s leaves its twin in step, a new random stream puts almost every vehicle somewhere else within two minutes" loading="lazy"></figure>
       <div class="text">
         <div><h3>Twin cities: is the simulator chaotic?</h3>
