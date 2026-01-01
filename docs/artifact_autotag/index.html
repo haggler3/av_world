@@ -1,0 +1,264 @@
+<title>Scene Auto-Tagger</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column with full-width figures; a verdict table up top, then one section per idea (claim, math, figure, numbers, limits). */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #14171c; --muted: #565c66; --line: #dde0e6; --accent: #2a78d6; --accent-2: #eb6834;
+  --math-bg: #eef1f6; --ok: #0e7a55; --ok-bg: #dff3ea; --mixed: #8a5a00; --mixed-bg: #fbecc8; --skip: #565c66; --skip-bg: #e7e9ee; --shadow: 0 1px 2px rgba(20,23,28,.06);
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --serif: "IBM Plex Serif", Georgia, serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1216; --surface: #171b21; --fg: #e8ebf0; --muted: #a2a9b4; --line: #2a303a; --accent: #5a9cf0; --accent-2: #f08457;
+  --math-bg: #1d232c; --ok: #5fd6a4; --ok-bg: #123a2c; --mixed: #f0c35a; --mixed-bg: #3a2e10; --skip: #a2a9b4; --skip-bg: #242a33; --shadow: none; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #171b21; --fg: #e8ebf0; --muted: #a2a9b4; --line: #2a303a; --accent: #5a9cf0; --accent-2: #f08457;
+  --math-bg: #1d232c; --ok: #5fd6a4; --ok-bg: #123a2c; --mixed: #f0c35a; --mixed-bg: #3a2e10; --skip: #a2a9b4; --skip-bg: #242a33; --shadow: none; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-block: 40px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+header { display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(32px, 5vw, 48px); line-height: 1.1; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.lede { font-size: 18px; color: var(--muted); margin: 0; max-width: 62ch; }
+h2 { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.2; margin: 0; text-wrap: balance; }
+h3 { font-size: 13px; font-family: var(--mono); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+p { margin: 0; max-width: 68ch; }
+section { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px; }
+.idea { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.pill { font-family: var(--mono); font-size: 12px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
+.ok { background: var(--ok-bg); color: var(--ok); } .mixed { background: var(--mixed-bg); color: var(--mixed); } .skip { background: var(--skip-bg); color: var(--skip); }
+.claim { font-size: 17px; font-weight: 500; max-width: 68ch; }
+.math { font-family: var(--mono); font-size: 14px; background: var(--math-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; line-height: 1.9; white-space: pre; margin: 0; max-width: 100%; }
+.math b { font-weight: 500; color: var(--accent); }
+figure { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+figure .card { background: #fcfcfb; border: 1px solid var(--line); border-radius: 8px; padding: 8px; box-shadow: var(--shadow); }
+figure img { display: block; width: 100%; height: auto; border-radius: 4px; }
+figure.gif .card { background: #0d1117; border-color: #2a303a; padding: 0; overflow: hidden; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 80ch; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); max-width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 560px; }
+th, td { padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+tr.hi td { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.note { border-left: 3px solid var(--accent-2); padding: 2px 0 2px 14px; max-width: 68ch; color: var(--fg); }
+.note b { font-weight: 600; }
+code { font-family: var(--mono); font-size: .9em; background: var(--math-bg); padding: 1px 5px; border-radius: 4px; }
+pre.cmd { font-family: var(--mono); font-size: 13px; background: var(--math-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; margin: 0; line-height: 1.7; }
+footer { color: var(--muted); font-size: 14px; max-width: 68ch; }
+a { color: var(--accent); }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } main { gap: 44px; } .math { font-size: 12.5px; } }
+
+.pc { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pc div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.pc h4 { margin: 0 0 6px; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.pc ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.pc .pro h4 { color: var(--ok); } .pc .con h4 { color: var(--mixed); }
+.stage { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+pre.mermaid { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 0; }
+ol.principles { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+@media (max-width: 760px) { .pc { grid-template-columns: 1fr; } }
+</style>
+
+<body>
+<main>
+<header>
+  <div class="eyebrow">av_world · an auto-tagging system for driving scenes, trained on simulator truth</div>
+  <h1>Scene Auto-Tagger</h1>
+  <p class="lede">Rules can find a hard brake; nobody can annotate a distracted driver or a road user hidden behind a truck. This simulator knows every hidden trait, can fork the world, and exports real Argoverse 2 logs and simulated runs in one format. So it teaches taggers the hidden things, calibrates them to a precision target, applies them to real logs, and flags where they should not be trusted.</p>
+</header>
+
+<section aria-labelledby="results">
+  <h2 id="results">What it does on 400 real and 1,504 simulated scenes</h2>
+  <figure class="gif"><div class="card"><img src="img/av2_scene.gif" alt="A real Argoverse 2 intersection from above with vehicles coloured by their active tag, next to a tag timeline with a moving cursor showing cut-in, turning, tailgating, hard brake, hidden road user ahead and risky moment intervals." loading="lazy"></div>
+    <figcaption>A real Argoverse 2 scene. Each vehicle takes the colour of its active tag; the timeline shows every tag’s interval. This scene is also flagged <code>sim_gap</code>: busier and harsher than anything the simulator makes.</figcaption></figure>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Tagger</th><th>Against simulator truth (held out)</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>lane change (rule)</td><td>precision 0.15 → <b>0.87</b> after tuning on the golden set; recall 0.77</td><td><span class="pill ok">good</span></td></tr>
+      <tr><td>cut-in (rule)</td><td>precision 0.17 → 0.38; recall 0.45 (11 true events)</td><td><span class="pill mixed">weak</span></td></tr>
+      <tr><td>turning (rule)</td><td>precision 0.86, recall 0.51</td><td><span class="pill mixed">misses slow turns</span></td></tr>
+      <tr class="hi"><td>hidden road user ahead (occlusion net)</td><td>AUROC <b>0.957</b>; emitted at precision 0.85, recall 0.70</td><td><span class="pill ok">strong</span></td></tr>
+      <tr class="hi"><td>action-sensitive moment (counterfactual)</td><td>AUROC <b>0.982</b> (critic’s spread), against 0.876 from risk alone</td><td><span class="pill ok">strong, sim only</span></td></tr>
+      <tr><td>distracted driver (learned)</td><td>AUROC 0.710: never reaches 0.9 precision</td><td><span class="pill skip">abstains</span></td></tr>
+      <tr><td>crash within 3 s (learned)</td><td>AUROC 0.691 (base rate 0.08 %)</td><td><span class="pill skip">abstains</span></td></tr>
+      <tr><td>tailgater style (learned)</td><td>AUROC 0.597; emits at precision 0.91 for 1.3 % of tailgaters</td><td><span class="pill mixed">rare but right</span></td></tr>
+      <tr><td>domain check (<code>sim_gap</code>)</td><td><b>50 %</b> of real scenes outside the simulator’s range, against 1.1 % of held-out simulated scenes</td><td><span class="pill ok">informative</span></td></tr>
+    </tbody></table></div>
+  <figure><div class="card"><img src="img/quality.png" alt="Three panels: rule precision and recall before and after tuning; AUROC of five learned and counterfactual taggers; calibration error before and after isotonic calibration."></div>
+    <figcaption>Left: tuning thresholds on the simulator golden set fixed lane-change precision. Middle: hidden-state taggers range from strong (occlusion, counterfactual) to weak (behaviour with no 5 s signature). Right: isotonic calibration turns scores into frequencies.</figcaption></figure>
+</section>
+
+<section aria-labelledby="fp">
+  <h2 id="fp">First principles</h2>
+  <ol class="principles">
+    <li><b>A tag is a claim about an interval of a scene,</b> made by a tagger, with a confidence. Search, fusion, calibration, review and drift all work on that one record, so it carries its provenance.</li>
+    <li><b>Simulator labels have no human noise but a domain gap.</b> So the gap is measured per scene, and sim-trained tags on scenes the simulator could not have made are flagged.</li>
+    <li><b>A score is not a probability.</b> Calibration makes it a frequency; a threshold with a precision bound makes it a decision; the uncertain middle goes to a person.</li>
+    <li><b>Taggers that agree reveal their accuracy</b> without labels (Dawid–Skene), so taggers can be fused before anyone labels anything.</li>
+    <li><b>Human time is the scarce resource.</b> Review what teaches the model most, not what comes first.</li>
+    <li><b>Every stage is a pure function of its inputs and config.</b> So the pipeline is a cached DAG, and a change reruns only what depends on it.</li>
+  </ol>
+</section>
+
+<section aria-labelledby="dag">
+  <h2 id="dag">The engineering DAG</h2>
+  <p>Eighteen stages, each a pure function with a content-addressed cache: key = sha256(name, config, the inputs’ keys, the function’s source). The full build takes about 11 minutes on 4 cores; a threshold change reruns <code>calibration → tags → store → qa</code> in seconds. <code>av-world tag explain</code> prints which stages are fresh.</p>
+  <pre class="mermaid">
+graph LR
+  sim_scenes[sim golden set] --> rule_tuning
+  rule_tuning --> rules_sim
+  rule_tuning --> rules_av2
+  av2_scenes[Argoverse 2] --> rules_av2
+  sim_scenes --> rules_sim
+  sim_train_scenes[sim training set] --> windows_train --> learned_model
+  sim_scenes --> windows_sim
+  av2_scenes --> windows_av2
+  learned_model --> learned_scores
+  windows_sim --> learned_scores
+  windows_av2 --> learned_scores
+  sim_scenes --> hidden_ahead
+  av2_scenes --> hidden_ahead
+  learned_scores --> calibration
+  hidden_ahead --> calibration
+  rules_sim --> domain
+  rules_av2 --> domain
+  learned_scores --> label_model
+  rules_sim --> label_model
+  rules_av2 --> label_model
+  forks[nets forks] --> counterfactual
+  learned_scores --> active
+  calibration --> tags
+  domain --> tags
+  label_model --> tags
+  tags --> store
+  tags --> qa
+  counterfactual --> qa
+  active --> qa
+  </pre>
+  <pre class="math">key(stage)  = sha256(name, config, [key(d) for d in deps], source of the function)
+run(target): for s in topological_order(target):
+                 load cache/&lt;s&gt;-&lt;key&gt;.pkl if it exists, else out = s.fn(*[value(d) for d in deps], **config); save it</pre>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Only stale stages rerun; results trace to the exact config and code that made them.</li><li>About 100 lines, no service to run.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>Pickles are tied to Python and numpy versions; the cache grows until cleaned.</li><li>No parallel branches. Each stage already uses all four cores, so this costs little here; on a cluster, Dagster, Airflow or Ray would replace this file.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m1">
+  <div class="head"><span class="idea">1</span><h2 id="m1">One scene format and a versioned tag record</h2><span class="stage">sim_scenes · av2_scenes · store</span></div>
+  <pre class="math">scene = { x, y, yaw, v, alive [vehicles, frames] at 0.2 s; kind, length, av; ego; pedestrians; truth (sim only) }
+from_av2: read_av2 → av2_to_scene(every 2nd frame) → dense arrays
+from_sim: record the city → every 10 s and AV: vehicles within 80 m → same arrays + hidden truth
+Tag = (scene_id, source, name, level, agent, t_start, t_end, confidence, tagger, version, status)</pre>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Every tagger runs unchanged on real and simulated data, which is what makes sim-to-real evaluation possible.</li><li>A flat parquet table scales to millions of tags.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>Real logs hold only what the AV perceived; simulated ones see everything.</li><li>Lanes are not in the format, so lane rules use geometry.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m2">
+  <div class="head"><span class="idea">2</span><h2 id="m2">Kinematic rules</h2><span class="stage">rules_sim · rules_av2</span></div>
+  <pre class="math">leader(i, t) = nearest j with x_ij &gt; 0, |y_ij| &lt; 1.8 m, |heading_ij| &lt; 35°  (in i’s frame)
+gap = x_ij − (Lᵢ + Lⱼ)/2,   headway = gap / vᵢ,   TTC = gap / (vᵢ − vⱼ) when closing
+hard_brake: v drops 4 m/s within 1 s · tailgating: headway &lt; 0.8 s for 1 s · low_ttc: TTC &lt; 1.5 s
+cut_in: j becomes i’s leader within 15 m, 2 s after driving parallel in the next lane while i went straight
+lane_change: lateral move &gt; threshold in 3 s, heading back within tolerance, small total swing</pre>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Transparent and instant, with no training.</li><li>The same statistics as measured on real logs.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>Geometry stands in for lanes: curves made false lane changes until the thresholds were tuned (method 10).</li><li>Blind to anything hidden.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m3">
+  <div class="head"><span class="idea">3</span><h2 id="m3">Learned taggers from simulator truth</h2><span class="stage">windows_train · learned_model · learned_scores · hidden_ahead</span></div>
+  <pre class="math">features(i, t) = (v, a, has_leader, gap, closing speed, leader accel, |yaw rate|, vehicles within 20 m)     trajectories only
+window = the last 5 s;  labels at its end:  distracted = dist_t &gt; 0;  tailgater = IDM T &lt; 1.25 s;  crash_soon = crash within 3 s
+causal dilated CNN, trained on a separate dense recording, rare positives up-weighted
+hidden_ahead = occlusion net N6 from the ego’s seat → P(someone hidden 25 m ahead in the lane)</pre>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Produces tags that cannot otherwise exist: nobody can annotate “distracted” or “hidden”.</li><li>The training recording is independent of the golden set.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>Labels are only as realistic as the simulator’s drivers.</li><li>A state with no 5 s behavioural signature (distraction, crash risk) stays weak, and the scores show it.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m4">
+  <div class="head"><span class="idea">4</span><h2 id="m4">Calibration, a precision threshold and abstention</h2><span class="stage">calibration</span></div>
+  <pre class="math">g = isotonic fit of truth on score (pool-adjacent-violators), on held-out calibration copies
+t_emit   = min t with WilsonLower95(precision{g(s) ≥ t}) ≥ 0.9     → status "auto"
+t_review = min t with WilsonLower95(precision) ≥ 0.5               → status "review" (a person decides)</pre>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Calibration error falls by 10–100×.</li><li>A tagger that cannot reach the target emits nothing rather than garbage.</li><li>Exactly the uncertain items reach people.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>The bound assumes independent items. Frames from one scene are correlated, so it is optimistic: occlusion reached precision 0.85, not 0.9.</li><li>It covers simulated data only; for real data the domain check has to take over.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m5">
+  <div class="head"><span class="idea">5</span><h2 id="m5">The domain check: sim_gap</h2><span class="stage">domain</span></div>
+  <pre class="math">f(scene) = 17 numbers (density, speeds, acceleration spread and tails, pedestrians, rate of each kinematic tag)
+z = (f − μ_sim) / σ_sim;   d = mean distance to the 5 nearest simulated scenes;   sim_gap if d &gt; 99th percentile of held-out sim</pre>
+  <figure><div class="card"><img src="img/drift_domain.png" alt="Left: tags per scene on a log scale, real much higher than simulated for hard brakes, low TTC and tailgating. Right: histograms of the domain distance; the simulated scenes cluster below the threshold, half of the real scenes lie above it."></div>
+    <figcaption>Per scene, real traffic has 11× the hard brakes, 26× the low-TTC moments and 70× the tailgating of simulated Oakland. The leading reasons real scenes fall outside the simulator are more tracked objects (Argoverse 2 also tracks parked ones), harder accelerations and more pedestrians.</figcaption></figure>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Marks exactly where sim-trained tags should not be trusted, and says why.</li><li>Doubles as a to-do list for the simulator.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>Depends on the 17 chosen features.</li><li>A scene can be “inside” on these and still unrealistic in other ways.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m6">
+  <div class="head"><span class="idea">6</span><h2 id="m6">Search and similarity</h2><span class="stage">store</span></div>
+  <pre class="math">query("cut_in &amp; hidden_ahead &amp; !sim_gap") → recursive-descent parser → predicate over a scene’s tag names
+--overlap: intersect the positive tags’ intervals in time;  similar(id) = top-k cosine of [features, log(1 + tag counts)]</pre>
+  <pre class="cmd">$ av-world tag query "cut_in &amp; hidden_ahead" --overlap
+19 scenes match 'cut_in &amp; hidden_ahead' in av2
+  av2:00e988db-…  [3.0-4.0 s] [4.0-5.0 s]
+  av2:01d7deae-…  [4.0-5.0 s] [5.0-6.0 s] [3.8-4.0 s]</pre>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Boolean queries cover most mining requests.</li><li>Overlap answers “while”, not just “and”.</li><li>One example finds more of a rare scene.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>The embedding is hand-built; a learned scene encoder would capture interactions.</li><li>Brute force is fine to about 10⁶ scenes; beyond that it needs an ANN index.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m7">
+  <div class="head"><span class="idea">7</span><h2 id="m7">Counterfactual tags</h2><span class="stage">counterfactual</span></div>
+  <pre class="math">from exact forks (other dice fixed): action_sensitive = the AV’s 4 s outcome differs between its 5 actions (3.8 % of moments)
+tagger: spread = maxₐ Q(o, a) − minₐ Q(o, a) of the interventional risk critic → AUROC 0.982</pre>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>A label that exists only because the world can be forked.</li><li>Marks where the AV’s choice matters: the most valuable moments to train and test on.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>Needs the AV’s 28 observation features: simulated runs and stacks that log them, not Argoverse 2.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m8">
+  <div class="head"><span class="idea">8</span><h2 id="m8">Weak-supervision label model</h2><span class="stage">label_model</span></div>
+  <pre class="math">votes: hard_brake, low_ttc, tailgating (rules), distracted, crash_soon (learned, top 2 %)
+Dawid–Skene EM from the majority vote:  M: aⱼ = Σ qᵢ[vᵢⱼ=1] / Σ qᵢ,  bⱼ = Σ (1−qᵢ)[vᵢⱼ=0] / Σ (1−qᵢ),  π = mean q
+                                         E: qᵢ = π Π aⱼ^[v=1](1−aⱼ)^[v=0] / (… + (1−π) Π (1−bⱼ)^[v=1] bⱼ^[v=0])</pre>
+  <figure><div class="card"><img src="img/fusion_active.png" alt="Left: AUROC for a crash within 3 s of five single taggers, the majority vote and the label model; the fusions reach 0.76, above the best single tagger at 0.75. Right: active learning curves of three strategies, all near 0.57."></div>
+    <figcaption>Left: fusion beats any single tagger slightly (0.763 against 0.746), but EM does no better than voting here. It does report that the rules carry almost no signal about a crash 3 s ahead. Right: active learning for the tailgater head; the three strategies are indistinguishable.</figcaption></figure>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Fuses taggers without labels.</li><li>Its accuracy estimates are a free quality report.</li><li>A new tagger is one more column.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>Assumes taggers are independent given the truth; rules sharing gap and speed are not.</li><li>EM can collapse with rare positives, hence the majority-vote start and the simulator check.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m9">
+  <div class="head"><span class="idea">9</span><h2 id="m9">Active learning and the review queue</h2><span class="stage">active · store (review_queue)</span></div>
+  <pre class="math">the simulator answers as reviewer; each round refit the head (logistic on logit + 12 window features)
+random: 100 at random · uncertainty: 100 nearest p = 0.5 · unc+div: 500 most uncertain → k-centre greedy picks 100 spread out</pre>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Strategies are compared with a perfect reviewer before a person spends any time.</li><li>Abstained tags are already queued, sorted by uncertainty.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>Here the head is too small for review to move it: all strategies end near AUROC 0.57.</li><li>A real loop needs a review interface and a verdict store (the <code>status</code> field is ready).</li></ul></div></div>
+</section>
+
+<section aria-labelledby="m10">
+  <div class="head"><span class="idea">10</span><h2 id="m10">Golden-set QA, rule tuning and drift</h2><span class="stage">rule_tuning · qa</span></div>
+  <pre class="math">golden set = an independent simulated recording with exact truth (copies 0–5 tune, 6–7 report)
+rule_tuning: grid over lane-change and cut-in thresholds → best F1 on copies 0–5
+qa: event precision/recall (overlap ±1 s); AUROC, precision/recall at threshold, ECE before/after; sim_gap share; tag rates real vs sim</pre>
+  <figure class="gif"><div class="card"><img src="img/sim_scene.gif" alt="A simulated Oakland scene from above with vehicles coloured by their active tags and a tag timeline showing lane change, turning and hidden road user intervals." loading="lazy"></div>
+    <figcaption>A golden-set scene: its tags can be checked against the simulator’s own record of every lane change, turn and hidden road user.</figcaption></figure>
+  <div class="pc"><div class="pro"><h4>Pros</h4><ul><li>Every number on this page is recomputed after any change, against exact labels.</li><li>Rule thresholds are chosen by data.</li></ul></div>
+  <div class="con"><h4>Cons</h4><ul><li>The golden set inherits the simulator’s blind spots.</li><li>Real-data quality still needs a small human-labelled set: what the review queue is for.</li></ul></div></div>
+</section>
+
+<section aria-labelledby="use">
+  <h2 id="use">Use it</h2>
+  <pre class="cmd">av-world tag run                                   # build or refresh the DAG (cached)
+av-world tag explain                               # which stages are fresh
+av-world tag query "cut_in &amp; hidden_ahead" --overlap
+av-world tag similar av2:0d5d8930-2bc9-4d54-a542-f3d39d090e90
+av-world tag report</pre>
+  <pre class="cmd">from av_world import easy
+easy.tag.query("low_ttc &amp; !sim_gap", source="av2")     # [(scene_id, overlap windows)]
+easy.tag.tags("av2")                                   # the tag table (pandas)</pre>
+  <footer>Code in <code>autotag/</code> (schema, scenes, rules, learned, calibrate, domain, search, labelmodel, counterfactual, active, dag, pipeline). Write-up: <code>docs/AUTOTAG.md</code>. Tests: <code>tests/test_autotag.py</code>.</footer>
+</section>
+</main>
+</body>

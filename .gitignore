@@ -30,3 +30,8 @@ results/nets/mindreader_windows.npz
 results/nets/occlusion_samples.npz
 results/nets/*_preds.npz
 results/nets/quick/
+
+# autotag: content-hashed stage cache and smoke runs
+results/autotag/cache*/
+results/autotag/smoke/
+results/autotag/quick/

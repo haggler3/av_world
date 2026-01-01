@@ -28,7 +28,7 @@ all = ["av_world[dev,easy,torch,perception,notebooks,usd,web]"]
 av-world = "av_world.cli:main"
 
 [tool.setuptools]
-packages = ["av_world", "xworld", "xnet", "pgh", "avrl", "dwm", "avlab", "wmplan", "bev", "nets", "wm2"]
+packages = ["av_world", "xworld", "xnet", "pgh", "avrl", "dwm", "avlab", "wmplan", "bev", "nets", "wm2", "autotag"]
 
 [tool.setuptools.package-data]
 av_world = ["_data/*"]

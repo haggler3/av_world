@@ -506,3 +506,18 @@ class _Nets:
 
 nets = _Nets()
 
+
+class _Tag:
+    """easy.tag: auto-tagging of real and simulated scenes (docs/AUTOTAG.md).
+    run(), explain(), tags(source), query("cut_in & hidden_ahead", source="av2", overlap=False), similar(scene_id), report()."""
+
+    def __getattr__(self, name):
+        from autotag import api
+        return getattr(api, name)
+
+    def __repr__(self):
+        return "easy.tag: run() | explain() | tags(source) | query(q, source, overlap) | similar(scene_id) | report()   (docs/AUTOTAG.md)"
+
+
+tag = _Tag()
+

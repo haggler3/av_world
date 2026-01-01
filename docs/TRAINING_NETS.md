@@ -131,6 +131,14 @@ knobs = post.sample(stats, n=500)  # for your own statistics (nets.sbi.summary c
 
 Train any of them the same way: `av-world nets train crn --quick`.
 
+## The auto-tagger
+
+| feature | question | quick / full | use |
+|---|---|---|---|
+| `autotag` | which real and simulated scenes contain a cut-in, a hidden road user, a tailgater, or are out of the simulator's reach? | 3 / 25 min | `av-world tag run`, then `av-world tag query "cut_in & hidden_ahead" --overlap` or `easy.tag.query(...)` |
+
+It is a cached DAG, so reruns only rebuild stale stages. The design, ten methods and results are in [AUTOTAG.md](AUTOTAG.md).
+
 ## Making it fast
 
 * **Use every core.** The network modules set `XLA_FLAGS=--xla_force_host_platform_device_count=4`, so the 4 CPU cores become 4 devices and

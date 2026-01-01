@@ -81,6 +81,10 @@ FEATURES = [
             "no measurable gain (h = 5: -0.003; h = 10: +0.15 [-0.31, 0.82])",
             (1, 3), ("results/extras/terminal_value.json",), "docs/WORLD_MODEL_UPGRADES.md#8-a-terminal-value-for-a-short-planner",
             (), "nets.registry:_run_terminal_value", "wmplan.terminal_value.cem_h(model, norm, value, o0, key, h=5, use_v=True)"),
+    Feature("autotag", "system", "Scene auto-tagger", "Which scenes contain cut-ins, distracted drivers, hidden road users, risky moments?",
+            "17 tags on real Argoverse 2 and simulated scenes; learned tags calibrated to a precision target; see docs/AUTOTAG.md",
+            (3, 25), ("results/autotag/eval.json", "results/autotag/tags_av2.parquet"), "docs/AUTOTAG.md#the-ten-methods",
+            ("city", "av2"), "nets.registry:_run_autotag", 'easy.tag.query("cut_in & hidden_ahead", source="av2")'),
 ]
 BY_NAME = {f.name: f for f in FEATURES}
 
@@ -177,3 +181,16 @@ def _run_sigreg(quick=False, out_dir=FULL_OUT):
 def _run_terminal_value(quick=False, out_dir=FULL_OUT):
     from wmplan import terminal_value as m
     m.main(64 if quick else 256, os.path.join(out_dir, "extras") if quick else "results/extras")
+
+
+def _run_autotag(quick=False, out_dir=FULL_OUT):
+    from autotag import dag, pipeline as PL
+    if quick:
+        dag.CACHE, PL.OUT = os.path.join(out_dir, "autotag", "cache"), os.path.join(out_dir, "autotag")
+        dag.STAGES["sim_scenes"].config = {"minutes": 2, "n_envs": 8, "seed": 0}
+        dag.STAGES["av2_scenes"].config = {"limit": 40}
+        dag.STAGES["learned_model"].config = {"steps": 500}
+        dag.STAGES["active"].config = {"tag": "distracted", "rounds": 3, "batch": 50}
+    dag.run("qa")
+    return dag.run("store")
+
