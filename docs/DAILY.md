@@ -5,11 +5,75 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 
 ## What to try next (running list)
 
-1. **Check which random stream the L4 leaderboard used.** The CPU run here used JAX's default generator; the repo's scripts set `JAX_DEFAULT_PRNG_IMPL=unsafe_rbg`, whose numbers differ between backends. Re-score the rule-based AV on the same CPU with `unsafe_rbg` and compare with the stored GPU row: if the gaps are the size seen below (~15 points), the drift is the stream.
-2. **Seeds with intervals on every leaderboard row** (FIXES.md #14's fix): `avlab.twins.bench` with `restream=1..N` already produces the scores; 8 streams x 11 scenarios x 2 rows is ~45 min on 4 cores (over a daily budget, so split over days).
-3. **Why does one kick in sixteen grow?** The 3 m/s kick that decorrelated one twin: find the first vehicle whose position diverges and the event (a gap acceptance? a signal phase? a pedestrian?) that amplified it. A black-box style trace on the pair.
-4. Settle H4's curve shape and H3's wet-road threshold (both need GPU-sized data).
-5. Add a speed-limit knob outside `xnet/` (a post-hoc scale on `link_v` in the net dict) and test the power model of crash rate against speed.
+1. **Check which random stream the L4 leaderboard used** (carried over). Re-score the rule-based AV on CPU with `unsafe_rbg` and compare with the stored GPU row.
+2. **Seeds with intervals on every leaderboard row** (carried over): `avlab.twins.bench` with `restream=1..N`, ~45 min, split over days.
+3. **Is the junction-box handoff the cause of the twin divergence in general?** `avlab.twintrace` explained one twin (seed 9). Run it on the other kicks (and a 1 m/s kick to every car) and count, per divergence, whether the first other car is displaced from a junction box.
+4. Settle H4's curve shape and H3's wet-road threshold (GPU-sized data).
+5. **Speed limit x AV share and x demand** (child of 2026-11-04 idea 1): does an AV-heavy city pay less for a higher limit? Also weight crashes by speed at impact to compare with Nilsson's fatal exponent 4.
+6. **Pedestrian crashes carry the speed effect (38 of 57 at x1.3).** Rerun the sweep with pedestrian crossings' yield behaviour varied, or at crossings only.
+
+---
+
+## 2026-11-04 - A power law for speed limits, and anatomy of a diverging twin
+
+**Ideas kept** (from 14 candidates; [search](../results/daily/2026-11-04/search.json)): (1) scale every speed limit of Oakland and fit the crash
+rate's power of the limit (next step 5 of yesterday); (2) trace the one twin that diverged after a 3 m/s kick, to find how the
+disturbance spreads (next step 3). Prior art: Nilsson's power model puts the exponent at 2 for injury crashes, 3 for serious
+and 4 for fatal ones, and later work (Elvik 2009, 2013) finds lower, speed-dependent exponents
+([Elvik, TOI](https://toi.brage.unit.no/toi-xmlui/bitstream/11250/2602719/2/Elvik_10.1016_j.aap.2012.07.012.pdf),
+[ITF](https://www.itf-oecd.org/sites/default/files/docs/speed-changes-crash-risk.pdf); I did not retrieve the exact 2009 values).
+Perturbation growth in car-following models is classic traffic physics (e.g. [chaos in traffic flow models](https://arxiv.org/pdf/chao-dyn/9812006)).
+
+### Pseudocode (what the code does)
+
+```
+1. avlab/speedlimit.py   for scale in 0.7 0.85 1.0 1.15 1.3:
+                           net["link_v"] *= scale                 # a copy of the net dict; xnet/ is untouched
+                           32 copies of Oakland, calibrated humans, warm 120 s, count 600 s -> crashes, vehicle-hours, vehicle-km
+                         quasi-Poisson regression (offset log vehicle-hours) of crashes on log(scale), per copy
+2. avlab/twintrace.py    copy 9 of the 16-copy twin experiment; warm 120 s; kick the fastest car of the twin by +3 m/s
+                         run both for 600 s in 1 s steps, recording alive / track / arc position / speed per slot
+                         displaced = alive in both and (|ds| > 1 m or another track); first[v] = first second displaced
+                         parent(v) = nearest already-displaced vehicle on v's track within 30 m, else none
+                         doubling time = 1 / slope of log2(#displaced) over the stretch where it goes from 4 to half its maximum
+```
+
+### Predictions, written before the full runs
+
+* P1 (speed limits): the crash rate rises with the limit with elasticity b >= 2 (lower 95 % bound above 0), although mean speed rises less than the limit because the city is congested. (Quick probe: mean speed 18.6 -> 22.8 km/h for x0.7 -> x1.3.)
+* P2 (twin): the kick spreads first through car following: the first other vehicle displaced is on the kicked car's track. (The doubling time came from the first full run, so it is not a prediction.)
+
+### Results
+
+| limit | crashes | vehicle-h | crashes per 1000 vehicle-h | mean speed (km/h) | trips finished |
+|---|---|---|---|---|---|
+| x0.70 | 4 | 2646 | 1.5 | 14.1 | 13,124 |
+| x0.85 | 10 | 2545 | 3.9 | 15.1 | 14,143 |
+| x1.00 | 14 | 2489 | 5.6 | 15.7 | 14,626 |
+| x1.15 | 31 | 2452 | 12.6 | 16.0 | 14,931 |
+| x1.30 | 57 | 2425 | 23.5 | 16.3 | 15,226 |
+
+![speed limits](img/speedlimit.png)
+
+**P1 held.** Crash rate against the limit: elasticity **b = 4.5** (SE 0.6; 95 % interval 3.4 to 5.7, dispersion 1.0), well above 2
+and consistent with 4. A 30 % higher limit raises mean speed by 4 % (15.7 to 16.3 km/h) and finished trips by 4 %, but crashes per
+vehicle-hour by 4.2x. Pedestrian crashes carry most of it: 5 at x1.0 and 38 at x1.3 (of 14 and 57 crashes in total). Caveats:
+the counts are small (116 crashes in all), one network (Oakland), crashes are all severities (Nilsson's 2 to 4 are for injury classes),
+and the fit against measured mean speed (b = 10.3, SE 1.9) is not comparable because mean speed barely moves in a congested city.
+`results/speedlimit/speedlimit.json`.
+
+![twin trace](img/twintrace.png)
+
+![twin trace GIF](img/twintrace.gif)
+
+**P2 failed.** After the kick the first other vehicle is displaced at 32 s, *not* on the kicked car's track: the kicked car was in a
+junction box, and the displaced car was on another track (1.6 m and 1.7 m/s off; the code does not say which rule fired, so "a conflict or gap-acceptance effect" is a reading, not a measurement). The second, at 51 s, is
+off by 140 m, which is a different decision (a turn or a gap), not a slow drift; 3 cars are displaced at 60 s, 59 at 300 s, 514 of 656
+at 600 s, a doubling time of **54 s**. Of 571 displaced vehicles, 126 had a displaced vehicle within 30 m on their own track, 445 did not:
+the spread is mostly through junctions and discrete decisions, not through queues. One twin, one kick: this explains one divergence,
+not all. `results/twintrace/trace.json`.
+
+**Tests**: `tests/test_daily_1104.py` (Poisson fit recovers a known elasticity, displacement and parent logic on toy data).
 
 ---
 
