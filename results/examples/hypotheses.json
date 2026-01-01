@@ -1,0 +1,375 @@
+{
+ "hypotheses": [
+  {
+   "id": "H1",
+   "claim": "Crash rate is proportional to how often humans make mistakes (elasticity 1)",
+   "prediction": "b = 1 in log(crash rate) = a + b log(mistake multiplier)",
+   "test": "Poisson regression over 1x-30x, Wald test of b = 1",
+   "effect": "b = 0.16 [0.01, 0.30]",
+   "estimate": 0.15536199542508158,
+   "ci": [
+    0.010815089445278592,
+    0.2999089014048846
+   ],
+   "p": 2.2779278051879185e-30,
+   "refutes_if": "p small and b != 1",
+   "per": {
+    "1": {
+     "crashes": 28.0,
+     "vehicle_hours": 3757.6506510416666,
+     "per_1000_vh": 7.451464385662903,
+     "red_light_crashes": 1.0,
+     "by_type": {
+      "rear-end": 7.0,
+      "angle": 0.0,
+      "left-turn": 8.0,
+      "sideswipe": 0.0,
+      "merge": 5.0,
+      "pedestrian": 8.0,
+      "bicycle": 0.0
+     }
+    },
+    "3": {
+     "crashes": 24.0,
+     "vehicle_hours": 3753.2171527777773,
+     "per_1000_vh": 6.394514098987708,
+     "red_light_crashes": 1.0,
+     "by_type": {
+      "rear-end": 3.0,
+      "angle": 0.0,
+      "left-turn": 10.0,
+      "sideswipe": 0.0,
+      "merge": 2.0,
+      "pedestrian": 8.0,
+      "bicycle": 1.0
+     }
+    },
+    "10": {
+     "crashes": 31.0,
+     "vehicle_hours": 3729.341193576389,
+     "per_1000_vh": 8.312460134620027,
+     "red_light_crashes": 3.0,
+     "by_type": {
+      "rear-end": 7.0,
+      "angle": 0.0,
+      "left-turn": 7.0,
+      "sideswipe": 0.0,
+      "merge": 2.0,
+      "pedestrian": 13.0,
+      "bicycle": 2.0
+     }
+    },
+    "30": {
+     "crashes": 44.0,
+     "vehicle_hours": 3736.588793402778,
+     "per_1000_vh": 11.775446117508363,
+     "red_light_crashes": 11.0,
+     "by_type": {
+      "rear-end": 12.0,
+      "angle": 1.0,
+      "left-turn": 10.0,
+      "sideswipe": 1.0,
+      "merge": 6.0,
+      "pedestrian": 14.0,
+      "bicycle": 0.0
+     }
+    }
+   },
+   "phi": 1.095377000214631,
+   "impact_pct": 84.46380045749184,
+   "p_holm": 2.5057205857067104e-29,
+   "verdict": "REFUTED",
+   "magnitude": 1.0,
+   "evidence": 1.0,
+   "reach": 1.0,
+   "impact_score_pct": 100.0,
+   "effort_days": 3,
+   "impact_per_day": 33.333333333333336,
+   "follow_up": "attribute crashes to mechanisms (Shapley over the Behaviour knobs): which mistakes actually make crashes?"
+  },
+  {
+   "id": "H2",
+   "claim": "Denser traffic is more dangerous per vehicle-hour",
+   "prediction": "b > 0 in log(crash rate) = a + b log(demand), demand 0.5x-2x",
+   "test": "Poisson regression, one-sided Wald test",
+   "effect": "b = -0.39 [-0.79, 0.01] per vehicle-hour; per vehicle-km b = 0.07 [-0.34, 0.47]",
+   "estimate": -0.3923598888876283,
+   "ci": [
+    -0.791945979282981,
+    0.007226201507724461
+   ],
+   "p": 0.9728552559425253,
+   "refutes_if": "b <= 0 inside the interval",
+   "per": {
+    "0.5": {
+     "crashes": 14.0,
+     "vehicle_hours": 1818.8671571180557,
+     "per_1000_vh": 7.69709868321698,
+     "speed_kmh": 19.59817658048023,
+     "per_1000_vkm": 0.3930065508893463
+    },
+    "1.0": {
+     "crashes": 28.0,
+     "vehicle_hours": 3757.6506510416666,
+     "per_1000_vh": 7.451464385662903,
+     "speed_kmh": 15.669016912282332,
+     "per_1000_vkm": 0.476042483042777
+    },
+    "1.5": {
+     "crashes": 34.0,
+     "vehicle_hours": 5715.22453125,
+     "per_1000_vh": 5.949022617413024,
+     "speed_kmh": 12.715163751676366,
+     "per_1000_vkm": 0.4682987300945342
+    },
+    "2.0": {
+     "crashes": 36.0,
+     "vehicle_hours": 7668.289557291666,
+     "per_1000_vh": 4.6946584021163,
+     "speed_kmh": 10.57601465549268,
+     "per_1000_vkm": 0.4442814987198322
+    }
+   },
+   "phi": 0.9340546834170216,
+   "per_km": [
+    0.0650171318255234,
+    -0.34129051650550923,
+    0.4713247801565561
+   ],
+   "impact_pct": 23.811766463269947,
+   "p_holm": 1.0,
+   "verdict": "REFUTED",
+   "magnitude": 0.47623532926539897,
+   "evidence": 1.0,
+   "reach": 0.8,
+   "impact_score_pct": 38.09882634123192,
+   "effort_days": 2,
+   "impact_per_day": 19.04941317061596,
+   "follow_up": "exposure matters: report every crash rate per hour, per km and per junction entry, and show where they disagree"
+  },
+  {
+   "id": "H3",
+   "claim": "Wet roads (friction 0.6) raise the crash rate by at least 50 %",
+   "prediction": "rate ratio wet/dry >= 1.5",
+   "test": "exact conditional rate ratio; one-sided test of RR >= 1.5",
+   "effect": "RR = 1.44 [0.87, 2.42]; icy (0.3): 24.56 [16.85, 37.24]",
+   "estimate": 1.438370976361908,
+   "ci": [
+    0.8655568706945701,
+    2.420921750251447
+   ],
+   "p": 0.4781966141217463,
+   "refutes_if": "RR < 1.5 at the corrected level",
+   "mde": 1.9943497965242718,
+   "icy": [
+    24.562071712343542,
+    [
+     16.845196568999693,
+     37.23624981814082
+    ],
+    7.951644848499024e-167
+   ],
+   "impact_pct": 43.83709763619079,
+   "p_holm": 1.0,
+   "verdict": "UNDECIDED",
+   "magnitude": 0.8767419527238158,
+   "evidence": 0.5,
+   "reach": 0.6,
+   "impact_score_pct": 26.302258581714472,
+   "effort_days": 2,
+   "impact_per_day": 13.151129290857236,
+   "follow_up": "a friction dose-response (1.0 .. 0.3) with 4x the copies: where does the cliff between wet and icy start?"
+  },
+  {
+   "id": "H4",
+   "claim": "Crashes fall in a straight line as the AV share grows",
+   "prediction": "no curvature: the quadratic term adds nothing (log-linear model fits)",
+   "test": "LRT of a quadratic term in a Poisson regression on 0-100 % AVs",
+   "effect": "LRT chi2 = 0.89; 100 % vs 0 % AVs RR = 0.46 [0.21, 0.95]",
+   "estimate": 0.894648469915172,
+   "ci": [
+    0.21256655397290483,
+    0.9493449477233258
+   ],
+   "p": 0.3442207176543235,
+   "refutes_if": "the quadratic term is significant",
+   "rr_full": 0.4624262853131997,
+   "impact_pct": 53.75737146868003,
+   "p_holm": 1.0,
+   "verdict": "UNDECIDED",
+   "magnitude": 1.0,
+   "evidence": 0.5,
+   "reach": 0.9,
+   "impact_score_pct": 45.0,
+   "effort_days": 2,
+   "impact_per_day": 22.5,
+   "follow_up": "the AV-share curve with 9 shares and 3x the copies: is there a threshold (convexity) or diminishing returns?"
+  },
+  {
+   "id": "H5",
+   "claim": "Doing well on everyday traffic and on long-tail incidents is the same skill",
+   "prediction": "Spearman rho >= 0.8 between core and long-tail scores (15 drivers)",
+   "test": "Spearman, permutation p, bootstrap CI; refuted if CI excludes 0.8",
+   "effect": "rho = 0.96 [0.82, 1.00]",
+   "estimate": 0.9607142857142855,
+   "ci": [
+    0.8212275211026384,
+    0.9964928057553943
+   ],
+   "p": 4.999750012499375e-05,
+   "threshold": 0.8,
+   "impact_pct": 92.29719387755098,
+   "p_holm": 0.0004999750012499375,
+   "verdict": "SURVIVES",
+   "magnitude": 1.0,
+   "evidence": 1.0,
+   "reach": 0.8,
+   "impact_score_pct": 80.0,
+   "effort_days": 3,
+   "impact_per_day": 26.666666666666668,
+   "follow_up": "a 3-scenario 'core' subset that predicts the full 18-scenario score: a cheaper benchmark"
+  },
+  {
+   "id": "H6",
+   "claim": "A driver that passes more absolute safety checks gets a higher overall score",
+   "prediction": "rho > 0 and the top scorer passes the most checks",
+   "test": "Spearman over 15 drivers",
+   "effect": "rho = 0.82 [0.45, 0.96]; the top scorer (rule-based AV, 77.2) passes 104 checks, the most passed is 123",
+   "estimate": 0.8193215256642503,
+   "ci": [
+    0.449835367244184,
+    0.9628306749349136
+   ],
+   "p": 0.00034998250087495624,
+   "impact_pct": 15.44715447154471,
+   "p_holm": 0.002449877506124694,
+   "verdict": "REFUTED",
+   "magnitude": 0.3089430894308942,
+   "evidence": 1.0,
+   "reach": 0.7,
+   "impact_score_pct": 21.626016260162594,
+   "effort_days": 2,
+   "impact_per_day": 10.813008130081297,
+   "follow_up": "a Pareto view of score vs checks: what the rule-based AV does that learned policies do not (comfort, speed)"
+  },
+  {
+   "id": "H7",
+   "claim": "Retraining the same RL recipe reproduces its score within 5 points",
+   "prediction": "|score(retrain) - score(original)| <= 5 per scenario, on average and typically",
+   "test": "3 recipes x 18 scenarios, paired differences",
+   "effect": "mean diff -3.4 [-13.1, +6.2]; per-scenario sd 36.3; core means -7.2, -1.6, -10.2",
+   "estimate": -3.4444340579848585,
+   "ci": [
+    -13.06031309778822,
+    6.1997980179419425
+   ],
+   "p": 0.4774914701895919,
+   "sd": 36.299511961896584,
+   "share_within5": 0.4074074074074074,
+   "impact_pct": 59.25925925925925,
+   "p_holm": 1.0,
+   "verdict": "REFUTED",
+   "magnitude": 1.0,
+   "evidence": 1.0,
+   "reach": 1.0,
+   "impact_score_pct": 100.0,
+   "effort_days": 5,
+   "impact_per_day": 20.0,
+   "follow_up": "seed variance of RL on AVBench: 10 seeds per recipe on a GPU, with confidence intervals on every leaderboard row"
+  },
+  {
+   "id": "H8",
+   "claim": "Policies trained in Oakland transfer to other neighbourhoods unchanged",
+   "prediction": "score(Squirrel Hill, Downtown) - score(Oakland) = 0",
+   "test": "Wilcoxon signed-rank over 15 drivers, bootstrap CI of the mean",
+   "effect": "mean change -18.8 points [-33.6, -5.4]",
+   "estimate": -18.768301808876785,
+   "ci": [
+    -33.62129874785197,
+    -5.425004947131286
+   ],
+   "p": 0.012451171875,
+   "impact_pct": 18.768301808876785,
+   "p_holm": 0.07470703125,
+   "verdict": "UNDECIDED",
+   "magnitude": 0.3753660361775357,
+   "evidence": 0.5,
+   "reach": 0.9,
+   "impact_score_pct": 16.89147162798911,
+   "effort_days": 4,
+   "impact_per_day": 4.222867906997277,
+   "follow_up": "train on a mix of Oakland, Squirrel Hill and Downtown: does the transfer gap close, and at what cost at home?"
+  },
+  {
+   "id": "H9",
+   "claim": "Faster AVs crash more: there is a speed-safety trade-off",
+   "prediction": "rho > 0 between progress and unaided crash rate (driver x scenario)",
+   "test": "Spearman over 165 driver-scenario pairs",
+   "effect": "rho = 0.38 [0.23, 0.50]",
+   "estimate": 0.3770799870355431,
+   "ci": [
+    0.2329322709349751,
+    0.5032464959645002
+   ],
+   "p": 0.0001999600079984003,
+   "impact_pct": 37.70799870355431,
+   "p_holm": 0.0017996400719856027,
+   "verdict": "SURVIVES",
+   "magnitude": 0.7541599740710861,
+   "evidence": 1.0,
+   "reach": 0.7,
+   "impact_score_pct": 52.79119818497603,
+   "effort_days": 3,
+   "impact_per_day": 17.597066061658676,
+   "follow_up": "the speed-safety frontier: a policy family indexed by one speed knob, with the frontier's slope and its kinks"
+  },
+  {
+   "id": "H10",
+   "claim": "How often the safety filter steps in predicts how unsafe the policy is without it",
+   "prediction": "rho > 0.5 between filter share and unaided crash rate",
+   "test": "Spearman over 165 driver-scenario pairs",
+   "effect": "rho = 0.86 [0.81, 0.90]",
+   "estimate": 0.8625334690764138,
+   "ci": [
+    0.8100813107686891,
+    0.8980663597329637
+   ],
+   "p": 0.0001999600079984003,
+   "threshold": 0.5,
+   "impact_pct": 74.39639852769929,
+   "p_holm": 0.0017996400719856027,
+   "verdict": "SURVIVES",
+   "magnitude": 1.0,
+   "evidence": 1.0,
+   "reach": 0.9,
+   "impact_score_pct": 90.0,
+   "effort_days": 3,
+   "impact_per_day": 30.0,
+   "follow_up": "filter dependence as a deployment metric: when does a filtered policy's record overstate its own safety?"
+  },
+  {
+   "id": "H11",
+   "claim": "Fog hurts the detection of pedestrians and cyclists more than of vehicles",
+   "prediction": "relative drop in detection rate (fog 0.7 vs clear) larger for VRUs",
+   "test": "sensor model on 12 AVs' trips, cluster bootstrap over AVs",
+   "effect": "relative drop VRU 38% vs vehicles 35%; difference +3% [-3%, +8%] (2858 VRU object-frames)",
+   "estimate": 0.028248538900618847,
+   "ci": [
+    -0.026600034132061023,
+    0.07794564052680494
+   ],
+   "p": 0.329,
+   "impact_pct": 2.8248538900618847,
+   "p_holm": 1.0,
+   "verdict": "UNDECIDED",
+   "magnitude": 0.056497077801237694,
+   "evidence": 0.5,
+   "reach": 0.5,
+   "impact_score_pct": 1.4124269450309423,
+   "effort_days": 2,
+   "impact_per_day": 0.7062134725154712,
+   "follow_up": "per-class sensor curves under fog, rain and night, with 10x the egos to resolve a few-point difference"
+  }
+ ],
+ "wall_s": 41.89945363998413
+}

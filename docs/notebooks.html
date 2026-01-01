@@ -105,7 +105,7 @@
 <header>
   <div class="wrap">
     <div class="eyebrow">Notebooks · every output produced by the cells</div>
-    <h1>Learn av_world in five short notebooks</h1>
+    <h1>Learn av_world in six short notebooks</h1>
     <p class="lede">Each one runs in a few minutes on a laptop CPU, or in Colab with no setup: the first cell clones the repository if it
       is not already there. They are committed executed, so you can read every number and figure on GitHub before running anything.</p>
   </div>
@@ -163,11 +163,22 @@
       <div class="row"><a class="btn primary" href="https://github.com/haggler3/av_world/blob/main/notebooks/05_avbench_and_metrics.ipynb">Read it, executed</a><a class="btn" href="https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/05_avbench_and_metrics.ipynb">Open in Colab</a></div>
     </div>
   </article>
+  <article class="nb">
+    <a href="https://github.com/haggler3/av_world/blob/main/notebooks/06_easy_mode.ipynb"><img src="img/nb_06.png" alt="Easy mode: a figure from the executed notebook" loading="lazy"></a>
+    <div class="body">
+      <div class="num">Notebook 06 <span class="time">· ~4 min on a laptop CPU</span></div>
+      <h2>Easy mode, and the tools you already use</h2>
+      <p>One line each to simulate, write a driver in metres and seconds, compare it on AVBench, train and save data; then Gymnasium with Stable-Baselines3, PettingZoo, PyTorch and ONNX.</p>
+      <ul><li>av_world.easy: simulate, driver, compare, sweep, train</li><li>run.save to CSV, Parquet, OpenDRIVE</li><li>compat.GymEnv + SB3, then the SB3 model in the whole city</li><li>the JAX policy as PyTorch and ONNX</li></ul>
+      <div class="row"><a class="btn primary" href="https://github.com/haggler3/av_world/blob/main/notebooks/06_easy_mode.ipynb">Read it, executed</a><a class="btn" href="https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/06_easy_mode.ipynb">Open in Colab</a></div>
+    </div>
+  </article>
 </section>
 
 <section class="local">
   <div class="card"><h3>Run them locally</h3><p>From a clone of the repository:</p>
 <pre>pip install -e . jupyter
+pip install gymnasium stable-baselines3   # notebook 06
 pip install pyvista     # for notebook 04
 jupyter lab notebooks/</pre></div>
   <div class="card"><h3>From the command line</h3><p>The same things without a notebook:</p>
