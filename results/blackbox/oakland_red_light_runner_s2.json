@@ -1,0 +1,53 @@
+{
+ "t_s": 108.2,
+ "frame": 90,
+ "types": [
+  "rear-end"
+ ],
+ "vehicles": [
+  {
+   "slot": 59,
+   "kind": "car",
+   "where": "on link 500 (199 m long, 1 m along)",
+   "xy": [
+    3158.1,
+    917.5
+   ],
+   "light_on_approach": "green",
+   "speed_at_impact_kmh": 12.4,
+   "speed_3s_before_kmh": 0.8,
+   "peak_braking_mps2": -0.6,
+   "braked_hard_s_before_impact": null,
+   "contributing": []
+  },
+  {
+   "slot": 94,
+   "kind": "car",
+   "where": "inside junction 217, turning left",
+   "xy": [
+    3156.1,
+    923.3
+   ],
+   "light_on_approach": "red",
+   "speed_at_impact_kmh": 40.3,
+   "speed_3s_before_kmh": 36.4,
+   "peak_braking_mps2": -7.4,
+   "braked_hard_s_before_impact": 2.8,
+   "contributing": [
+    "entered on red"
+   ]
+  }
+ ],
+ "closing_speed_kmh": 27.9,
+ "pedestrians_crossing_nearby_city_wide": 62,
+ "centre_xy": [
+  3157.1,
+  920.4
+ ],
+ "summary": "Rear-end crash: a car (12 km/h) and a car (40 km/h), closing at 28 km/h. Contributing: entered on red.",
+ "area": "oakland",
+ "scenario": "red_light_runner",
+ "copy": 5,
+ "seed": 2,
+ "search_s": 28.6
+}

@@ -1,0 +1,250 @@
+{
+ "names": [
+  "red-light running",
+  "not looking",
+  "distraction",
+  "aggressive drivers",
+  "pedestrians crossing against the light"
+ ],
+ "v_none": 7.017010082155209,
+ "v_all": 12.496873295680595,
+ "phi": {
+  "red-light running": -3.9360979075922518,
+  "not looking": -1.3655134996213016,
+  "distraction": -5.095804037975477,
+  "aggressive drivers": 2.246484416921602,
+  "pedestrians crossing against the light": 13.630794241792815
+ },
+ "se": {
+  "red-light running": 1.9865935695849406,
+  "not looking": 1.9973840848902913,
+  "distraction": 1.9593275417091758,
+  "aggressive drivers": 1.9673602016442788,
+  "pedestrians crossing against the light": 2.0111733125806706
+ },
+ "by_type": {
+  "red-light running": {
+   "rear-end": -0.9565437518148409,
+   "angle": -0.0001585260629103774,
+   "left-turn": 0.5452769518056464,
+   "sideswipe": 0.04653409994304359,
+   "merge": -0.8192167930855132,
+   "pedestrian": -2.7739527103416286,
+   "bicycle": 0.021962821963950663
+  },
+  "not looking": {
+   "rear-end": 0.2908587222968646,
+   "angle": -0.1143677745375031,
+   "left-turn": 0.17125877626048158,
+   "sideswipe": 0.04653409994304359,
+   "merge": -0.13233920213992612,
+   "pedestrian": -1.6510121774572917,
+   "bicycle": 0.02355405601302929
+  },
+  "distraction": {
+   "rear-end": 0.8518710761790322,
+   "angle": -0.1143677745375031,
+   "left-turn": -0.9647210560833194,
+   "sideswipe": -0.06980114991456539,
+   "merge": -1.2668356754674366,
+   "pedestrian": -3.5539122801156355,
+   "bicycle": 0.021962821963950663
+  },
+  "aggressive drivers": {
+   "rear-end": 1.5471647070166443,
+   "angle": 0.4702175110842043,
+   "left-turn": 1.9593373944391503,
+   "sideswipe": 0.04653409994304359,
+   "merge": -0.819168898884767,
+   "pedestrian": -1.2097038072759783,
+   "bicycle": 0.25210341059930313
+  },
+  "pedestrians crossing against the light": {
+   "rear-end": 1.028871661784789,
+   "angle": -0.24132343594628775,
+   "left-turn": -1.71115206642196,
+   "sideswipe": -0.06980114991456539,
+   "merge": -1.1726454797154826,
+   "pedestrian": 16.13128836167975,
+   "bicycle": -0.3344436496734317
+  }
+ },
+ "v_none_by_type": {
+  "rear-end": 1.403402016431042,
+  "angle": 0.0,
+  "left-turn": 0.0,
+  "sideswipe": 0.0,
+  "merge": 4.2102060492931255,
+  "pedestrian": 0.0,
+  "bicycle": 1.403402016431042
+ },
+ "coalitions": {
+  "(none)": {
+   "rate": 7.017010082155209,
+   "crashes": 5.0,
+   "vehicle_hours": 712.55419921875
+  },
+  "red-light running": {
+   "rate": 4.1839541671307305,
+   "crashes": 3.0,
+   "vehicle_hours": 717.0250629340278
+  },
+  "not looking": {
+   "rate": 8.257444862470955,
+   "crashes": 6.0,
+   "vehicle_hours": 726.6170225694444
+  },
+  "distraction": {
+   "rate": 2.844098561680167,
+   "crashes": 2.0,
+   "vehicle_hours": 703.2105099826389
+  },
+  "aggressive drivers": {
+   "rate": 9.997910840815685,
+   "crashes": 7.0,
+   "vehicle_hours": 700.1462717013889
+  },
+  "pedestrians crossing against the light": {
+   "rate": 21.75233632713748,
+   "crashes": 16.0,
+   "vehicle_hours": 735.5531727430556
+  },
+  "red-light running,not looking": {
+   "rate": 2.799081926640527,
+   "crashes": 2.0,
+   "vehicle_hours": 714.5199934895834
+  },
+  "red-light running,distraction": {
+   "rate": 6.96461054969401,
+   "crashes": 5.0,
+   "vehicle_hours": 717.9152322048611
+  },
+  "red-light running,aggressive drivers": {
+   "rate": 4.231779653168127,
+   "crashes": 3.0,
+   "vehicle_hours": 708.9215993923611
+  },
+  "red-light running,pedestrians crossing against the light": {
+   "rate": 25.744087398918467,
+   "crashes": 19.0,
+   "vehicle_hours": 738.0335416666667
+  },
+  "not looking,distraction": {
+   "rate": 4.140031448606079,
+   "crashes": 3.0,
+   "vehicle_hours": 724.6321766493055
+  },
+  "not looking,aggressive drivers": {
+   "rate": 15.421929046007039,
+   "crashes": 11.0,
+   "vehicle_hours": 713.2700434027778
+  },
+  "not looking,pedestrians crossing against the light": {
+   "rate": 26.161649771706795,
+   "crashes": 19.0,
+   "vehicle_hours": 726.2538932291667
+  },
+  "distraction,aggressive drivers": {
+   "rate": 2.8063154777826553,
+   "crashes": 2.0,
+   "vehicle_hours": 712.6782486979166
+  },
+  "distraction,pedestrians crossing against the light": {
+   "rate": 23.234445589975664,
+   "crashes": 17.0,
+   "vehicle_hours": 731.6722894965278
+  },
+  "aggressive drivers,pedestrians crossing against the light": {
+   "rate": 31.272950821706196,
+   "crashes": 23.0,
+   "vehicle_hours": 735.4598589409723
+  },
+  "red-light running,not looking,distraction": {
+   "rate": 4.211277334610193,
+   "crashes": 3.0,
+   "vehicle_hours": 712.3729361979167
+  },
+  "red-light running,not looking,aggressive drivers": {
+   "rate": 13.960229982913077,
+   "crashes": 10.0,
+   "vehicle_hours": 716.3205772569445
+  },
+  "red-light running,not looking,pedestrians crossing against the light": {
+   "rate": 27.02379344729426,
+   "crashes": 20.0,
+   "vehicle_hours": 740.0885460069444
+  },
+  "red-light running,distraction,aggressive drivers": {
+   "rate": 15.211886151528661,
+   "crashes": 11.0,
+   "vehicle_hours": 723.1187434895834
+  },
+  "red-light running,distraction,pedestrians crossing against the light": {
+   "rate": 16.302706926270606,
+   "crashes": 12.0,
+   "vehicle_hours": 736.0740798611112
+  },
+  "red-light running,aggressive drivers,pedestrians crossing against the light": {
+   "rate": 28.780730615597367,
+   "crashes": 21.0,
+   "vehicle_hours": 729.6548611111111
+  },
+  "not looking,distraction,aggressive drivers": {
+   "rate": 12.392206560656826,
+   "crashes": 9.0,
+   "vehicle_hours": 726.26291015625
+  },
+  "not looking,distraction,pedestrians crossing against the light": {
+   "rate": 19.0601612131197,
+   "crashes": 14.0,
+   "vehicle_hours": 734.51634765625
+  },
+  "not looking,aggressive drivers,pedestrians crossing against the light": {
+   "rate": 27.09126119927193,
+   "crashes": 20.0,
+   "vehicle_hours": 738.2454383680556
+  },
+  "distraction,aggressive drivers,pedestrians crossing against the light": {
+   "rate": 27.299101135328915,
+   "crashes": 20.0,
+   "vehicle_hours": 732.6248546006944
+  },
+  "red-light running,not looking,distraction,aggressive drivers": {
+   "rate": 9.925235676038092,
+   "crashes": 7.0,
+   "vehicle_hours": 705.2729253472222
+  },
+  "red-light running,not looking,distraction,pedestrians crossing against the light": {
+   "rate": 19.207216997458122,
+   "crashes": 14.0,
+   "vehicle_hours": 728.8926866319445
+  },
+  "red-light running,not looking,aggressive drivers,pedestrians crossing against the light": {
+   "rate": 25.80734245244842,
+   "crashes": 19.0,
+   "vehicle_hours": 736.2245855034722
+  },
+  "red-light running,distraction,aggressive drivers,pedestrians crossing against the light": {
+   "rate": 23.17915311424021,
+   "crashes": 17.0,
+   "vehicle_hours": 733.4176497395833
+  },
+  "not looking,distraction,aggressive drivers,pedestrians crossing against the light": {
+   "rate": 27.04418740272008,
+   "crashes": 20.0,
+   "vehicle_hours": 739.5304470486111
+  },
+  "red-light running,not looking,distraction,aggressive drivers,pedestrians crossing against the light": {
+   "rate": 12.496873295680595,
+   "crashes": 9.0,
+   "vehicle_hours": 720.1801432291667
+  }
+ },
+ "wall_s": 1628.304836988449,
+ "amplify": 10.0,
+ "settings": {
+  "copies": 24,
+  "warm_s": 120.0,
+  "seconds": 300.0
+ }
+}

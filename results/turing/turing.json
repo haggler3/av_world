@@ -1,0 +1,119 @@
+{
+ "rule-based AV": {
+  "auc": 0.5969426837305435,
+  "ci": [
+   0.5718355034770819,
+   0.6217043076884923
+  ],
+  "n_av": 706,
+  "n_human": 1642,
+  "coef": {
+   "mean speed": -0.269,
+   "speed SD": -0.168,
+   "accel SD": -0.527,
+   "accel p5": -0.043,
+   "accel p95": 0.095,
+   "RMS jerk": 0.216,
+   "share stopped": -0.412,
+   "share braking > 2 m/s2": 0.127
+  },
+  "av_mean": {
+   "mean speed": 5.561,
+   "speed SD": 4.197,
+   "accel SD": 0.95,
+   "accel p5": -1.449,
+   "accel p95": 1.554,
+   "RMS jerk": 2.83,
+   "share stopped": 0.237,
+   "share braking > 2 m/s2": 0.014
+  },
+  "human_mean": {
+   "mean speed": 5.615,
+   "speed SD": 4.395,
+   "accel SD": 0.979,
+   "accel p5": -1.496,
+   "accel p95": 1.565,
+   "RMS jerk": 2.837,
+   "share stopped": 0.25,
+   "share braking > 2 m/s2": 0.016
+  }
+ },
+ "PPO (bundled)": {
+  "auc": 0.8804188103338588,
+  "ci": [
+   0.866510282684772,
+   0.8941686867112866
+  ],
+  "n_av": 702,
+  "n_human": 1648,
+  "coef": {
+   "mean speed": -0.907,
+   "speed SD": -0.433,
+   "accel SD": -1.044,
+   "accel p5": -1.218,
+   "accel p95": 0.791,
+   "RMS jerk": -1.588,
+   "share stopped": -1.267,
+   "share braking > 2 m/s2": 0.683
+  },
+  "av_mean": {
+   "mean speed": 5.622,
+   "speed SD": 4.027,
+   "accel SD": 0.958,
+   "accel p5": -1.638,
+   "accel p95": 1.618,
+   "RMS jerk": 1.935,
+   "share stopped": 0.219,
+   "share braking > 2 m/s2": 0.027
+  },
+  "human_mean": {
+   "mean speed": 5.544,
+   "speed SD": 4.364,
+   "accel SD": 0.976,
+   "accel p5": -1.499,
+   "accel p95": 1.562,
+   "RMS jerk": 2.812,
+   "share stopped": 0.256,
+   "share braking > 2 m/s2": 0.016
+  }
+ },
+ "IDM (T = 1.5 s)": {
+  "auc": 0.8704819277108434,
+  "ci": [
+   0.8539157923011899,
+   0.8862799175867265
+  ],
+  "n_av": 703,
+  "n_human": 1660,
+  "coef": {
+   "mean speed": -0.757,
+   "speed SD": -0.312,
+   "accel SD": -1.292,
+   "accel p5": 0.279,
+   "accel p95": -0.876,
+   "RMS jerk": 1.721,
+   "share stopped": -1.049,
+   "share braking > 2 m/s2": 0.625
+  },
+  "av_mean": {
+   "mean speed": 4.629,
+   "speed SD": 3.484,
+   "accel SD": 0.942,
+   "accel p5": -1.347,
+   "accel p95": 1.388,
+   "RMS jerk": 3.65,
+   "share stopped": 0.225,
+   "share braking > 2 m/s2": 0.021
+  },
+  "human_mean": {
+   "mean speed": 5.426,
+   "speed SD": 4.324,
+   "accel SD": 0.965,
+   "accel p5": -1.476,
+   "accel p95": 1.556,
+   "RMS jerk": 2.787,
+   "share stopped": 0.256,
+   "share braking > 2 m/s2": 0.016
+  }
+ }
+}

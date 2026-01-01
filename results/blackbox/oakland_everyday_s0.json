@@ -1,0 +1,51 @@
+{
+ "t_s": 258.8,
+ "frame": 43,
+ "types": [
+  "merge"
+ ],
+ "vehicles": [
+  {
+   "slot": 229,
+   "kind": "car",
+   "where": "on link 206 (19 m long, 11 m along)",
+   "xy": [
+    2376.8,
+    -86.2
+   ],
+   "light_on_approach": "green",
+   "speed_at_impact_kmh": 41.5,
+   "speed_3s_before_kmh": 45.6,
+   "peak_braking_mps2": -9.0,
+   "braked_hard_s_before_impact": 0.4,
+   "contributing": []
+  },
+  {
+   "slot": 301,
+   "kind": "car",
+   "where": "on link 206 (19 m long, 17 m along)",
+   "xy": [
+    2372.7,
+    -90.2
+   ],
+   "light_on_approach": "green",
+   "speed_at_impact_kmh": 15.0,
+   "speed_3s_before_kmh": 20.0,
+   "peak_braking_mps2": -1.7,
+   "braked_hard_s_before_impact": null,
+   "contributing": []
+  }
+ ],
+ "closing_speed_kmh": 26.5,
+ "pedestrians_crossing_nearby_city_wide": 47,
+ "centre_xy": [
+  2374.8,
+  -88.2
+ ],
+ "summary": "Merge crash: a car (42 km/h) and a car (15 km/h), closing at 26 km/h. No human-factor flag was set: a gap or physics crash.",
+ "area": "oakland",
+ "scenario": null,
+ "copy": 0,
+ "seed": 0,
+ "search_s": 32.8
+}
