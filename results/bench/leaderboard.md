@@ -1,3 +1,5 @@
+> **Reproducibility caveat:** computed on an L4 GPU; on a CPU single-scenario scores move by up to ±75 points and means by up to ~8 (docs/FIXES.md, item 14).
+
 ## Absolute tier: fixed bars, 18 scenarios (11 core + 7 long-tail) x 8 checks
 
 | policy | checks passed (of 144) | core | long-tail | scenarios cleared | most failed |

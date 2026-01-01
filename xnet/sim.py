@@ -473,15 +473,19 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     g_stop = seen(jnp.minimum(stop_gap, park_gap))
     g_stop = jnp.where(ghost, jnp.minimum(g_stop, 12.0), g_stop)
     gap_lead_c = seen(gap_lead_c)
+    # committed to a yellow (decided "go" at onset): hold speed rather than brake toward the limit, or the time the decision
+    # counted on is lost and the AV meets the red short of the line (the dilemma zone; tests/test_xnet_rl full-throttle case)
+    y_commit = on_link & (s_state == 1) & (ydec == 2)
+    v_term = jnp.where(y_commit, jnp.maximum(1.5 * (v0 - st.v), 0.0), jnp.maximum(1.5 * (v0 - st.v), -2.0))
     shield = jnp.minimum(jnp.minimum(jnp.where(g_stop < 1e8, idm(st.v, jnp.maximum(v0, 1.0), g_stop, 0.0, 2.0, 3.0, 0.5, st.s0), 99.0),
                                      jnp.where(gap_lead_c < 1e8, idm(st.v, jnp.maximum(v0, 1.0), gap_lead_c, jnp.maximum(v_lead, 0.0), 2.0, 3.0, 0.6, 2.0), 99.0)),
-                         jnp.maximum(1.5 * (v0 - st.v), -2.0))
+                         v_term)
     # control barrier function: the stop target (line, crosswalk, parked / broken-down / crashed vehicle), the leader
     # (braking like it is braking now), and the speed limit (h_v = v0 - v)
     a_lead = jnp.where(lead_any >= 0, st.acc[jnp.maximum(lead_any, 0)], 0.0)
     b_stop, h_stop = cbf_bound(g_stop, st.v, 0.0, 0.0)
     b_lead, h_lead = cbf_bound(gap_lead_c, st.v, jnp.maximum(v_lead, 0.0), a_lead)
-    barrier = jnp.minimum(jnp.minimum(b_stop, b_lead), CBF["alpha_v"] * (v0 - st.v))
+    barrier = jnp.minimum(jnp.minimum(b_stop, b_lead), jnp.where(y_commit, jnp.maximum(CBF["alpha_v"] * (v0 - st.v), 0.0), CBF["alpha_v"] * (v0 - st.v)))
     filt = barrier if SHIELD == "cbf" else shield
     av_ctl = alive & st.av & ~wreck
     gsc = st.gsc

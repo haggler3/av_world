@@ -119,6 +119,12 @@ def accel_to_command(a):
     return jnp.where(a >= 0, a / 3.0, a / 8.0)
 
 
+def accel_from_command(u0):
+    """The simulator's command u0 in [-1, 1] -> m/s^2 (the inverse of accel_to_command)."""
+    u0 = jnp.clip(u0, -1.0, 1.0)
+    return jnp.where(u0 >= 0, 3.0 * u0, 8.0 * u0)
+
+
 def driver(fn: Callable) -> Callable:
     """Turn fn(car) -> acceleration [m/s^2] (or (acceleration, caution)) into a policy the simulator runs. `caution` > 0 waits for
     bigger gaps at junctions (0 = default). The result is a normal policy f(obs, key) -> (u, aux)."""
@@ -153,6 +159,22 @@ class drivers:  # noqa: N801  (a namespace of ready-made drivers)
                                 jnp.where(car.has_stop, term(car.stop_gap, v), 0.0))
             return a_max * (1 - (v / v0) ** 4 - inter)
         return idm
+
+    @staticmethod
+    def comfortable(T=1.5, s0=2.5, a_max=1.5, b=2.0, margin=1.5, comfort=3.5):
+        """IDM that brakes only as hard as it must. Plain IDM's stop-line term brakes hard when a light changes late, which fails
+        AVBench's comfort check. Here, while the braking the situation needs (car.brake_needed_for_stop / _for_lead, from the
+        simulator) is below `comfort` m/s^2, the car brakes at margin x that need instead of IDM's harder command. Above it, IDM
+        brakes in full: comfort never overrides an emergency."""
+        base = drivers.idm(T, s0, a_max, b)
+
+        @driver
+        def comfortable(car):
+            a_idm = accel_from_command(base(car.obs, None)[0][..., 0])
+            need = jnp.maximum(jnp.where(car.has_stop, car.brake_needed_for_stop, 0.0), jnp.where(car.has_lead, car.brake_needed_for_lead, 0.0))
+            gentle = jnp.maximum(a_idm, -margin * need - 0.2)
+            return jnp.where(need < comfort, gentle, a_idm)
+        return comfortable
 
     @staticmethod
     def cautious():
@@ -220,6 +242,10 @@ class Run:
                 "av_speed_kmh": round(3.6 * d["av_veh_m"] / max(d["av_veh_s"], 1), 1) if av_h else None,
                 "crashes": int(crashes), "crashes_per_1000_vehicle_hours": round(1000 * crashes / max(vh, 1e-9), 2),
                 "crashes_per_1000_vehicle_hours_95ci": [round(lo, 2), round(hi, 2)],
+                # the same crashes over other exposures: they can disagree (congestion lowers the per-hour rate, not the per-km one;
+                # see docs/HYPOTHESES.md, H2), so a comparison should say which one it uses
+                "crashes_per_million_vehicle_km": round(1e9 * crashes / max(d["veh_m"], 1e-9), 2),
+                "crashes_per_million_junction_entries": round(1e6 * crashes / max(d["entered"], 1), 2),
                 "av_crashes": int(d["av_crash"]), "crashes_by_type": {k: int(d[k]) for k in X.CRASH_NAMES if d[k]},
                 "red_light_runs": int(d["red_runs"]), "pedestrian_crossings": int(d["peds"]), **self.settings}
 
@@ -308,7 +334,7 @@ def sweep(param, values, city="oakland", minutes=5.0, copies=8, **kw):
     rows = []
     for v in values:
         r = simulate(city, minutes=minutes, copies=copies, **{**kw, param: v}).summary()
-        rows.append({param: v, **{k: r[k] for k in ("vehicle_hours", "crashes", "crashes_per_1000_vehicle_hours", "mean_speed_kmh",
+        rows.append({param: v, **{k: r[k] for k in ("vehicle_hours", "crashes", "crashes_per_1000_vehicle_hours", "crashes_per_million_vehicle_km", "mean_speed_kmh",
                                                      "trips_finished", "av_crashes")}})
     return _frame(rows)
 

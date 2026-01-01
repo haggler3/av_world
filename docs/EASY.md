@@ -34,7 +34,7 @@ easy.export_perception("data/bus", scenario="bus_dartout")      # cameras + 3-D 
 | `simulate(city, minutes, av_share, scenario, driver, copies, **knobs)` | a `Run`: `.summary()`, `.show()`, `.gif()`, `.save()`, `.more()` | ~10 s per copy-minute incl. compile |
 | `world(av_share, scenario, intensity, risk, **knobs)` | the traffic itself (an `xnet.sim.Behaviour`), for advanced use | |
 | `driver(fn)` | `fn(car) -> acceleration` (m/s²) or `(acceleration, caution)` becomes a policy; `car` has 27 named fields (`easy.Car.describe()`) | |
-| `drivers.idm(T)`, `.cautious()`, `.ppo()`, `.load(path)`, `.rule_based` | ready-made drivers | |
+| `drivers.idm(T)`, `.comfortable()`, `.cautious()`, `.ppo()`, `.load(path)`, `.rule_based` | ready-made drivers; `comfortable` is IDM that brakes only as hard as it must (AVBench nominal 93.1 vs IDM's 81.0, passes the comfort check) | |
 | `score(driver, scenarios)` | AVBench scorecard: av_world score, the 8 checks, crash rates with and without the safety filter | ~30-60 s per scenario |
 | `compare({name: driver}, scenarios)` | a table of several drivers plus the leaderboard's references | |
 | `sweep(param, values)` | `simulate` once per value of one setting (a DataFrame) | |

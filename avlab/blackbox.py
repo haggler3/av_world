@@ -78,6 +78,19 @@ def investigate(net, geo, frames, beh=None):
             turn = {0: "straight", 1: "left", 2: "right"}.get(int(net["mov_turn"][mv]), "a turn")
             where, link = f"inside junction {int(net['mov_node'][mv])}, turning {turn}", int(net["mov_in"][mv])
         hard = np.nonzero(a < -3.0)[0]
+        passed = None
+        if trk < 2 * L:  # on a link: the light that mattered is the one it came through, not the one at the far end
+            hist = [j for j in range(max(0, k - 75), k) if frames[j].alive[i] and abs(frames[j].t0[i] - st.t0[i]) < 1e-3 and frames[j].trk[i] >= 2 * L]
+            if hist:
+                last = hist[-1]
+                first = last
+                while first - 1 in hist and frames[first - 1].trk[i] == frames[last].trk[i]:
+                    first -= 1
+                mv = int(frames[last].trk[i]) - 2 * L
+                node = int(net["mov_node"][mv])
+                light = _light(net, int(net["mov_in"][mv]), frames[first].t) if net["node_signal"][node] else "no signal"
+                passed = {"junction": node, "turn": {0: "straight", 1: "left", 2: "right"}.get(int(net["mov_turn"][mv]), "turn"), "light_at_entry": light, "s_before_impact": round((k - first) * X.DT, 1),
+                          "ran_red_there": bool(frames[last].ran_red[i])}
         factors = []
         if prev.ran_red[i]:
             factors.append("entered on red")
@@ -99,6 +112,8 @@ def investigate(net, geo, frames, beh=None):
             "slot": int(i), "kind": "AV" if prev.av[i] else KINDS.get(int(prev.kind[i]), "vehicle"),
             "where": where, "xy": [round(float(x[0]), 1), round(float(y[0]), 1)],
             "light_on_approach": _light(net, link, prev.t) if trk < 2 * L or net["node_signal"][int(net["mov_node"][trk - 2 * L])] else "none",
+            "came_through": passed,
+            "node": int(net["link_end"][trk // 2]) if trk < 2 * L else int(net["mov_node"][trk - 2 * L]),
             "speed_at_impact_kmh": round(3.6 * float(v[-1] if len(v) else 0), 1),
             "speed_3s_before_kmh": round(3.6 * float(v[max(0, len(v) - 16)] if len(v) else 0), 1),
             "peak_braking_mps2": round(float(min(a.min(), 0.0)) if len(a) else 0.0, 1),
@@ -106,8 +121,22 @@ def investigate(net, geo, frames, beh=None):
             "contributing": factors})
     peds = int((st.ped_t > 0).sum())
     if "pedestrian" in types:
+        J = {kk: np.asarray(vv) for kk, vv in net.items()}
         for v in involved:
-            v["contributing"].append("struck a pedestrian on the crosswalk ahead")
+            legs = [g for g in np.nonzero(np.asarray(net["leg_node"]) == v["node"])[0] if prev.ped_t[g] > 0]
+            notes = []
+            for g in legs:  # when did this crossing start, and was WALK shown then?
+                j = k - 1
+                while j > max(0, k - 100) and frames[j - 1].ped_t[g] > 0 and frames[j - 1].ped_t[g] >= frames[j].ped_t[g]:
+                    j -= 1
+                walk = bool(np.asarray(X.leg_walk(J, float(frames[j].t)))[g])
+                notes.append(walk)
+            if notes and not any(notes):
+                v["contributing"].append("struck a pedestrian who started crossing without the WALK signal")
+            elif notes:
+                v["contributing"].append("struck a pedestrian crossing with the WALK signal")
+            else:
+                v["contributing"].append("struck a pedestrian on the crosswalk ahead")
     friction = float(beh.friction) if beh is not None else 1.0
     if friction < 0.9:
         for v in involved:
@@ -129,10 +158,13 @@ def _summary(types, inv, closing=None):
 
 def markdown(rep, title="Incident report"):
     L = [f"# {title}", "", f"**{rep['summary']}**", "", f"Time {rep['t_s']:.1f} s into the run; crash type: {', '.join(rep['types'])}.", "",
-         "| | kind | where | light on approach | speed 3 s before | at impact | peak braking | braked hard | contributing |", "|---|---|---|---|---|---|---|---|---|"]
+         "| | kind | where | light (on approach, or the junction it just came through) | speed 3 s before | at impact | peak braking | braked hard | contributing |", "|---|---|---|---|---|---|---|---|---|"]
     for j, v in enumerate(rep["vehicles"], 1):
         bh = f"{v['braked_hard_s_before_impact']:.1f} s before" if v["braked_hard_s_before_impact"] is not None else "no"
-        L.append(f"| {j} | {v['kind']} | {v['where']} | {v['light_on_approach']} | {v['speed_3s_before_kmh']:.0f} km/h | {v['speed_at_impact_kmh']:.0f} km/h | "
+        came = v.get("came_through")
+        light = (f"came through junction {came['junction']} ({came['turn']}) on {came['light_at_entry']} {came['s_before_impact']:.1f} s before"
+                 if came else v["light_on_approach"])
+        L.append(f"| {j} | {v['kind']} | {v['where']} | {light} | {v['speed_3s_before_kmh']:.0f} km/h | {v['speed_at_impact_kmh']:.0f} km/h | "
                  f"{v['peak_braking_mps2']:.1f} m/s² | {bh} | {'; '.join(v['contributing']) or '-'} |")
     return "\n".join(L) + "\n"
 

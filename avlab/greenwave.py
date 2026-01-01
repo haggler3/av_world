@@ -56,7 +56,9 @@ def score(m0, m1):
     return 3.6 * c["veh_m"] / np.maximum(c["veh_s"], 1), c["finished"], sum(c[k] for k in X.CRASH_NAMES), c["veh_s"] / 3600
 
 
-def optimise(area="oakland", gens=12, pop=24, elite=6, copies=4, warm_s=120.0, eval_s=240.0, seed=0, demand=1.2):
+def optimise(area="oakland", gens=12, pop=24, elite=6, copies=4, warm_s=120.0, eval_s=240.0, seed=0, demand=1.2, splits=True):
+    """splits=False: search the offsets only. Every green, yellow and red then lasts exactly as long as today; only the lights'
+    coordination changes, so the search cannot buy speed with shorter clearance for one axis."""
     from av_world import easy
     from examples import _common as C
     net, geo, info = easy._build(area)
@@ -71,7 +73,7 @@ def optimise(area="oakland", gens=12, pop=24, elite=6, copies=4, warm_s=120.0, e
     for _ in range(int(warm_s / 60)):
         st0 = chunk(st0, base_o, base_g)
     mu = np.r_[off0[sig], g00[sig]].astype(float)
-    sd = np.r_[np.full(len(sig), cyc / 4), np.full(len(sig), 6.0)]
+    sd = np.r_[np.full(len(sig), cyc / 4), np.full(len(sig), 6.0 if splits else 0.0)]
     lo, hi = np.r_[np.full(len(sig), -1e9), np.full(len(sig), 15.0)], np.r_[np.full(len(sig), 1e9), np.full(len(sig), cyc - 20.0)]
     rng = np.random.default_rng(seed)
     hist, best = [], (-np.inf, mu.copy())
@@ -102,7 +104,7 @@ def optimise(area="oakland", gens=12, pop=24, elite=6, copies=4, warm_s=120.0, e
         order = np.argsort(-sp)
         el = cands[order[:elite]]
         mu = 0.7 * el.mean(0) + 0.3 * mu
-        sd = np.maximum(0.7 * el.std(0) + 0.3 * sd, np.r_[np.full(len(sig), 1.0), np.full(len(sig), 0.5)])
+        sd = np.maximum(0.7 * el.std(0) + 0.3 * sd, np.r_[np.full(len(sig), 1.0), np.full(len(sig), 0.5 if splits else 0.0)])
         if sp[order[0]] > best[0]:
             best = (float(sp[order[0]]), cands[order[0]].copy())
         hist.append({"gen": g, "best_kmh": float(sp[order[0]]), "mean_kmh": float(sp.mean()), "today_kmh": base_speed, "wall_s": round(time.time() - t0)})
@@ -162,7 +164,7 @@ def plot(opt, val, out):
     a0.set_xlabel("generation", color=INK2)
     a0.set_ylabel("network mean speed, km/h (training traffic)", color=INK2, fontsize=9)
     a0.legend(facecolor=BG, edgecolor="#30363d", labelcolor=INK, fontsize=8)
-    a0.set_title("Cross-entropy search over 34 offsets and 34 splits", color=INK, fontsize=10, loc="left")
+    a0.set_title(opt.get("title", "Cross-entropy search over 34 offsets and 34 splits"), color=INK, fontsize=10, loc="left")
     d = np.asarray(val.get("per_copy_speed_gain_kmh", []))
     lo, hi = val["speed_gain_ci_kmh"]
     a1.axhline(0, color=INK2, lw=1)
@@ -182,29 +184,34 @@ def plot(opt, val, out):
     plt.close(fig)
 
 
-def main(quick=False):
+def main(quick=False, splits=True, copies=64):
     os.makedirs(OUT, exist_ok=True)
     kw = dict(gens=2, pop=4, elite=2, copies=1, warm_s=60.0, eval_s=60.0) if quick else {}
     t0 = time.time()
-    opt = optimise(**kw)
-    val = validate(opt, **(dict(copies=2, warm_s=60.0, seconds=60.0) if quick else {}))
+    opt = optimise(splits=splits, **kw)
+    val = validate(opt, **(dict(copies=2, warm_s=60.0, seconds=60.0) if quick else dict(copies=copies)))
     O, G = opt["timings"](opt["best"][1][None])
-    res = {"history": opt["history"], "validation": val, "signals": opt["sig"].tolist(), "offsets": O[0][opt["sig"]].round(2).tolist(),
-           "splits": G[0][opt["sig"]].round(2).tolist(), "wall_s": time.time() - t0}
-    json.dump(res, open(f"{OUT}/{'quick' if quick else 'greenwave'}.json", "w"), indent=1, default=float)
+    name = "quick" if quick else ("greenwave" if splits else "greenwave_offsets")
+    res = {"history": opt["history"], "validation": val, "signals": opt["sig"].tolist(), "offsets": O[0][opt["sig"]].tolist(),
+           "splits": G[0][opt["sig"]].tolist(), "search": "offsets and splits" if splits else "offsets only", "wall_s": time.time() - t0}
+    json.dump(res, open(f"{OUT}/{name}.json", "w"), indent=1, default=float)
     if not quick:
-        plot(opt, val, "docs/img/greenwave.png")
-    print(json.dumps(val, indent=1, default=float))
+        opt["title"] = "Cross-entropy search over 34 offsets" + (" and 34 splits" if splits else " (splits unchanged)")
+        plot(opt, val, f"docs/img/{name}.png")
+    print(json.dumps({k: v for k, v in val.items() if k != "per_copy_speed_gain_kmh"}, indent=1, default=float))
     return res
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
+    ap.add_argument("--offsets-only", action="store_true", help="keep every split as today; search the offsets (coordination) only")
+    ap.add_argument("--copies", type=int, default=64, help="new copies for the validation")
     ap.add_argument("--revalidate", action="store_true", help="re-run the validation of the saved timing and redraw the figure")
     a = ap.parse_args()
+    name = "greenwave_offsets" if a.offsets_only else "greenwave"
     if a.revalidate:
-        res = json.load(open(f"{OUT}/greenwave.json"))
+        res = json.load(open(f"{OUT}/{name}.json"))
         from av_world import easy
         from examples import _common as C
         net, _, _ = easy._build("oakland")
@@ -212,9 +219,10 @@ if __name__ == "__main__":
         sig = np.asarray(res["signals"])
         O, G = np.asarray(net["node_offset"], np.float32).copy(), np.asarray(net["node_g0"], np.float32).copy()
         O[sig], G[sig] = res["offsets"], res["splits"]
-        res["validation"] = validate({"chunk": chunk, "reset": reset, "net": net}, O=O[None], G=G[None])
-        json.dump(res, open(f"{OUT}/greenwave.json", "w"), indent=1, default=float)
-        plot({"history": res["history"]}, res["validation"], "docs/img/greenwave.png")
+        res["validation"] = validate({"chunk": chunk, "reset": reset, "net": net}, copies=a.copies, O=O[None], G=G[None])
+        json.dump(res, open(f"{OUT}/{name}.json", "w"), indent=1, default=float)
+        title = "Cross-entropy search over 34 offsets" + (" (splits unchanged)" if a.offsets_only else " and 34 splits")
+        plot({"history": res["history"], "title": title}, res["validation"], f"docs/img/{name}.png")
         print(json.dumps({k: v for k, v in res["validation"].items() if k != "per_copy_speed_gain_kmh"}, default=float))
     else:
-        main(a.quick)
+        main(a.quick, splits=not a.offsets_only, copies=a.copies)

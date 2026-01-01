@@ -115,7 +115,7 @@ def behaviours(n, seed=0, knobs=None):
     return jax.tree.map(lambda *x: jnp.asarray(x, jnp.float32), *rows)
 
 
-def make_fns(cfg: Config, net, beh, opt, shape=None):
+def make_fns(cfg: Config, net, beh, opt, shape=None, bonus=None):
     """`beh` (here and in warm / update) is a Behaviour [E], or a dict {"beh": Behaviour [E], "net": {key: [E, ...]},
     "nh": [E, L, D]} that gives every copy of the area its own city (xnet.mutate). `shape(obs [T+1, E, N, 28]) -> phi
     [T+1, E, N]` adds potential-based shaping gamma * phi(s') - phi(s) to the reward (the optimal policy is unchanged)."""
@@ -209,6 +209,8 @@ def make_fns(cfg: Config, net, beh, opt, shape=None):
             ok, dn = tr["valid"].astype(jnp.float32), tr["done"].astype(jnp.float32)
             nxt = jnp.concatenate([phi[1:] * ok[1:], jnp.zeros_like(phi[:1])], 0)
             tr = {**tr, "reward": tr["reward"] + (cfg.gamma * nxt * (1.0 - dn) - phi) * ok}
+        if bonus is not None:
+            tr = {**tr, "reward": tr["reward"] + bonus(tr) * tr["valid"].astype(jnp.float32)}
         adv, ret, w = gae(tr)
         T = cfg.n_steps
         flat = lambda x: x[:T].reshape((T * E * cfg.n_slots,) + x.shape[3:])

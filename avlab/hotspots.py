@@ -84,32 +84,79 @@ def site_features(net):
     return np.c_[(np.asarray(net["node_signal"]) > 0).astype(float), np.log1p(nmov)]
 
 
-def eb(y, E, Z=None):
+def site_structure(net):
+    """Richer covariates: how many angle, left-turn and merge conflict points the junction has (log 1 + n), signalised, a stop
+    sign on any approach, and the fastest approach speed. The crash model's conflict points are exactly where its crashes can
+    happen, so this is the site type that matters here (a real agency would use the same counts from its geometry)."""
+    S = int(len(net["node_signal"]))
+    node_of_mov = np.asarray(net["mov_node"])
+    c_node = node_of_mov[np.asarray(net["c_mov"])[:, 0]]
+    ct = np.asarray(net["c_type"])
+    feats = [np.log1p(np.bincount(c_node[ct == k], minlength=S)) for k in (1, 2, 3)]
+    ends = np.asarray(net["link_end"])
+    stop = np.zeros(S)
+    np.maximum.at(stop, ends, np.asarray(net["link_stop"]).astype(float))
+    vmax = np.zeros(S)
+    np.maximum.at(vmax, ends, np.asarray(net["link_v"], float))
+    return np.c_[np.stack(feats, 1), (np.asarray(net["node_signal"]) > 0).astype(float), stop, vmax / 10.0]
+
+
+def nb_alpha_ml(y, mu):
+    """Maximum-likelihood negative-binomial overdispersion for fixed means (1-D search), instead of the method of moments."""
+    from scipy.optimize import minimize_scalar
+    from scipy.special import gammaln
+    ok = mu > 0
+
+    def nll(la):
+        a = np.exp(la)
+        r = 1 / a
+        return -np.sum(gammaln(y[ok] + r) - gammaln(r) - gammaln(y[ok] + 1) + r * np.log(r / (r + mu[ok])) + y[ok] * np.log(mu[ok] / (r + mu[ok])))
+    return float(np.exp(minimize_scalar(nll, bounds=(-8, 4), method="bounded").x))
+
+
+def poisson_ridge(y, D, lam=1.0, iters=100):
+    """Poisson regression with an L2 penalty on every coefficient but the intercept (IRLS / Newton). With site types that never
+    crash in the data the unpenalised fit separates (coefficients run off to +-30); the ridge keeps them finite."""
+    b = np.zeros(D.shape[1])
+    b[0] = np.log(max(y.sum(), 0.5) / len(y))
+    P = lam * np.eye(D.shape[1])
+    P[0, 0] = 0
+    for _ in range(iters):
+        mu = np.exp(np.clip(D @ b, -30, 30))
+        step = np.linalg.solve(D.T @ (D * mu[:, None]) + P, D.T @ (y - mu) - P @ b)
+        b += step
+        if np.abs(step).max() < 1e-9:
+            break
+    return b
+
+
+def eb(y, E, Z=None, ml=False):
     """Empirical Bayes estimates of each site's expected crashes. The SPF is log mu = a + b log E (+ c' Z, site-type covariates,
     as the Highway Safety Manual fits one SPF per site type). -> (EB, mu, alpha, coefficients)."""
     from examples.hypotheses import poisson_glm
     ok = E > 0
     D = np.c_[np.ones(len(E)), np.log(np.maximum(E, 1e-9))] if Z is None else np.c_[np.ones(len(E)), np.log(np.maximum(E, 1e-9)), Z]
     try:
-        b, _, _, _ = poisson_glm(y[ok], D[ok], np.zeros(ok.sum()))
+        b = poisson_ridge(y[ok], D[ok]) if ml else poisson_glm(y[ok], D[ok], np.zeros(ok.sum()))[0]
     except np.linalg.LinAlgError:  # too few crashes to fit the SPF: a common rate per vehicle-hour
         D = np.c_[np.ones(len(E)), np.log(np.maximum(E, 1e-9))]
         b = np.array([np.log(max(y.sum(), 0.5) / max(E.sum(), 1e-9)), 1.0])
     mu = np.where(ok, np.exp(D @ b), 0.0)
-    alpha = max(float(np.sum((y - mu) ** 2 - mu) / max(np.sum(mu ** 2), 1e-12)), 1e-6)
+    alpha = nb_alpha_ml(y, mu) if ml else max(float(np.sum((y - mu) ** 2 - mu) / max(np.sum(mu ** 2), 1e-12)), 1e-6)
     w = 1 / (1 + alpha * mu)
     return w * mu + (1 - w) * y, mu, alpha, tuple(float(x) for x in b)
 
 
-def evaluate(K, T, Z=None, top=10, splits=20, seed=0):
+def evaluate(K, T, Z=None, top=10, splits=200, seed=0, Z2=None):
     """Random halves of the copies: rank on half A, judge on half B. -> per method: share of B's crashes in its top sites, mean
     predicted vs observed B counts for its top sites (scaled by exposure), and a Spearman of predicted vs observed over all sites."""
     from scipy.stats import spearmanr
     rng = np.random.default_rng(seed)
-    methods = ("naive", "rate", "EB") + (("EB + site type",) if Z is not None else ())
+    methods = ("naive", "rate", "EB") + (("EB + site type",) if Z is not None else ()) + (("EB + conflicts (ML)",) if Z2 is not None else ())
     out = {m: {"captured": [], "pred_top": [], "obs_top": [], "spearman": []} for m in methods}
     for _ in range(splits):
         p = rng.permutation(len(K))
+        tie = 1e-9 * rng.random(K.shape[1])  # the same tie-break for every method
         a, b = p[: len(K) // 2], p[len(K) // 2:]
         ya, Ea, yb, Eb = K[a].sum(0), T[a].sum(0), K[b].sum(0), T[b].sum(0)
         scale = np.where(Ea > 0, Eb / np.maximum(Ea, 1e-12), 0)
@@ -120,13 +167,22 @@ def evaluate(K, T, Z=None, top=10, splits=20, seed=0):
         if Z is not None:
             est_z, _, _, _ = eb(ya, Ea, Z)
             preds["EB + site type"] = (est_z * scale, est_z * scale)
+        if Z2 is not None:
+            est_c, _, _, _ = eb(ya, Ea, Z2, ml=True)
+            preds["EB + conflicts (ML)"] = (est_c * scale, est_c * scale)
         for m, (key, pr) in preds.items():
-            order = np.argsort(-key + 1e-9 * rng.random(len(key)))[:top]
+            order = np.argsort(-key + tie)[:top]
             out[m]["captured"].append(yb[order].sum() / max(yb.sum(), 1))
             out[m]["pred_top"].append(pr[order].sum())
             out[m]["obs_top"].append(yb[order].sum())
             out[m]["spearman"].append(spearmanr(pr, yb).statistic)
-    return {m: {k: (float(np.mean(v)), float(np.std(v))) for k, v in d.items()} for m, d in out.items()}
+    res = {m: {k: (float(np.mean(v)), float(np.std(v))) for k, v in d.items()} for m, d in out.items()}
+    for m, d in out.items():  # paired against the crash count, split by split: mean difference and its standard error
+        diff = np.asarray(d["captured"]) - np.asarray(out["naive"]["captured"])
+        res[m]["captured_minus_naive"] = (float(diff.mean()), float(diff.std(ddof=1) / np.sqrt(len(diff))) if len(diff) > 1 else 0.0)
+        bias = (np.asarray(d["pred_top"]) - np.asarray(d["obs_top"])) / np.maximum(np.asarray(d["obs_top"]), 1e-9)
+        res[m]["prediction_bias"] = (float(bias.mean()), float(bias.std(ddof=1) / np.sqrt(len(bias))) if len(bias) > 1 else 0.0)
+    return res
 
 
 def plot(K, T, nets, ev, out, top=10):
@@ -172,12 +228,12 @@ def plot(K, T, nets, ev, out, top=10):
     for i, m in enumerate(ms):
         a1.text(i, max(ev[m]["pred_top"][0], ev[m]["obs_top"][0]) * 1.03, f"holds {100 * ev[m]['captured'][0]:.0f} % of all crashes", ha="center",
                 color=INK, fontsize=8.5)
-    a1.set_xticks(x, [{"naive": "crash count", "rate": "crash rate", "EB": "empirical Bayes", "EB + site type": "EB + site type"}[m] for m in ms],
+    a1.set_xticks(x, [{"naive": "crash count", "rate": "crash rate", "EB": "empirical Bayes", "EB + site type": "EB + site type", "EB + conflicts (ML)": "EB + conflict\npoints (ridge, ML)"}[m] for m in ms],
                   color=INK, fontsize=8.5)
     a1.set_ylabel("crashes at the 10 selected sites, second half", color=INK2, fontsize=9)
     a1.set_ylim(0, max(max(d["pred_top"][0], d["obs_top"][0]) for d in ev.values()) * 1.18)
     a1.legend(facecolor=BG, edgecolor="#30363d", labelcolor=INK, fontsize=8, loc="lower right")
-    a1.set_title("Pick the top 10 on one half of the data, check on the other (20 random splits)", color=INK, fontsize=10, loc="left")
+    a1.set_title("Pick the top 10 on one half of the data, check on the other (200 random splits)", color=INK, fontsize=10, loc="left")
     fig.savefig(out, dpi=105, facecolor=BG)
     plt.close(fig)
 
@@ -194,7 +250,7 @@ def main(quick=False):
 def analyse(K, T, nets, quick=False, t0=None):
     t0 = t0 or time.time()
     Z = site_features(nets[0])
-    ev = evaluate(K, T, Z)
+    ev = evaluate(K, T, Z, Z2=site_structure(nets[0]))
     est, mu, alpha, spf = eb(K.sum(0), T.sum(0), Z)
     res = {"crashes": float(K.sum()), "sites": int(K.shape[1]), "sites_with_crashes": int((K.sum(0) > 0).sum()), "alpha": alpha, "spf": spf,
            "evaluation": ev, "top10": [{"site": int(i), "eb": float(est[i]), "observed": float(K.sum(0)[i]), "vehicle_hours": float(T.sum(0)[i])}
@@ -204,8 +260,9 @@ def analyse(K, T, nets, quick=False, t0=None):
         plot(K, T, nets, ev, "docs/img/hotspots.png")
     print(f"{res['crashes']:.0f} crashes at {res['sites_with_crashes']} of {res['sites']} sites; alpha {alpha:.2f}; SPF {np.round(spf, 2).tolist()}")
     for m, d in ev.items():
-        print(f"  {m:6s} top-10 hold {100 * d['captured'][0]:.1f} % of next-period crashes; predicted {d['pred_top'][0]:.1f} vs observed "
-              f"{d['obs_top'][0]:.1f}; Spearman {d['spearman'][0]:.2f}")
+        cm, bias = d["captured_minus_naive"], d["prediction_bias"]
+        print(f"  {m:20s} top-10 hold {100 * d['captured'][0]:.1f} % ({100 * cm[0]:+.1f} ± {196 * cm[1]:.1f} vs counts); prediction bias "
+              f"{100 * bias[0]:+.1f} ± {196 * bias[1]:.1f} %; Spearman {d['spearman'][0]:.2f}")
     return res
 
 

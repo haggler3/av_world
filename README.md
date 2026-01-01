@@ -19,7 +19,7 @@ honest account of what it can and cannot do.**
 | PPO, full world, 10x envelope penalty | 104 | 49.2 | 25.9 |
 | PPO, 234k steps (no barrier teacher) | 76 | 6.1 | 5.4 |
 
-The learned policies pass more checks, but the rule-based AV keeps the best core score: unaided, they crash 1.3-1.6x as often.
+*Caveat ([FIXES.md](docs/FIXES.md#14-the-leaderboard-does-not-reproduce-across-hardware)): these were computed on a GPU; on a CPU single-scenario scores move by up to ±75 points and core means by up to ~8, so read only the means and the ranking.* The learned policies pass more checks, but the rule-based AV keeps the best core score: unaided, they crash 1.3-1.6x as often.
 Retraining one recipe moves scores by up to 10 points.
 
 **Latent world-model planners**, on the 3 junction-heavy scenarios they were benchmarked on (nominal, red runners, inattentive):
@@ -135,6 +135,7 @@ impact over the effort of a follow-up.
 | | |
 |---|---|
 | [docs/EASY.md](docs/EASY.md) | easy mode for beginners (`av_world.easy`) and compatibility with Gymnasium, PettingZoo, SB3, PyTorch, ONNX, pandas, CARLA, OpenUSD |
+| [docs/FIXES.md](docs/FIXES.md) | the fix round: every open question and weak result from the last rounds, what was changed, and what happened (two fixes failed) |
 | [docs/IDEAS.md](docs/IDEAS.md) | five tools with pseudocode: crash attribution (Shapley), a black box that writes incident reports, an AV Turing test, empirical-Bayes hotspots, a green-wave signal optimiser |
 | [docs/HYPOTHESES.md](docs/HYPOTHESES.md) | eleven plausible claims about driving and AV research, each tested to fail, with the statistics and an impact-per-effort ranking |
 | [docs/BEV.md](docs/BEV.md) | camera BEV perception: a CPU-sized BEVFormer on rendered av_world cities, traced front to back |

@@ -168,14 +168,17 @@ def h_density(sims):
 
 def h_friction(sims):
     """H3. Wet roads (friction 0.6) raise the crash rate by at least 50 %."""
-    a, b = copies(sims, "friction_0.6"), copies(sims, "base")
+    def pooled(g):  # the first batch plus the extra independent batches (_b, _c, _d) where they exist
+        cs = [copies(sims, x) for x in [g] + [f"{g}_{y}" for y in "bcd"] if x in sims["groups"]]
+        return {"k": np.concatenate([c["k"] for c in cs]), "t": np.concatenate([c["t"] for c in cs]), "n": len(cs)}
+    a, b = pooled("friction_0.6"), pooled("base")
     rr, ci, p = rate_ratio(a["k"].sum(), a["t"].sum(), b["k"].sum(), b["t"].sum())
     ice = copies(sims, "friction_0.3")
     rr3, ci3, p3 = rate_ratio(ice["k"].sum(), ice["t"].sum(), b["k"].sum(), b["t"].sum())
     p_claim = float(stats.binomtest(int(a["k"].sum()), int(a["k"].sum() + b["k"].sum()),
                                     1.5 * a["t"].sum() / (1.5 * a["t"].sum() + b["t"].sum()), alternative="less").pvalue)
     return dict(id="H3", claim="Wet roads (friction 0.6) raise the crash rate by at least 50 %",
-                prediction="rate ratio wet/dry >= 1.5", test="exact conditional rate ratio; one-sided test of RR >= 1.5",
+                prediction="rate ratio wet/dry >= 1.5", test=f"{len(a['k'])} + {len(b['k'])} copies; exact conditional rate ratio; one-sided test of RR >= 1.5",
                 effect=f"RR = {rr:.2f} [{ci[0]:.2f}, {ci[1]:.2f}]; icy (0.3): {rr3:.2f} [{ci3[0]:.2f}, {ci3[1]:.2f}]",
                 estimate=rr, ci=ci, p=p_claim, refutes_if="RR < 1.5 at the corrected level", mde=mde_ratio(a["k"].sum(), b["k"].sum()),
                 icy=(rr3, ci3, p3), impact_pct=100 * abs(rr - 1))
@@ -183,16 +186,20 @@ def h_friction(sims):
 
 def h_av_linear():
     """H4. Crashes fall linearly with the AV share (no curvature)."""
-    r = json.load(open("results/examples/av_share.json"))["rows"]
+    import os
+    f = "results/examples/av_share_fine.json" if os.path.exists("results/examples/av_share_fine.json") else "results/examples/av_share.json"
+    r = json.load(open(f))["rows"]
     s = np.array([x["av_share"] for x in r]); k = np.array([x["crashes"] for x in r]); t = np.array([x["vehicle_hours"] for x in r])
-    b1, _, d1, phi = poisson_glm(k, np.c_[np.ones(5), s], np.log(t))
-    b2, cov2, d2, _ = poisson_glm(k, np.c_[np.ones(5), s, s ** 2], np.log(t))
-    stat, p = lrt(d1, d2, 1, 1.0)  # 5 aggregate points: no overdispersion estimate, plain chi2
+    n = len(s)
+    b1, _, d1, _ = poisson_glm(k, np.c_[np.ones(n), s], np.log(t))
+    b2, cov2, d2, phi2 = poisson_glm(k, np.c_[np.ones(n), s, s ** 2], np.log(t))
+    stat, p = lrt(d1, d2, 1, phi2 if n > 5 else 1.0)  # with 9 shares the quadratic model's residuals estimate the dispersion
     rr, ci, _ = rate_ratio(k[-1], t[-1], k[0], t[0])
     return dict(id="H4", claim="Crashes fall in a straight line as the AV share grows",
-                prediction="no curvature: the quadratic term adds nothing (log-linear model fits)", test="LRT of a quadratic term in a Poisson regression on 0-100 % AVs",
+                prediction="no curvature: the quadratic term adds nothing (log-linear model fits)", test=f"LRT of a quadratic term in a Poisson regression on {n} AV shares, 0-100 %",
                 effect=f"LRT chi2 = {stat:.2f}; 100 % vs 0 % AVs RR = {rr:.2f} [{ci[0]:.2f}, {ci[1]:.2f}]", estimate=stat, ci=ci, p=p,
-                refutes_if="the quadratic term is significant", rr_full=rr, impact_pct=100 * (1 - rr))
+                refutes_if="the quadratic term is significant", rr_full=rr, impact_pct=100 * (1 - rr), curvature=float(b2[2]),
+                curvature_ci=(float(b2[2] - Z975 * math.sqrt(cov2[2, 2])), float(b2[2] + Z975 * math.sqrt(cov2[2, 2]))), shares=n)
 
 
 def leaderboard():
@@ -273,23 +280,38 @@ def h_filter_hides(lb, full):
                 effect=f"rho = {rho:.2f} [{ci[0]:.2f}, {ci[1]:.2f}]", estimate=rho, ci=ci, p=p, threshold=0.5, impact_pct=100 * rho ** 2)
 
 
-def h_fog():
-    """H11. Fog hurts the detection of pedestrians and cyclists more (relatively) than of vehicles."""
+def fog_rows(seeds=(11, 12, 13, 14, 15), per_run=12, cache="results/examples/hypotheses_fog.json"):
+    """(ego, fog, detected VRU, VRU object-frames, detected vehicles, vehicle object-frames) per ego and fog level, over several
+    independent runs (5 x 12 = 60 egos, 5x the first version's 12, which left H11 undecided). Cached: the sensor model is slow."""
+    import os
+    key = {"seeds": list(seeds), "per_run": per_run}
+    if os.path.exists(cache):
+        c = json.load(open(cache))
+        if c.get("key") == key:
+            return np.array(c["rows"], float)
     from xnet import carla_export as CE
     from xnet import network as NW
     from xnet import perception as PC
     net, geo, info = NW.build("oakland")
-    sim = X.Sim(net, n_envs=1, beh=C.calibrated(p_av=0.3, ped_scale=2.0, p_bike=0.08), seed=11)
-    sim.run(90.0)
-    scene = CE.trajectories(net, geo, sim.run(90.0, record=(0, 1)))
-    egos = [v["id"] for v in scene["vehicles"] if v["av"] and len(v["x"]) >= 200][:12]
     rows = []
-    for e in egos:
-        for fog in (0.0, 0.7):
-            d = PC.detect(scene, e, PC.Sensor(fog=fog), seed=e)
-            vru = d["vru"].astype(bool)
-            rows.append((e, fog, d["detected"][vru].sum(), vru.sum(), d["detected"][~vru].sum(), (~vru).sum()))
-    R = np.array(rows, float)
+    for sd in seeds:
+        sim = X.Sim(net, n_envs=1, beh=C.calibrated(p_av=0.3, ped_scale=2.0, p_bike=0.08), seed=sd)
+        sim.run(90.0)
+        scene = CE.trajectories(net, geo, sim.run(90.0, record=(0, 1)))
+        egos = [v["id"] for v in scene["vehicles"] if v["av"] and len(v["x"]) >= 200][:per_run]
+        for e in egos:
+            for fog in (0.0, 0.7):
+                d = PC.detect(scene, e, PC.Sensor(fog=fog), seed=e)
+                vru = d["vru"].astype(bool)
+                rows.append((1000 * sd + e, fog, d["detected"][vru].sum(), vru.sum(), d["detected"][~vru].sum(), (~vru).sum()))
+    json.dump({"key": key, "rows": np.asarray(rows, float).tolist()}, open(cache, "w"))
+    return np.array(rows, float)
+
+
+def h_fog():
+    """H11. Fog hurts the detection of pedestrians and cyclists more (relatively) than of vehicles."""
+    R = fog_rows()
+    egos = sorted(set(R[:, 0].tolist()))
 
     def drop(sel):
         r = R[np.isin(R[:, 0], sel)]
@@ -326,8 +348,12 @@ def verdict(h):
         return "SURVIVES" if sig and lo > 0 else ("REFUTED" if hi < 0.1 else "UNDECIDED")
     if i == "H3":
         return "REFUTED" if sig else ("SURVIVES" if lo >= 1.5 else "UNDECIDED")
-    if i == "H4":
-        return "REFUTED" if sig else "UNDECIDED"  # 5 points cannot confirm a shape, only reject one
+    if i == "H4":  # with 9 shares (rule fixed before the 9-share data came in): survives if no bend is detected and any bend is
+        # small: |quadratic coefficient| < 1, i.e. it moves the predicted rate at 50 % AVs by at most e^0.25 - 1 = 28 %
+        if sig:
+            return "REFUTED"
+        lo_c, hi_c = h.get("curvature_ci", (-9, 9))
+        return "SURVIVES" if h.get("shares", 5) > 5 and -1 < lo_c and hi_c < 1 else "UNDECIDED"
     if i in ("H5", "H10"):
         return "REFUTED" if hi < h["threshold"] else ("SURVIVES" if lo >= h["threshold"] else "UNDECIDED")
     if i == "H6":

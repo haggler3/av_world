@@ -68,3 +68,65 @@ def test_greenwave_runner_batches_signal_timings():
     g = jnp.tile(jnp.asarray(net["node_g0"], jnp.float32), (2, 1))
     st = chunk(st, o, g.at[1].set(20.0))
     assert float(st.t[0]) > 59 and st.alive.shape == (2, 512)
+
+
+def test_ridge_poisson_stays_finite_under_separation():
+    rng = np.random.default_rng(2)
+    E = rng.uniform(1, 30, 300)
+    z = (rng.random(300) < 0.3).astype(float)  # one site type never crashes: the unpenalised fit separates
+    y = np.where(z > 0, 0.0, rng.poisson(0.1 * E)).astype(float)
+    D = np.c_[np.ones(300), np.log(E), z]
+    b = H.poisson_ridge(y, D)
+    assert np.all(np.isfinite(b)) and abs(b[2]) < 15 and b[2] < -1
+
+
+def test_ml_dispersion_recovers_a_known_alpha():
+    rng = np.random.default_rng(3)
+    mu = rng.uniform(0.5, 5, 4000)
+    alpha = 0.8
+    y = rng.poisson(rng.gamma(1 / alpha, alpha * mu)).astype(float)
+    assert abs(H.nb_alpha_ml(y, mu) - alpha) < 0.15
+
+
+def test_site_structure_has_conflict_counts():
+    from xnet import network as NW
+    net, _, _ = NW.build("oakland")
+    Z = H.site_structure(net)
+    assert Z.shape == (len(net["node_signal"]), 6) and np.isfinite(Z).all() and Z[:, :3].sum() > 0
+
+
+def test_shapley_reports_speed_and_per_km_from_per_copy_counters():
+    from xnet import sim as X
+    rng = np.random.default_rng(4)
+    names = ("a", "b")
+    col = {k: i for i, k in enumerate(X.METRICS)}
+    per = {}
+    for S in A.coalitions(2):
+        m = np.zeros((3, X.NM))
+        m[:, col["veh_s"]], m[:, col["veh_m"]] = 3.6e5, 3.6e5 * (5 + len(S)) + rng.normal(0, 1e3, 3)  # speed rises 1 m/s per mechanism
+        m[:, col["rear-end"]] = 2 + len(S)
+        per[S] = m
+    r = A.shapley(per, names)
+    assert np.allclose([r["speed_kmh"]["phi"][n] for n in names], 3.6, atol=0.05)
+    assert set(r["per_vkm"]["phi"]) == set(names)
+
+
+def test_comfortable_driver_brakes_no_harder_than_needed():
+    import jax.numpy as jnp
+    from av_world import easy
+    obs = np.zeros((2, 28), np.float32)
+    obs[:, 0], obs[:, 3], obs[:, 16] = 10 / 15, 1.0, 1.0
+    obs[:, 6], obs[:, 7] = 1.0, 30 / 100   # a stop line 30 m ahead at 10 m/s: about 1.7 m/s^2 needed
+    obs[0, 24], obs[1, 24] = 1.7 / 8, 6.0 / 8   # car 1: an emergency (6 m/s^2 needed)
+    u_c, _ = easy.drivers.comfortable()(jnp.asarray(obs), None)
+    u_i, _ = easy.drivers.idm()(jnp.asarray(obs), None)
+    a_c, a_i = np.asarray(easy.accel_from_command(u_c[:, 0])), np.asarray(easy.accel_from_command(u_i[:, 0]))
+    assert a_c[0] >= a_i[0] and a_c[0] >= -1.5 * 1.7 - 0.2 - 1e-5   # gentler, but still braking enough
+    assert np.isclose(a_c[1], a_i[1])                               # an emergency is left to IDM
+
+
+def test_summary_reports_every_exposure():
+    from av_world import easy
+    run = easy.simulate("oakland", minutes=0.2, copies=1, warm_minutes=0.1)
+    s = run.summary()
+    assert {"crashes_per_1000_vehicle_hours", "crashes_per_million_vehicle_km", "crashes_per_million_junction_entries"} <= set(s)

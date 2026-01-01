@@ -1,0 +1,154 @@
+{
+ "start": {
+  "name": "start: no smoothness reward, 3x hard-brake penalty",
+  "policy": "results/turing/humanize_1/policy.npz",
+  "auc": 0.9081602622672567,
+  "ci": [
+   0.8952388655007221,
+   0.9200116492797591
+  ],
+  "av_mean": {
+   "mean speed": 5.084,
+   "speed SD": 3.792,
+   "accel SD": 0.984,
+   "accel p5": -1.789,
+   "accel p95": 1.557,
+   "RMS jerk": 2.045,
+   "share stopped": 0.225,
+   "share braking > 2 m/s2": 0.054
+  },
+  "human_mean": {
+   "mean speed": 5.479,
+   "speed SD": 4.356,
+   "accel SD": 0.972,
+   "accel p5": -1.486,
+   "accel p95": 1.556,
+   "RMS jerk": 2.8,
+   "share stopped": 0.257,
+   "share braking > 2 m/s2": 0.016
+  },
+  "av_score": 53.23330752801806,
+  "crash_per_h_unaided": 0.07188214370320267,
+  "comfort": 0.9854840706829228,
+  "progress": 1.0290839173285427,
+  "filter_share": 0.00951248134572354
+ },
+ "humanlike": {
+  "name": "+ human-likeness reward (lam 0.0)",
+  "policy": "results/turing/humanlike_lam0/policy.npz",
+  "auc": 0.9107126255609034,
+  "ci": [
+   0.8983767531952379,
+   0.9227891728768125
+  ],
+  "av_mean": {
+   "mean speed": 5.055,
+   "speed SD": 3.759,
+   "accel SD": 0.998,
+   "accel p5": -1.851,
+   "accel p95": 1.515,
+   "RMS jerk": 1.96,
+   "share stopped": 0.229,
+   "share braking > 2 m/s2": 0.053
+  },
+  "human_mean": {
+   "mean speed": 5.484,
+   "speed SD": 4.359,
+   "accel SD": 0.972,
+   "accel p5": -1.485,
+   "accel p95": 1.557,
+   "RMS jerk": 2.801,
+   "share stopped": 0.257,
+   "share braking > 2 m/s2": 0.015
+  },
+  "av_score": 17.171365855508718,
+  "crash_per_h_unaided": 0.1674133915415274,
+  "comfort": 0.9855953480340841,
+  "progress": 1.031992391651444,
+  "filter_share": 0.009615779164674399
+ },
+ "log": [
+  {
+   "round": 0,
+   "discriminator_auc": 0.5329162016666666,
+   "reward_per_step": 0.07285138219594955,
+   "av_hours": 3.39,
+   "av_speed_kmh": 19.847146252129164,
+   "av_hard_per_h": 3.840466260910034,
+   "av_jerk_rms": 3.7972090425149645,
+   "av_crashes": 0,
+   "av_red": 0,
+   "av_near": 0,
+   "av_shield_share": 0.01836530636531598,
+   "av_trip_min": 1.3038709852430554,
+   "human_trip_min": 1.3947454543340774,
+   "trips_finished": 20,
+   "teleports": 0,
+   "crashes": 0,
+   "wall_s": 67
+  },
+  {
+   "round": 1,
+   "discriminator_auc": 0.5571450780555556,
+   "reward_per_step": 0.060862984508275986,
+   "av_hours": 5.29,
+   "av_speed_kmh": 16.67648212382728,
+   "av_hard_per_h": 1.8908812999725342,
+   "av_jerk_rms": 3.7560983890793627,
+   "av_crashes": 0,
+   "av_red": 0,
+   "av_near": 0,
+   "av_shield_share": 0.015967441389042655,
+   "av_trip_min": 2.775879186871408,
+   "human_trip_min": 2.9292833964029947,
+   "trips_finished": 61,
+   "teleports": 0,
+   "crashes": 0,
+   "wall_s": 148
+  },
+  {
+   "round": 2,
+   "discriminator_auc": 0.5342779972222222,
+   "reward_per_step": 0.05442723631858826,
+   "av_hours": 6.76,
+   "av_speed_kmh": 14.744881664458006,
+   "av_hard_per_h": 1.3318438529968262,
+   "av_jerk_rms": 3.649812838558074,
+   "av_crashes": 0,
+   "av_red": 0,
+   "av_near": 0,
+   "av_shield_share": 0.012948482093954532,
+   "av_trip_min": 4.127544044961735,
+   "human_trip_min": 4.674628018465909,
+   "trips_finished": 104,
+   "teleports": 0,
+   "crashes": 0,
+   "wall_s": 205
+  },
+  {
+   "round": 3,
+   "discriminator_auc": 0.5315033338888889,
+   "reward_per_step": 0.045687247067689896,
+   "av_hours": 8.06,
+   "av_speed_kmh": 12.372691749726666,
+   "av_hard_per_h": 3.225362777709961,
+   "av_jerk_rms": 3.5836558396389417,
+   "av_crashes": 0,
+   "av_red": 0,
+   "av_near": 0,
+   "av_shield_share": 0.009738114924148123,
+   "av_trip_min": 5.849689398871528,
+   "human_trip_min": 5.726698133680555,
+   "trips_finished": 108,
+   "teleports": 0,
+   "crashes": 0,
+   "wall_s": 262
+  }
+ ],
+ "reward": {
+  "jerk": 0.0,
+  "comfort": 0.0,
+  "hard": 0.6
+ },
+ "lam": 0.0
+}
