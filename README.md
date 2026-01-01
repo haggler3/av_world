@@ -365,6 +365,20 @@ python -m avlab.split validate results/unaided/phase2/policy.npz oakland 16     
 python -m avrl.dyn_plot && python -m avrl.fork_viz                               # the charts
 ```
 
+## Speed, and a GPU training script
+
+[docs/SPEED.md](docs/SPEED.md) compares `xnet` with CARLA, MetaDrive, Nocturne, SUMO/CityFlow, GPUDrive and Waymax in
+vehicle-steps per second (CARLA ~10 k, GPUDrive 2.3 M, this repo 0.75 M on 4 CPU threads, 6-13 M projected for one A100).
+
+`python -m avrl.gpu_train` runs PPO with the copies sharded over every device (`jax.shard_map`, gradients averaged with
+`pmean`), and the learner trains on the valid AV rows only (`Config.compact`; 86 % of the old rows were padding).
+Measured on the 4-thread CPU (4 forced host devices): a PPO update went from 1.97 s to 0.81 s with packing alone, and the
+whole trainer from ~210 to ~1,100 area-steps/s. Trained 100 updates (3 min, 32 copies) from the 234k-step policy with no
+safety filter, it reached 0.011 crashes per AV-hour in Oakland (3 replicates, 95 % CI -0.001 to 0.022; one seed) against
+0.026-0.031 for the 8-copy trainer after the same 100 updates, at the same speed (15.7 vs 16.1 km/h). That is a hint that more
+copies per update help, not a measured effect. **No GPU was available: the GPU rows are projections**; run
+`python -m avrl.gpu_train --preset gpu --bench` on a card to measure.
+
 ## Crashes at junctions, in merges and with cyclists
 
 The area simulator now has cyclists and a richer crash model:

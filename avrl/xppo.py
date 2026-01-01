@@ -96,6 +96,8 @@ class Config:
         self.warm = 300.0
         self.bc_updates = 60
         self.reward = {}  # overrides of xnet.sim.Reward
+        self.compact = 0.0  # >0: train on the valid AV rows only, packed into this fraction of all rows (0.25 fits ~14 % valid)
+        self.axis_name = None  # inside shard_map / pmap: average gradients and advantage statistics over this axis
         self.reset_every = 15  # updates (a copy restarts every 60 updates = 13 simulated minutes)
         self.__dict__.update(kw)
 
@@ -184,9 +186,11 @@ def make_fns(cfg: Config, net, beh, opt, shape=None):
         obs, u, lp_old, adv, ret, w = b
         lp = log_prob(params, obs, u)
         ratio = jnp.exp(lp - lp_old)
-        n = jnp.maximum(w.sum(), 1.0)
-        mu_a = (adv * w).sum() / n
-        sd_a = jnp.sqrt(((adv - mu_a) ** 2 * w).sum() / n) + 1e-8
+        ax = cfg.axis_name
+        gsum = (lambda x: jax.lax.psum(x, ax)) if ax else (lambda x: x)
+        n = jnp.maximum(gsum(w.sum()), 1.0)
+        mu_a = gsum((adv * w).sum()) / n
+        sd_a = jnp.sqrt(gsum(((adv - mu_a) ** 2 * w).sum()) / n) + 1e-8
         adv = (adv - mu_a) / sd_a
         pg = -(jnp.minimum(ratio * adv, jnp.clip(ratio, 1 - cfg.clip, 1 + cfg.clip) * adv) * w).sum() / n
         vl = (((value(params, obs) - ret) ** 2) * w).sum() / n
@@ -208,6 +212,12 @@ def make_fns(cfg: Config, net, beh, opt, shape=None):
         T = cfg.n_steps
         flat = lambda x: x[:T].reshape((T * E * cfg.n_slots,) + x.shape[3:])
         data = (flat(tr["obs"]), flat(tr["u"]), flat(tr["aux"][..., 0]), adv.reshape(-1), ret.reshape(-1), w.reshape(-1))
+        n_valid = data[5].sum()
+        if cfg.compact:  # pack the valid rows to the front of a smaller buffer: the learner skips the ~86 % padding
+            K = int(cfg.compact * data[0].shape[0]) // cfg.minibatches * cfg.minibatches
+            idx = jnp.nonzero(data[5] > 0, size=K, fill_value=0)[0]
+            keep = (jnp.arange(K) < n_valid).astype(jnp.float32)
+            data = tuple(x[idx] for x in data[:5]) + (keep,)
         n = data[0].shape[0]
         mb = n // cfg.minibatches
 
@@ -219,6 +229,8 @@ def make_fns(cfg: Config, net, beh, opt, shape=None):
                 params, opt_state = c
                 b = tuple(x[idx] for x in data)
                 (loss, aux), g = jax.value_and_grad(ppo_loss, has_aux=True)(params, b)
+                if cfg.axis_name:
+                    g = jax.lax.pmean(g, cfg.axis_name)
                 upd, opt_state = opt.update(g, opt_state, params)
                 return (optax.apply_updates(params, upd), opt_state), aux
 
@@ -228,7 +240,7 @@ def make_fns(cfg: Config, net, beh, opt, shape=None):
         nv = jnp.maximum(w.sum(), 1.0)
         dm = (st.m - m0).sum(0)
         stats = {"reward_per_step": (r_raw[:T] * tr["valid"][:T]).sum() / nv, "transitions": w.sum(),
-                 "pg": aux[0].mean(), "vl": aux[1].mean(), "kl": aux[2].mean(), "m": dm,
+                 "pg": aux[0].mean(), "vl": aux[1].mean(), "kl": aux[2].mean(), "m": dm, "dropped": jnp.maximum(n_valid - data[5].sum(), 0.0),
                  # per copy of the area: mean |advantage| per AV decision = how much there is still to learn there
                  "signal": (jnp.abs(adv) * w).sum((0, 2)) / jnp.maximum(w.sum((0, 2)), 1.0), "valid": w.sum((0, 2)), "m_env": st.m - m0}
         return params, opt_state, st, stats
