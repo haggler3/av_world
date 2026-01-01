@@ -7,6 +7,7 @@ For every moving vehicle-frame (speed > 1 m/s; the ego, which is an AV in both s
   jerk     change of a per step
   hw       time headway gap / v to the leader (same lane, within 60 m, v > 3 m/s)
   ttc_inv  closing speed / gap (1 / time to collision; 0 when opening)
+  gap0     the bumper gap in queues: follower and leader both stopped (frames of their own)
 and its context: speed bin, whether there is a leader, whether the vehicle is turning (|yaw rate| > 0.15 rad/s) and how many moving
 vehicles are within 30 m. Tail counts follow avlab.incidents (hard brake: a 4 m/s drop within 1 s from above 3 m/s, one per vehicle per
 3 s; tight following: headway < 0.8 s; TTC under 2 s and 1 s with closing > 0.5 m/s and gap < 25 m) so the rates are comparable.
@@ -16,7 +17,7 @@ from scipy.stats import wasserstein_distance
 
 from autotag.rules import leaders, relative, wrap
 
-DISTS = ("v", "a", "a1", "jerk", "hw", "ttc_inv")
+DISTS = ("v", "a", "a1", "jerk", "hw", "ttc_inv", "gap0")
 TAILS = ("hard_brakes_per_h", "tight_share", "ttc2_share", "ttc1_share")
 SPEED_BINS = (1.0, 5.0, 10.0, 15.0, 99.0)
 K_MAX = 10
@@ -52,6 +53,12 @@ def measure(sc, skip_ego=True):
     closing = v - vl
     ttc_inv = np.where(has & (gap < 25.0), np.maximum(closing, 0.0) / np.maximum(gap, 0.1), np.nan)
     m = moving
+    # standstill gaps: follower and leader both stopped (queues at lights); keeps a fit from buying tight following with tiny s0
+    still = np.isfinite(v) & (v < 0.3) & (lead >= 0) & (vl < 0.3) & (gap > -1.0) & (gap < 15.0)
+    still[sc["ego"]] = False
+    if "kind" in sc:
+        still &= (np.asarray(sc["kind"]) != "bike")[:, None]
+    gap0 = gap[still]
     out = {"v": v[m], "a": a[m], "a1": a1[m], "jerk": jerk[m], "hw": hw[m], "ttc_inv": ttc_inv[m],
            "ctx_speed": np.digitize(v[m], SPEED_BINS[1:-1]), "ctx_lead": has[m], "ctx_turn": np.abs(yr[m]) > 0.15, "ctx_dens": dens[m]}
     # tail counts (exposure: moving vehicle-seconds)
@@ -67,6 +74,7 @@ def measure(sc, skip_ego=True):
             last = t
     fast = m & (v > 3.0)
     ttc = np.where((closing > 0.5) & has & (gap < 25.0), gap / np.maximum(closing, 1e-3), np.inf)
+    out["gap0"] = gap0
     out["tail"] = np.array([m.sum() * dt, hb, ((hw < 0.8) & fast).sum() * dt, ((ttc < 2.0) & fast).sum() * dt, ((ttc < 1.0) & fast).sum() * dt])
     # velocity structure function D(k) = E[(v[t+k] - v[t])^2] of moving non-ego tracks: sums and counts, so scenes pool
     D = np.zeros((2, K_MAX))
@@ -82,7 +90,8 @@ def measure(sc, skip_ego=True):
 def pool(ms, weights=None):
     """Concatenate per-scene measures; `weights` (one per scene) become per-sample weights."""
     w = np.ones(len(ms)) if weights is None else np.asarray(weights, float)
-    P = {k: np.concatenate([m[k] for m in ms]) for k in ms[0] if k not in ("tail", "D")}
+    P = {k: np.concatenate([m[k] for m in ms]) for k in ms[0] if k not in ("tail", "D", "gap0")}
+    P["gap0"] = np.concatenate([m.get("gap0", np.zeros(0)) for m in ms])
     P["w"] = np.concatenate([np.full(len(m["v"]), wi) for m, wi in zip(ms, w)])
     P["scene"] = np.concatenate([np.full(len(m["v"]), i) for i, m in enumerate(ms)])
     P["tail_scene"] = np.stack([m["tail"] for m in ms])
@@ -114,7 +123,7 @@ def _scale(a):
     return max(q[1] - q[0], 1e-6)
 
 
-CLIP = {"a": 10.0, "a1": 10.0, "jerk": 60.0, "hw": 6.0, "ttc_inv": 3.0}
+CLIP = {"a": 10.0, "a1": 10.0, "jerk": 60.0, "hw": 6.0, "ttc_inv": 3.0, "gap0": 15.0}
 
 
 def _arr(P, k):
@@ -145,7 +154,7 @@ def scoreboard(R, S, n_boot=200, seed=0, where=True):
     for k in DISTS:
         a, b = _arr(R, k), _arr(S, k)
         sc = _scale(a)
-        w1 = _w1(a, b, R["w"], S["w"]) / sc
+        w1 = (_w1(a, b) if k == "gap0" else _w1(a, b, R["w"], S["w"])) / sc
         fa, fb = a[np.isfinite(a)], b[np.isfinite(b)]
         out["dists"][k] = {"w1_iqr": float(w1), "real_median": float(np.median(fa)) if len(fa) else None,
                            "sim_median": float(np.median(fb)) if len(fb) else None,
