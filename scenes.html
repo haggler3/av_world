@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>av_world · 3-D scenes</title>
+<meta name="description" content="Simulated long-tail scenes from av_world, exported to OpenUSD and set in the real city: Manhattan, Chicago, Boston and a real Argoverse 2 log, side by side with the simulator's own view.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #2a313a; --ink: #e6edf3; --ink-2: #a3adb8; --ink-3: #6e7681;
+    --accent: #3987e5; --accent-2: #6da7ec; --warm: #f0883e; --bad: #ff6b6b;
+    --font: "Inter", system-ui, -apple-system, Segoe UI, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+    color-scheme: dark;  /* matches the main site: a deliberately dark page */
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+  nav.top { position: sticky; top: 0; z-index: 10; background: rgba(13, 17, 23, 0.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav.top .wrap { display: flex; align-items: center; gap: 22px; height: 56px; }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
+  .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 14px var(--accent); }
+  nav.top .links { display: flex; gap: 20px; margin-left: auto; font-size: 14px; }
+  nav.top .links a { color: var(--ink-2); }
+  nav.top .links a.here { color: var(--ink); }
+  header { padding: 56px 0 8px; background: radial-gradient(900px 360px at 70% -10%, rgba(57, 135, 229, 0.18), transparent 70%); }
+  .eyebrow { font: 500 13px var(--mono); color: var(--accent-2); letter-spacing: 0.04em; text-transform: uppercase; }
+  h1 { font-size: clamp(30px, 4.6vw, 48px); line-height: 1.08; letter-spacing: -0.03em; margin: 12px 0 14px; font-weight: 800; max-width: 860px; }
+  .lede { font-size: 18px; color: var(--ink-2); max-width: 760px; margin: 0; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 32px 0 14px; }
+  .tab { font: 600 14px var(--font); color: var(--ink-2); background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: 8px 14px; cursor: pointer; }
+  .tab:hover { color: var(--ink); border-color: var(--ink-3); }
+  .tab[aria-selected="true"] { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .tab .crash { color: var(--bad); margin-left: 6px; }
+  .tab[aria-selected="true"] .crash { color: #fff; }
+  .stage { background: #0a0d12; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .stage video { display: block; width: 100%; height: auto; aspect-ratio: 964 / 390; background: #0a0d12; }
+  .about { display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; padding: 22px 24px 24px; }
+  .about h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.01em; }
+  .about p { margin: 0; color: var(--ink-2); }
+  .facts { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; font-size: 14px; align-content: start; }
+  .facts dt { color: var(--ink-3); font: 500 12px var(--mono); text-transform: uppercase; letter-spacing: 0.04em; padding-top: 2px; }
+  .facts dd { margin: 0; color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 26px 0 0; }
+  .thumb { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; cursor: pointer; text-align: left; padding: 0; color: inherit; font: inherit; }
+  .thumb:hover { border-color: var(--ink-3); }
+  .thumb[aria-current="true"] { border-color: var(--accent); }
+  .thumb img { display: block; width: 100%; height: auto; aspect-ratio: 964 / 390; object-fit: cover; }
+  .thumb span { display: block; padding: 9px 12px 11px; font-size: 14px; font-weight: 600; }
+  .thumb small { display: block; color: var(--ink-3); font-weight: 500; font-size: 12.5px; }
+  .how { margin: 54px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
+  code { font: 13px var(--mono); background: #0f141a; border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+  footer { margin-top: 70px; border-top: 1px solid var(--line); padding: 26px 0 46px; color: var(--ink-3); font-size: 13.5px; }
+  footer a { color: var(--ink-2); }
+  @media (max-width: 900px) {
+    .about, .how { grid-template-columns: 1fr; }
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    nav.top .links a.opt { display: none; }
+    .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  }
+  @media (max-width: 520px) { .grid { gap: 10px; } .thumb span { font-size: 12.5px; padding: 7px 9px 9px; } .about { padding: 18px; } }
+  @media (prefers-reduced-motion: reduce) { .stage video { animation: none; } }
+</style>
+</head>
+<body>
+<nav class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="dot"></span>av_world</a>
+    <div class="links">
+      <a class="opt" href="index.html#results">Results</a>
+      <a class="here" href="scenes.html">3-D scenes</a>
+      <a href="viewer/index.html">Viewer</a>
+      <a href="https://github.com/haggler3/av_world">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">OpenUSD export · open map data</div>
+    <h1>Long-tail scenes, set in the real city</h1>
+    <p class="lede">Each clip is one simulated run. On the left is av_world's own view; on the right is the same run exported to an OpenUSD
+      stage for NVIDIA Omniverse, with buildings at their mapped heights, trees, lamps and signals from Overture and OpenStreetMap.
+      The frames, vehicles and signal timing are the same on both sides.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <section class="stage" aria-live="polite">
+    <video id="video" autoplay muted loop playsinline preload="auto"></video>
+    <div class="about">
+      <div><h2 id="title"></h2><p id="text"></p></div>
+      <dl class="facts" id="facts"></dl>
+    </div>
+  </section>
+  <div class="grid" id="grid"></div>
+
+  <div class="how">
+    <div class="card"><h3>Made by one command</h3><p><code>av-world export-nvidia out --area new_york --scenario black_ice</code> writes the
+      USD stage, a camera-view control video, and this side-by-side clip.</p></div>
+    <div class="card"><h3>Crashes found automatically</h3><p><code>--find-crash 600</code> runs 8 copies of the city until an AV crashes,
+      then replays that copy with recording on and follows the AV into the crash. Otherwise the clip follows the AV with the most driving.
+      Frames between simulator steps are interpolated, so clips play at 20 fps.</p></div>
+    <div class="card"><h3>What it is not</h3><p>The layout is real but untextured: plain facades, one tree model, no parked cars. The
+      photoreal pass belongs to Omniverse or a world model conditioned on the stage. <a href="https://github.com/haggler3/av_world/blob/main/docs/NVIDIA.md">Details</a></p></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">av_world · <a href="index.html">Home</a> · <a href="https://github.com/haggler3/av_world/blob/main/docs/TESTING.md">What you can test</a> ·
+    <a href="https://github.com/haggler3/av_world">GitHub</a></div>
+</footer>
+
+<script>
+const SCENES = [
+  { id: "ny_everyday", tab: "Manhattan", title: "Midtown Manhattan, everyday traffic",
+    text: "An ordinary run through the canyon of Midtown. Almost every building in the box has a mapped height (2,880 of 2,939), so the skyline is the real one.",
+    facts: { City: "New York, Midtown", Scenario: "none (everyday traffic)", Source: "av_world simulation" } },
+  { id: "ny_jaywalker", tab: "Jaywalker", crash: true, title: "A jaywalker during a perception blackout",
+    text: "Pedestrians cross against the signal while the AV's perception drops its targets for a moment, a stand-in for the misclassification in the Tempe case. The AV hits a pedestrian at 2.7 m/s (6 mph). Real crashes of this kind are much faster: the simulator under-states severity.",
+    facts: { City: "New York, Midtown", Scenario: "jaywalker_misclassified, intensity 1.2", Outcome: "AV-pedestrian crash, 2.7 m/s", "Found by": "crash search, 8 copies of the city" } },
+  { id: "ny_ice", tab: "Black ice", crash: true, title: "Black ice",
+    text: "Road friction falls to a fraction of normal, so stopping distances multiply. The AV cannot stop for a pedestrian on the crossing and hits them at 3.8 m/s (8 mph).",
+    facts: { City: "New York, Midtown", Scenario: "black_ice, intensity 1.2", Outcome: "AV-pedestrian crash, 3.8 m/s", "Found by": "crash search, 8 copies of the city" } },
+  { id: "ny_redlight", tab: "Red-light runner", crash: true, title: "Red-light runners",
+    text: "Human drivers run red lights (two in this window), and the AV is struck side-on at a junction. The orange marker shows a wreck on both sides.",
+    facts: { City: "New York, Midtown", Scenario: "red_light_runner, intensity 1.2", Outcome: "angle crash involving the AV", "Found by": "crash search, 8 copies of the city" } },
+  { id: "chicago_dartout", tab: "Bus dart-out", crash: true, title: "A pedestrian steps out from behind a bus",
+    text: "Buses and double-parked vans hide pedestrians who step out into the road, a classic masked-pedestrian case. The AV hits one at 4.2 m/s (9 mph). Grant Park is to the east.",
+    facts: { City: "Chicago, the Loop", Scenario: "bus_dartout, intensity 1.2", Outcome: "masked-pedestrian crash, 4.2 m/s", "Found by": "crash search, 8 copies of the city" } },
+  { id: "boston", tab: "Boston", title: "Back Bay, Boston",
+    text: "Everyday traffic between Back Bay's brownstones and towers, with trees and street lamps where the map has them.",
+    facts: { City: "Boston, Back Bay", Scenario: "none (everyday traffic)", Source: "av_world simulation" } },
+  { id: "av2", tab: "Real log", title: "A real Argoverse 2 log, through the same exporter",
+    text: "Recorded traffic from a real AV fleet log, replayed through the same exporter. The log has no geographic frame, so there are no buildings or trees; the road surface, sidewalks and markings come from the log's own map.",
+    facts: { Source: "Argoverse 2 motion forecasting", Scenario: "real recorded traffic", Signals: "not in the log" } },
+];
+const $ = (id) => document.getElementById(id);
+function show(i, focus) {
+  const s = SCENES[i];
+  const v = $("video");
+  v.poster = `scenes/${s.id}.jpg`;
+  v.src = `scenes/${s.id}.mp4`;
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {});
+  $("title").textContent = s.title;
+  $("text").textContent = s.text;
+  $("facts").replaceChildren(...Object.entries(s.facts).flatMap(([k, val]) => {
+    const dt = document.createElement("dt"); dt.textContent = k;
+    const dd = document.createElement("dd"); dd.textContent = val;
+    return [dt, dd];
+  }));
+  document.querySelectorAll(".tab").forEach((t, j) => { t.setAttribute("aria-selected", j === i); t.tabIndex = j === i ? 0 : -1; });
+  document.querySelectorAll(".thumb").forEach((t, j) => t.setAttribute("aria-current", j === i));
+  if (focus) document.querySelectorAll(".tab")[i].focus();
+  try { history.replaceState(null, "", `#${s.id}`); } catch (e) {}
+}
+SCENES.forEach((s, i) => {
+  const t = document.createElement("button");
+  t.className = "tab"; t.setAttribute("role", "tab"); t.textContent = s.tab;
+  if (s.crash) { const c = document.createElement("span"); c.className = "crash"; c.textContent = "●"; c.title = "AV crash"; t.append(c); }
+  t.onclick = () => show(i);
+  t.onkeydown = (e) => {
+    if (e.key === "ArrowRight") show((i + 1) % SCENES.length, true);
+    if (e.key === "ArrowLeft") show((i - 1 + SCENES.length) % SCENES.length, true);
+  };
+  $("tabs").append(t);
+  const b = document.createElement("button");
+  b.className = "thumb";
+  b.innerHTML = `<img loading="lazy" width="964" height="390" alt=""><span></span>`;
+  b.querySelector("img").src = `scenes/${s.id}.jpg`;
+  b.querySelector("span").textContent = s.title;
+  if (s.crash) { const m = document.createElement("small"); m.textContent = "AV crash"; b.querySelector("span").append(m); }
+  b.onclick = () => { show(i); $("tabs").scrollIntoView({ behavior: "smooth", block: "start" }); };
+  $("grid").append(b);
+});
+const start = Math.max(0, SCENES.findIndex((s) => `#${s.id}` === location.hash));
+show(start);
+</script>
+</body>
+</html>
