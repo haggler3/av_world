@@ -248,9 +248,9 @@
             cyclists, a wet road and two unseen neighbourhoods) × eight checks, each against the rule-based AV driving the
             same traffic. Every policy runs with the IDM envelope, with the barrier function, and with no filter.</p></div>
         <ul>
-          <li>The best policy passes <span class="big">67 / 88</span>: as fast as the rule-based AV with <b>5×</b> fewer hard brakes, but no scenario fully overcome.</li>
+          <li>Trained with the barrier function as its teacher, the best policy crashes <span class="big">15×</span> less with no filter (0.64 → 0.044 per AV-hour) and fully overcomes its first two scenarios.</li>
           <li>Unaided, the 62k-step policies crash <span class="big">63–80</span> times per AV-hour, across all seven crash types: they accelerate and let the filter brake, which the training score cannot see.</li>
-          <li>A 10× penalty on leaning on the filter removes almost every unaided crash but halves the speed. The bar has two sides.</li>
+          <li>What it still misses is mostly speed: 95–96 % of the rule-based AV's, against a 97 % bar.</li>
         </ul>
       </div>
     </div>
@@ -292,7 +292,8 @@
         <ul>
           <li>Zoom from the whole neighbourhood down to a single lane; pan, pinch, scroll.</li>
           <li>Area, street and follow-an-AV cameras; colour by vehicle type or speed.</li>
-          <li>Indexed key moments: crashes by type, red-light runs, breakdowns, buses and double-parked vans; cyclists in green.</li>
+          <li>Every AV's barrier function drawn live: the zone it must keep clear, how much slack is left, and each time the filter brakes it, holds it at a junction or blocks a merge.</li>
+          <li>Indexed key moments: crashes by type, barrier interventions, red-light runs, breakdowns, buses and double-parked vans.</li>
         </ul>
         <a class="btn primary" href="viewer/index.html">▶ Open the viewer</a>
       </div>
@@ -375,7 +376,7 @@
   <div class="wrap">
     <h2>What's next</h2>
     <ol class="next">
-      <li><div><b>Pass AVBench unaided</b><span>Train from the 234k-step policy with the barrier function's vetoes and corrections as an annealed penalty, or distil the latent planner into it. Target: all 88 checks.</span></div></li>
+      <li><div><b>Finish passing AVBench unaided</b><span>The barrier-taught policy is 2 % short on speed and has one or two unaided crashes where the rule-based AV has none. Distil the latent planner's junction timing into it. Target: all 88 checks.</span></div></li>
       <li><div><b>Amortise the planner</b><span>Train the policy on the planner's choices in imagined rollouts (Dreamer / TD-MPC style), keeping the foresight at the policy's speed.</span></div></li>
       <li><div><b>Close the operating-domain gaps</b><span>A barrier whose braking assumption adapts to the road, training with sensor noise, and one policy across Oakland, Squirrel Hill and Downtown.</span></div></li>
       <li><div><b>Scale the simulation on a GPU</b><span>Test the fitted power laws 4–16× further out (62 k → 1 M simulator steps); the jitted step moves unchanged.</span></div></li>
