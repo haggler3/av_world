@@ -104,10 +104,13 @@ POLICIES = {  # name -> checkpoint (None = the rule-based AV, the bar to clear)
     "PPO + barrier teacher, then no filter (phase 2, GPU retrain)": "results/unaided/gpu/phase2/policy.npz",
     "PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain)": "results/unaided/gpu/phase3/policy.npz",
     "latent world-model planner (wm-mpc)": "wmplan",
+    "latent world-model planner v2 (wm-mpc)": "wmplan/v2",
 }
 # the latent planner replans every AV every step (~10 min per run here), so it runs on the junction-heavy scenarios it was built
 # for, unaided and with the envelope, in two halves per run
 WM, WM_SCENARIOS, WM_MODES, WM_K = "latent world-model planner (wm-mpc)", ("nominal", "red_runners", "inattentive"), ("raw", "shielded"), 112
+# wmplan.v2: an ensemble latent model, 4 s plans, the barrier-teacher phase 3 policy as prior; fast enough on a GPU for every scenario
+WM2 = "latent world-model planner v2 (wm-mpc)"
 STEPS = {"imitation (BC)": 0, "PPO, full world": 62_400, "PPO, 130k steps (xnet)": 130_000, "PPO, 234k steps (xnet3)": 234_000}
 RENAME = {"PPO, long run (xnet3)": "PPO, 234k steps (xnet3)"}
 
@@ -204,23 +207,47 @@ def _load(path_out):
     return d
 
 
-def run_wm(name, mode):
-    """One mode of the latent planner in one scenario (~10 min)."""
+def run_wm(name, mode, v2=False):
+    """One mode of the latent planner (v1, or wmplan.v2 with v2=True) in one scenario (v1: ~10 min on CPU, ~2 min on an L4)."""
     from wmplan import model as M
     from wmplan import planner as PL
     path_out = f"{OUT}/{name}.json"
     d = _load(path_out)
-    row = d["runs"].setdefault(WM, {})
+    who = WM2 if v2 else WM
+    row = d["runs"].setdefault(who, {})
     if mode in row:
         return
     area, over = SCENARIOS[name]
     PL.K_PLAN = WM_K  # every AV in a copy (~75-105 here), not the 48 the planner was tuned with
     t0 = time.time()
-    go = runner(area, behaviour(over), chunks=2, planner=PL.make(M.load(), P.load("results/xnet3/policy.npz")))[mode]
-    row[mode] = go(None).tolist()
+    if v2:
+        from wmplan import v2 as V
+        pol = V.make(V.load(), P.load(V.PRIOR))
+    else:
+        pol = PL.make(M.load(), P.load("results/xnet3/policy.npz"))
+    row[mode] = runner(area, behaviour(over), chunks=2, planner=pol)[mode](None).tolist()
     with open(path_out, "w") as f:
         json.dump(d, f)
-    print(f"{name} {WM} {mode}: {time.time() - t0:.0f} s", flush=True)
+    print(f"{name} {who} {mode}: {time.time() - t0:.0f} s", flush=True)
+
+
+def run_wm2(name):
+    """Both modes of the latent planner v2 in one scenario, from one warm state (~3 min each on an L4)."""
+    from wmplan import v2 as V
+    path_out = f"{OUT}/{name}.json"
+    d = _load(path_out)
+    row = d["runs"].setdefault(WM2, {})
+    todo = [m for m in WM_MODES if m not in row]
+    if not todo:
+        return
+    area, over = SCENARIOS[name]
+    r = runner(area, behaviour(over), chunks=2, planner=V.make(V.load(), P.load(V.PRIOR)))
+    for mode in todo:
+        t0 = time.time()
+        row[mode] = r[mode](None).tolist()
+        with open(path_out, "w") as f:
+            json.dump(d, f)
+        print(f"{name} {WM2} {mode}: {time.time() - t0:.0f} s", flush=True)
 
 
 def run(name):
@@ -229,7 +256,7 @@ def run(name):
     path_out = f"{OUT}/{name}.json"
     rows = _load(path_out)["runs"] if os.path.exists(path_out) else {}
     rows = {RENAME.get(k, k): v for k, v in rows.items()}
-    todo = [p for p in POLICIES if p not in rows and p != WM]
+    todo = [p for p in POLICIES if p not in rows and p not in (WM, WM2)]
     if not todo:
         return
     r_ = runner(area, behaviour(over))
@@ -310,7 +337,7 @@ def report():
     tail = [n for n in TAIL if os.path.exists(f"{OUT}/{n}.json")]
     names = core + tail
     data = {n: _runs(n) for n in names}
-    rel_pols = [p for p in POLICIES if p != WM]
+    rel_pols = [p for p in POLICIES if p not in (WM, WM2)]
     # ---- relative tier: the original eight checks against the rule-based AV, core scenarios
     board = {p: {"passed": 0, "overcome": [], "scenarios": {}} for p in rel_pols}
     for n in core:
@@ -345,7 +372,7 @@ def report():
         v = [scores[p][n]["av_score"] if key is None else scores[p][n]["metrics"][key] for n in ns if n in scores.get(p, {})]
         return float(np.mean(v)) if v else float("nan")
 
-    full = [p for p in rel_pols if all(n in absolute.get(p, {}) for n in names)]
+    full = [p for p in POLICIES if p != WM and all(n in absolute.get(p, {}) for n in names)]  # v2 too, once it ran everywhere
     ncheck = len(SC.ABSOLUTE)
     L = [f"## Absolute tier: fixed bars, {len(names)} scenarios ({len(core)} core + {len(tail)} long-tail) x {ncheck} checks", "",
          f"| policy | checks passed (of {len(names) * ncheck}) | core | long-tail | scenarios cleared | most failed |", "|---|---|---|---|---|---|"]
@@ -406,6 +433,9 @@ if __name__ == "__main__":
         for n in sys.argv[2:3] or WM_SCENARIOS:
             for mode in sys.argv[3:4] or WM_MODES:
                 run_wm(n, mode)
+    elif cmd == "run-wm2":  # run-wm2 [scenario ...]: the latent planner v2, both modes, every scenario by default
+        for n in sys.argv[2:] or list(SCENARIOS):
+            run_wm2(n)
     elif cmd == "forget":  # forget POLICY ...: drop a retrained policy's rows so the next `run` / `run-wm` measures it again
         for n in SCENARIOS:
             if os.path.exists(f"{OUT}/{n}.json"):

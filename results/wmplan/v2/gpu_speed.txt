@@ -1,0 +1,9 @@
++ nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
+NVIDIA L4, 23034 MiB
++ av-world bench
++ grep -v dot_search
++ tail -5
+8 copies of oakland: 15 simulated s per wall-clock s (includes compile)
++ python -
+matmul 8192^2 float32: 39.7 TFLOP/s
+matmul 8192^2 bfloat16: 80.4 TFLOP/s

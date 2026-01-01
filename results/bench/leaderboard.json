@@ -19251,6 +19251,38 @@
     "right of way": false,
     "inside the barrier": false
    }
+  },
+  "latent world-model planner v2 (wm-mpc)": {
+   "nominal": {
+    "safer than people": true,
+    "comfortable": true,
+    "keeps up": false,
+    "light touch": true,
+    "safer unaided": true,
+    "lawful": true,
+    "right of way": true,
+    "inside the barrier": true
+   },
+   "red_runners": {
+    "safer than people": false,
+    "comfortable": true,
+    "keeps up": false,
+    "light touch": true,
+    "safer unaided": false,
+    "lawful": true,
+    "right of way": true,
+    "inside the barrier": true
+   },
+   "inattentive": {
+    "safer than people": false,
+    "comfortable": true,
+    "keeps up": false,
+    "light touch": true,
+    "safer unaided": false,
+    "lawful": true,
+    "right of way": true,
+    "inside the barrier": true
+   }
   }
  },
  "scores": {
@@ -28563,6 +28595,107 @@
      "self_reliance": 0.9661755913479976
     },
     "av_score": 1.0796650626510842
+   }
+  },
+  "latent world-model planner v2 (wm-mpc)": {
+   "nominal": {
+    "metrics": {
+     "crash_per_h": 0.0,
+     "crash_per_1000km": 0.0,
+     "crash_ratio_vs_human": 0.0,
+     "progress": 0.954359080345919,
+     "speed_kmh": 15.219833067223641,
+     "comfort_pass": 0.9794927730646266,
+     "hard_brakes_per_h": 3.7296755663387025,
+     "jerk_rms": 2.032696178264175,
+     "red_runs_per_100km": 0.0,
+     "near_miss_per_h": 0.0,
+     "driving_score": 95.4359080345919,
+     "crash_per_h_unaided": 0.0,
+     "harm_per_h": 0.0,
+     "harm_per_h_unaided": 0.0,
+     "crash_ucb95_per_h": 0.07027112870419248,
+     "filter_share": 0.004959869044544061,
+     "filter_dependence": 0.0,
+     "barrier_exit_share": 0.00046768988108773454,
+     "human_crash_per_h": 0.007052295901962389,
+     "human_speed_kmh": 15.94770079801308,
+     "av_hours": 42.631053873697915
+    },
+    "factors": {
+     "efficiency": 0.954359080345919,
+     "safety": 1.0,
+     "comfort": 0.9794927730646266,
+     "conduct": 1.0,
+     "self_reliance": 0.995040130955456
+    },
+    "av_score": 93.01513969253435
+   },
+   "red_runners": {
+    "metrics": {
+     "crash_per_h": 0.02350474432526904,
+     "crash_per_1000km": 1.58327375183526,
+     "crash_ratio_vs_human": 0.833704804232272,
+     "progress": 0.9286922606763787,
+     "speed_kmh": 14.845660327548151,
+     "comfort_pass": 0.9791957691251113,
+     "hard_brakes_per_h": 3.784263836368315,
+     "jerk_rms": 2.0383139613815784,
+     "red_runs_per_100km": 0.0,
+     "near_miss_per_h": 0.0,
+     "driving_score": 92.12115051962454,
+     "crash_per_h_unaided": 0.04705903018160721,
+     "harm_per_h": 0.02350474432526904,
+     "harm_per_h_unaided": 0.2588246659988397,
+     "crash_ucb95_per_h": 0.11150332261848606,
+     "filter_share": 0.004988229073473762,
+     "filter_dependence": 0.02355428585633817,
+     "barrier_exit_share": 0.0005176504340261732,
+     "human_crash_per_h": 0.02819312567943481,
+     "human_speed_kmh": 15.985554048588563,
+     "av_hours": 42.54460232204861
+    },
+    "factors": {
+     "efficiency": 0.9286922606763787,
+     "safety": 0.278687641836538,
+     "comfort": 0.9791957691251113,
+     "conduct": 1.0,
+     "self_reliance": 0.9950117709265263
+    },
+    "av_score": 25.216643801170484
+   },
+   "inattentive": {
+    "metrics": {
+     "crash_per_h": 0.04657186702716236,
+     "crash_per_1000km": 3.1508060321836866,
+     "crash_ratio_vs_human": 0.7366093301508718,
+     "progress": 0.9624665960668727,
+     "speed_kmh": 14.780937497090365,
+     "comfort_pass": 0.9801479237745307,
+     "hard_brakes_per_h": 3.609319694605083,
+     "jerk_rms": 2.0076870573768946,
+     "red_runs_per_100km": 0.0,
+     "near_miss_per_h": 0.0,
+     "driving_score": 94.7099575107369,
+     "crash_per_h_unaided": 0.07001766674786603,
+     "harm_per_h": 0.13971560108148706,
+     "harm_per_h_unaided": 0.3734275559886188,
+     "crash_ucb95_per_h": 0.14660343169413956,
+     "filter_share": 0.004934030578933257,
+     "filter_dependence": 0.023445799720703667,
+     "barrier_exit_share": 0.00045511594552541385,
+     "human_crash_per_h": 0.06322464992077081,
+     "human_speed_kmh": 15.357351161580862,
+     "av_hours": 42.94438096788195
+    },
+    "factors": {
+     "efficiency": 0.9624665960668727,
+     "safety": 0.21122555866267323,
+     "comfort": 0.9801479237745307,
+     "conduct": 1.0,
+     "self_reliance": 0.9950659694210667
+    },
+    "av_score": 19.82785029458022
    }
   }
  },
