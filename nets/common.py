@@ -60,3 +60,24 @@ def boot(x, n=2000, seed=0, groups=None):
         pick = rng.integers(0, len(u), (n, len(u)))
         bs = sums[pick].sum(1) / cnts[pick].sum(1)
     return float(x.mean()), float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))
+
+
+def split_env(env, frac=0.25):
+    """The first copy index of the held-out quarter (copies are numbered 0 .. E-1; works for any number of copies)."""
+    n = int(np.max(env)) + 1
+    return n - max(1, int(round(frac * n)))
+
+
+def save_params(path, params, **extra):
+    import pickle
+    with open(path, "wb") as f:
+        pickle.dump({"params": jax.tree.map(np.asarray, params), **extra}, f)
+
+
+def load_params(path):
+    import pickle
+    with open(path, "rb") as f:
+        d = pickle.load(f)
+    if isinstance(d, dict) and "params" in d:
+        return jax.tree.map(jnp.asarray, d["params"]), {k: v for k, v in d.items() if k != "params"}
+    return jax.tree.map(jnp.asarray, d), {}

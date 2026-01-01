@@ -143,21 +143,23 @@ def loss(p, b):
     return optax.sigmoid_binary_cross_entropy(y[:, :-1], b["grid"]).mean() + optax.sigmoid_binary_cross_entropy(y[:, -1], b["path"]).mean()
 
 
-def main():
-    os.makedirs(OUT, exist_ok=True)
+def main(out_dir=OUT, quick=False):
+    os.makedirs(out_dir, exist_ok=True)
+    steps = 1000 if quick else 4000
     t0 = time.time()
-    cache = f"{OUT}/occlusion_samples.npz"
+    cache = f"{out_dir}/occlusion_samples.npz"
     if os.path.exists(cache):
         z = np.load(cache)
         tok, grid, path, shadow, env = z["tok"], z["grid"], z["path"], z["shadow"], z["env"]
     else:
-        tok, grid, path, shadow, env = collect()
+        tok, grid, path, shadow, env = collect(4, 2) if quick else collect()
         np.savez_compressed(cache, tok=tok, grid=grid, path=path, shadow=shadow, env=env)
     print(f"{len(tok)} AV views, hidden-cell rate {grid.mean():.4f}, someone hidden ahead {path.mean():.3f} ({time.time() - t0:.0f}s)", flush=True)
-    tr, te = env < 12, env >= 12
+    te = env >= CM.split_env(env)
+    tr = ~te
     gflat = grid.reshape(len(grid), -1)
     p = init(jax.random.PRNGKey(0))
-    p, curve = CM.fit(loss, p, {"tok": tok[tr], "grid": gflat[tr], "path": path[tr]}, steps=4000, batch=1024)
+    p, curve = CM.fit(loss, p, {"tok": tok[tr], "grid": gflat[tr], "path": path[tr]}, steps=steps, batch=1024)
     out = np.concatenate([np.asarray(jax.jit(apply)(p, jnp.asarray(tok[te][i:i + 8192]))) for i in range(0, te.sum(), 8192)])
     pg = 1 / (1 + np.exp(-out[:, :-1]))
     pp = 1 / (1 + np.exp(-out[:, -1]))
@@ -175,13 +177,11 @@ def main():
            "ahead": {"network_auroc": CM.auroc(pp, path[te]), "shadow_ahead_auroc": CM.auroc(st_.reshape(-1, G, G)[:, G // 2:G // 2 + 3, 3:5].mean((1, 2)), path[te])}}
     print(json.dumps(res, indent=1), flush=True)
     res["curve"] = curve[::40].tolist()
-    with open(f"{OUT}/occlusion.json", "w") as f:
+    with open(f"{out_dir}/occlusion.json", "w") as f:
         json.dump(res, f)
-    import pickle
-    with open(f"{OUT}/occlusion_params.pkl", "wb") as f:
-        pickle.dump(jax.tree.map(np.asarray, p), f)
+    CM.save_params(f"{out_dir}/occlusion_params.pkl", p)
     k = np.argsort(-path[te])[:400]
-    np.savez_compressed(f"{OUT}/occlusion_preds.npz", tok=tok[te][k], grid=yt[k], pg=pg[k], shadow=st_[k], pp=pp[k], path=path[te][k])
+    np.savez_compressed(f"{out_dir}/occlusion_preds.npz", tok=tok[te][k], grid=yt[k], pg=pg[k], shadow=st_[k], pp=pp[k], path=path[te][k])
 
 
 if __name__ == "__main__":

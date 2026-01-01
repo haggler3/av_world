@@ -36,6 +36,24 @@ v2 fixed v1's red-light runs but does not beat the policy it plans around. Train
 either. Forked at the policy's own crash moments, the converged plan averts 18 % of them, against 75 % for simply braking
 harder ([GIFs, the test and why](wmplan/README.md)).
 
+**Neural nets only this simulator can train** ([results](docs/NEURAL_NETS.md), [easy training guide](docs/TRAINING_NETS.md),
+`av-world nets list`). The simulator knows every driver's hidden traits and can fork the city with every other die held fixed, so it can teach
+what real logs cannot:
+
+* **A risk critic trained on exact forks.** At a 10 % intervention budget it cuts bad outcomes 71 %; the same network trained on the log makes
+  them worse.
+* **A model of how the human behind reacts to the AV.**
+* **An occlusion belief** that finds hidden road users at AUROC 0.97.
+* **A mind reader.** It reads driving style (headway R² 0.41) but not intent.
+* **But-for crash blame.** Only 1.6 % of crashes hinge on one mistake.
+* **A posterior over the simulator's knobs for real Argoverse 2 traffic.** It also shows where the simulator cannot reach real traffic.
+
+```bash
+av-world nets train occlusion --quick   # ~3 min, then: python -c "from av_world import easy; print(easy.nets.load('occlusion', quick=True))"
+```
+
+<img src="docs/img/nets/forks.gif" width="440" alt="One moment of the city forked into five futures with different AV actions"> <img src="docs/img/nets/occlusion.gif" width="300" alt="The AV's view: visible cars, hidden cars and the network's belief where the hidden ones are">
+
 ## Install
 
 ```bash
@@ -156,6 +174,9 @@ impact over the effort of a follow-up.
 
 | | |
 |---|---|
+| [docs/NEURAL_NETS.md](docs/NEURAL_NETS.md) | six networks only this simulator can train (risk critic from exact forks, social response, occlusion belief, mind reader, but-for blame, real-traffic posterior): method, math, results |
+| [docs/TRAINING_NETS.md](docs/TRAINING_NETS.md) | the easy guide: train and use each of them in one command (`av-world nets`, `easy.nets`), quick mode, data, speed, troubleshooting |
+| [docs/WORLD_MODEL_UPGRADES.md](docs/WORLD_MODEL_UPGRADES.md) | ten world-model ideas from the literature, seven built and measured: CRN, conservative imagination, agent tokens, learned humans, multi-step loss, SIGReg, terminal value |
 | [docs/EASY.md](docs/EASY.md) | easy mode for beginners (`av_world.easy`) and compatibility with Gymnasium, PettingZoo, SB3, PyTorch, ONNX, pandas, CARLA, OpenUSD |
 | [docs/FIXES.md](docs/FIXES.md) | the fix round: every open question and weak result from the last rounds, what was changed, and what happened (two fixes failed) |
 | [docs/IDEAS.md](docs/IDEAS.md) | five tools with pseudocode: crash attribution (Shapley), a black box that writes incident reports, an AV Turing test, empirical-Bayes hotspots, a green-wave signal optimiser |

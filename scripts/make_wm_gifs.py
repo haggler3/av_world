@@ -17,7 +17,7 @@ sys.path.insert(0, os.getcwd())
 OUT = "docs/img/wmup"
 BG, PANEL, INK, MUTED = "#0d1117", "#141a1f", "#e6edf3", "#8b949e"
 BLUE, ORANGE, AQUA, GRAY, RED = "#3987e5", "#eb6834", "#1baf7a", "#9a9a94", "#e66767"
-ROOT = "/tmp/claude-0/-home-user/55bcdaf2-8ef3-51cf-9658-ec3ffd940c9e/scratchpad/av2"
+ROOT = os.environ.get("AV2_ROOT", "data/av2")  # Argoverse 2 scenarios: av-world fetch-av2 data/av2 --n 400
 
 
 def save(fig, draw, n, name, fps=8, dpi=75):

@@ -1,0 +1,188 @@
+as is (the policy) {'bad_rate': [0.0019, 0.0017, 0.002], 'bad_rate_risky': [0.0491, 0.0446, 0.054]}
+random action {'bad_rate': [0.0088, 0.0084, 0.0091], 'bad_rate_risky': [0.2315, 0.2246, 0.2392]}
+observational critic {'bad_rate': [0.0197, 0.0187, 0.0207], 'bad_rate_risky': [0.5197, 0.4962, 0.5442]}
+interventional critic {'bad_rate': [0.0005, 0.0004, 0.0006], 'bad_rate_risky': [0.0124, 0.0103, 0.0144]}
+oracle (best true action) {'bad_rate': [0.0002, 0.0001, 0.0002], 'bad_rate_risky': [0.0049, 0.0035, 0.0063]}
+AUROC {'interventional': [0.959, 0.942, 0.985, 0.96, 0.959], 'observational': [0.962, 0.932, 0.675, 0.946, 0.952]}
+mean effect of each action vs as-is: true [ 0.     -0.0014  0.0347  0.0001 -0.0001] int [ 0.     -0.0019  0.0331 -0.0004 -0.0006] obs [ 0.      0.0001 -0.0002 -0.0008  0.0017]
+bad-outcome rate at an intervention budget of [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0] {'interventional': [0.00166, 0.00135, 0.00107, 0.00085, 0.00054, 0.00053, 0.00047], 'observational': [0.00181, 0.00182, 0.00195, 0.00225, 0.00314, 0.01351, 0.01966], 'random_moments_brake': [0.00186, 0.00184, 0.00184, 0.00185, 0.00179, 0.00145, 0.00048], 'oracle': [0.00086, 0.00019, 0.00019, 0.00019, 0.00019, 0.00019, 0.00019], 'as_is': 0.00186}
+=== critic retrained in 61s
+0 {'interventional': {'mae': 0.0196, 'corr_hardest_braking': 0.022, 'auroc_new_hard_brake': 0.751}, 'observational': {'mae': 0.0089, 'corr_hardest_braking': 0.0, 'auroc_new_hard_brake': 0.747}, 'zero': {'mae': 0.0089, 'corr_hardest_braking': 0.0, 'auroc_new_hard_brake': 0.747}} true effect -0.003 new hard brakes 19
+1 {'interventional': {'mae': 0.1105, 'corr_hardest_braking': 0.465, 'auroc_new_hard_brake': 0.899}, 'observational': {'mae': 0.3652, 'corr_hardest_braking': 0.13, 'auroc_new_hard_brake': 0.864}, 'zero': {'mae': 0.2069, 'corr_hardest_braking': 0.0, 'auroc_new_hard_brake': 0.872}} true effect -0.118 new hard brakes 258
+2 {'interventional': {'mae': 0.1287, 'corr_hardest_braking': 0.146, 'auroc_new_hard_brake': 0.554}, 'observational': {'mae': 0.2346, 'corr_hardest_braking': 0.014, 'auroc_new_hard_brake': 0.663}, 'zero': {'mae': 0.2852, 'corr_hardest_braking': 0.0, 'auroc_new_hard_brake': 0.68}} true effect -0.236 new hard brakes 356
+3 {'interventional': {'mae': 0.0262, 'corr_hardest_braking': 0.017, 'auroc_new_hard_brake': 0.628}, 'observational': {'mae': 0.1471, 'corr_hardest_braking': -0.021, 'auroc_new_hard_brake': 0.536}, 'zero': {'mae': 0.0197, 'corr_hardest_braking': 0.0, 'auroc_new_hard_brake': 0.642}} true effect -0.006 new hard brakes 38
+4 {'interventional': {'mae': 0.0288, 'corr_hardest_braking': 0.046, 'auroc_new_hard_brake': 0.643}, 'observational': {'mae': 0.134, 'corr_hardest_braking': 0.023, 'auroc_new_hard_brake': 0.711}, 'zero': {'mae': 0.0238, 'corr_hardest_braking': 0.0, 'auroc_new_hard_brake': 0.643}} true effect -0.0 new hard brakes 23
+=== response retrained in 44s
+mistake: 2948 crashes, 0.016 with a cause, 0.006 of the collided pair and 0.000 of bystanders are causes
+  network {'top1': [0.5, 0.25, 0.75], 'auroc': 0.821}
+  striker (faster of the two) {'top1': [0.5, 0.25, 0.75], 'auroc': 0.728}
+  crossed on red {'top1': [0.417, 0.167, 0.667], 'auroc': 0.804}
+  privileged: had a mistake on {'top1': [0.917, 0.75, 1.0], 'auroc': 0.872}
+careful: 2948 crashes, 0.466 with a cause, 0.264 of the collided pair and 0.005 of bystanders are causes
+  network {'top1': [0.894, 0.861, 0.925], 'auroc': 0.938}
+  striker (faster of the two) {'top1': [0.955, 0.931, 0.976], 'auroc': 0.911}
+  crossed on red {'top1': [0.535, 0.483, 0.589], 'auroc': 0.886}
+  privileged: had a mistake on {'top1': [0.468, 0.414, 0.52], 'auroc': 0.741}
+done in 33s
+=== blame retrained in 33s
+real statistics outside every simulated world: ['tight_follow_share', 'ttc_under_1s_share', 'acc_sd']
+{
+ "n_worlds": 1024,
+ "held_out_nll": 37.81243133544922,
+ "posterior_sd_over_prior_sd": {
+  "p_red": 0.8699945262633264,
+  "distract_rate": 0.8967608963139355,
+  "p_aggressive": 0.8259811722673476,
+  "T_med": 0.34048705687746406,
+  "T_sigma": 0.6937968840356916,
+  "accel_noise": 0.3313894921448082,
+  "pulse_rate": 0.26316223986214027,
+  "ped_scale": 0.6972128374036402,
+  "p_ped_violate": 0.7962234634906054
+ },
+ "real_stats": [
+  1.6454800367355347,
+  -1.7278677225112915,
+  -1.9725109338760376,
+  -2.4492242336273193,
+  0.7609999775886536,
+  1.827142357826233
+ ],
+ "stat_names": [
+  "hard_brakes_per_h",
+  "tight_follow_share",
+  "ttc_under_2s_share",
+  "ttc_under_1s_share",
+  "median_speed",
+  "acc_sd"
+ ],
+ "posterior_real": {
+  "p_red": {
+   "median": 0.07490552961826324,
+   "q05": 0.06671038269996643,
+   "q95": 0.08323121070861816
+  },
+  "distract_rate": {
+   "median": 9.512108363196603e-07,
+   "q05": 2.829247307545302e-07,
+   "q95": 6.267781827773433e-06
+  },
+  "p_aggressive": {
+   "median": 0.41674911975860596,
+   "q05": 0.20902849733829498,
+   "q95": 0.5459128618240356
+  },
+  "T_med": {
+   "median": 0.6073744893074036,
+   "q05": 0.6064274311065674,
+   "q95": 0.6083994507789612
+  },
+  "T_sigma": {
+   "median": 0.4837718605995178,
+   "q05": 0.4638832211494446,
+   "q95": 0.503172755241394
+  },
+  "accel_noise": {
+   "median": 0.999967098236084,
+   "q05": 0.9999624490737915,
+   "q95": 0.9999712705612183
+  },
+  "pulse_rate": {
+   "median": 0.014686359092593193,
+   "q05": 0.01414536777883768,
+   "q95": 0.015178208239376545
+  },
+  "ped_scale": {
+   "median": 1.8429012298583984,
+   "q05": 1.7404892444610596,
+   "q95": 1.940061092376709
+  },
+  "p_ped_violate": {
+   "median": 0.21063226461410522,
+   "q05": 0.06567337363958359,
+   "q95": 0.34719353914260864
+  }
+ },
+ "sim_stats_range": [
+  [
+   0.92760169506073,
+   -3.698970079421997,
+   -3.6149816513061523,
+   -4.301030158996582,
+   0.6899999976158142,
+   1.0158761739730835
+  ],
+  [
+   1.8702325820922852,
+   -2.0379862785339355,
+   -1.8253346681594849,
+   -3.058417797088623,
+   0.9570000171661377,
+   1.4445879459381104
+  ]
+ ],
+ "sbc_chi2": [
+  39.03125,
+  16.0625,
+  12.624999999999998,
+  27.78125,
+  17.156249999999996,
+  13.09375,
+  11.218749999999998,
+  18.875,
+  24.34375
+ ],
+ "outside_sim_range": [
+  "tight_follow_share",
+  "ttc_under_1s_share",
+  "acc_sd"
+ ]
+}
+posterior-predictive distance to the real statistics (in SDs): (2.244875818490982, 2.169121182244271, 2.3267895318567753) prior: (3.49986469745636, 3.3445780243724585, 3.657761187851429)
+done in 84s
+=== sbi retrained in 85s
+624701 windows from 16 copies (5s)
+/home/user/av_world/nets/mindreader.py:127: RuntimeWarning: Mean of empty slice
+  f = [np.nanmean(ratio, 1), np.nanmax(ratio, 1), acc.min(1), acc.max(1), np.nanmean(np.where(fol, acc, np.nan), 1),
+/home/user/av_world/nets/mindreader.py:128: RuntimeWarning: All-NaN slice encountered
+  np.nanmedian(thw, 1), np.nanmin(thw, 1), (v < 0.5).mean(1), fol.mean(1), v[:, -1] / 15.0, np.clip(dist[:, -1], 0, 150) / 100.0,
+runner {'net_auroc': 0.516, 'linear_auroc': 0.503, 'base_rate': 0.259}
+aggr {'net_auroc': 0.503, 'linear_auroc': 0.494, 'base_rate': 0.202}
+red_soon {'net_auroc': 1.0, 'linear_auroc': 0.999, 'base_rate': 0.0}
+T {'net_r2': 0.409, 'linear_r2': 0.004}
+amax {'net_r2': 0.444, 'linear_r2': 0.044}
+b {'net_r2': 0.033, 'linear_r2': -0.003}
+v0f {'net_r2': 0.367, 'linear_r2': 0.009}
+s0 {'net_r2': 0.336, 'linear_r2': 0.002}
+done in 219s
+=== mindreader retrained in 219s
+219468 AV views, hidden-cell rate 0.0179, someone hidden ahead 0.176 (1s)
+/home/user/av_world/nets/occlusion.py:164: RuntimeWarning: overflow encountered in exp
+  pg = 1 / (1 + np.exp(-out[:, :-1]))
+/home/user/av_world/nets/occlusion.py:165: RuntimeWarning: overflow encountered in exp
+  pp = 1 / (1 + np.exp(-out[:, -1]))
+{
+ "n_views": 219468,
+ "n_test": 54311,
+ "hidden_cell_rate": 0.01791284792125225,
+ "hidden_ahead_rate": 0.1763218343257904,
+ "grid": {
+  "network": {
+   "auroc": 0.9677102077008906,
+   "brier": 0.01354459673166275
+  },
+  "marginal prior": {
+   "auroc": 0.8744340539796667,
+   "brier": 0.01760767214000225
+  },
+  "shadow geometry": {
+   "auroc": 0.92581370774613,
+   "brier": 0.016494385830706906
+  }
+ },
+ "ahead": {
+  "network_auroc": 0.9783554299722074,
+  "shadow_ahead_auroc": 0.7695864937365576
+ }
+}
+=== occlusion retrained in 185s

@@ -157,6 +157,19 @@ s (6)   hard brakes /h, headway &lt; 0.8 s, TTC &lt; 2 s, TTC &lt; 1 s, median s
   <p class="note"><b>Misspecification, found.</b> Tight following, TTC under 1 s and acceleration SD in real traffic lie outside the range of every simulated world. The posterior therefore piles onto the edge of the box: shortest headway, most acceleration noise. Its tight intervals there are extrapolation, not knowledge. Within this prior, the simulator’s drivers cannot follow as closely, or brake as late, as real ones.</p>
 </section>
 
+<section aria-labelledby="train">
+  <h2 id="train">Train it yourself</h2>
+  <p>Every network and upgrade is one command. Quick mode takes a few minutes and writes to <code>results/nets/quick/</code>, so it never overwrites the full results. The step-by-step guide is <code>docs/TRAINING_NETS.md</code>.</p>
+  <pre class="cmd">av-world nets list                       # 13 features: question, minutes, trained or not
+av-world nets train occlusion --quick    # about 1 minute on a 4-core CPU
+av-world nets info occlusion             # what it needs, what it wrote, how to use it</pre>
+  <pre class="cmd">from av_world import easy
+net = easy.nets.load("critic")           # also: response, occlusion, mindreader, blame, sbi
+net.risk(obs, u)                         # P(bad outcome in 4 s) for each of the 5 actions
+easy.nets.load("mindreader").read(windows)   # headway, acceleration, desired speed in real units
+easy.nets.load("sbi").real(n=1000)       # knob posterior for real Argoverse 2 traffic</pre>
+</section>
+
 <section aria-labelledby="speed">
   <h2 id="speed">Making it fast on 4 CPU cores</h2>
   <div class="tablewrap"><table>

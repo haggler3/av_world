@@ -163,20 +163,22 @@ def loss(p, b, apply_fn):
     return lb.mean() + 0.5 * lr.mean()
 
 
-def main(stride=9):
-    os.makedirs(OUT, exist_ok=True)
+def main(stride=9, out_dir=OUT, quick=False):
+    os.makedirs(out_dir, exist_ok=True)
+    steps = 1000 if quick else 4000
     t0 = time.time()
-    cache = f"{OUT}/mindreader_windows.npz"
+    cache = f"{out_dir}/mindreader_windows.npz"
     if os.path.exists(cache):
         z = np.load(cache)
         x, y, env = z["x"].astype(np.float32), z["y"], z["env"]
     else:
-        rec = collect()
+        rec = collect(4, 2) if quick else collect()
         x, y, env = windows(rec, stride)
         del rec
         np.savez(cache, x=x.astype(np.float16), y=y, env=env)
     print(f"{len(x)} windows from {len(np.unique(env))} copies ({time.time() - t0:.0f}s)", flush=True)
-    tr, te = env < 12, env >= 12
+    te = env >= CM.split_env(env)
+    tr = ~te
     yb, yr = y[:, BIN], y[:, REGI]
     mu, sd = yr[tr].mean(0), yr[tr].std(0) + 1e-6
     yrn = (yr - mu) / sd
@@ -185,7 +187,7 @@ def main(stride=9):
     wb[:, 2] = np.where(yb[:, 2] > 0.5, min(20.0, 0.5 / max(yb[tr, 2].mean(), 1e-4)), 1.0)
     xn = normalise(x)
     p = init(jax.random.PRNGKey(0))
-    p, curve = CM.fit(lambda p, b: loss(p, b, apply), p, {"x": xn[tr], "yb": yb[tr], "yr": yrn[tr], "wb": wb[tr]}, steps=4000, batch=1024)
+    p, curve = CM.fit(lambda p, b: loss(p, b, apply), p, {"x": xn[tr], "yb": yb[tr], "yr": yrn[tr], "wb": wb[tr]}, steps=steps, batch=1024)
     out = np.concatenate([np.asarray(jax.jit(apply)(p, jnp.asarray(xn[te][i:i + 8192]))) for i in range(0, te.sum(), 8192)])
     hf = hand_features(x)
     hmu, hsd = hf[tr].mean(0), hf[tr].std(0) + 1e-6
@@ -204,12 +206,10 @@ def main(stride=9):
     for k, v in res["targets"].items():
         print(k, {a: round(b, 3) for a, b in v.items()}, flush=True)
     res["curve"] = curve[::40].tolist()
-    with open(f"{OUT}/mindreader.json", "w") as f:
+    with open(f"{out_dir}/mindreader.json", "w") as f:
         json.dump(res, f)
-    np.savez_compressed(f"{OUT}/mindreader_preds.npz", net=out, lin=lout, yb=yb[te], yr=yrn[te], x_last=x[te][:, -1])
-    import pickle
-    with open(f"{OUT}/mindreader_params.pkl", "wb") as f:
-        pickle.dump(jax.tree.map(np.asarray, p), f)
+    np.savez_compressed(f"{out_dir}/mindreader_preds.npz", net=out, lin=lout, yb=yb[te], yr=yrn[te], x_last=x[te][:, -1])
+    CM.save_params(f"{out_dir}/mindreader_params.pkl", p, reg_mean=mu, reg_sd=sd, reg_names=REG)
     print(f"done in {time.time() - t0:.0f}s")
 
 

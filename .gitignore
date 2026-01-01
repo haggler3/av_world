@@ -29,3 +29,4 @@ results/nets/forks.npz
 results/nets/mindreader_windows.npz
 results/nets/occlusion_samples.npz
 results/nets/*_preds.npz
+results/nets/quick/

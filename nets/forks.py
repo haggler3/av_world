@@ -68,8 +68,8 @@ def neighbours(trk, s, length, alive):
     return fol, lead
 
 
-def collect(cycles=120, n_envs=32, warm=120.0, seed=0):
-    os.makedirs(OUT, exist_ok=True)
+def collect(cycles=120, n_envs=32, warm=120.0, seed=0, out_dir=OUT):
+    os.makedirs(out_dir, exist_ok=True)
     X.SHIELD = "off"
     w = C.World()
     beh = AD.world(5.0)._replace(crn=1.0)
@@ -123,9 +123,14 @@ def collect(cycles=120, n_envs=32, warm=120.0, seed=0):
             print(f"cycle {c}: {len(bad)} AV forks, bad-outcome rate per action {bad.mean(0).round(4).tolist()} ({time.time() - t0:.0f}s)", flush=True)
     out = {k: np.asarray(v) for k, v in rows.items()}
     out["u_prior"] = np.asarray(P.mean(prior, jnp.asarray(out["obs"])))
-    np.savez_compressed(f"{OUT}/forks.npz", **out, deltas=DELTAS)
+    np.savez_compressed(f"{out_dir}/forks.npz", **out, deltas=DELTAS)
     X.SHIELD = "idm"
     print(f"saved {len(out['bad'])} AV forks x {K + 1} branches in {time.time() - t0:.0f}s")
+
+
+def main(out_dir=OUT, quick=False):
+    """Registry entry point: 150 cycles x 32 copies (~4 min), quick: 12 cycles x 16 copies (~1 min)."""
+    return collect(12, 16, out_dir=out_dir) if quick else collect(150, 32, out_dir=out_dir)
 
 
 if __name__ == "__main__":
