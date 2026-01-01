@@ -153,18 +153,23 @@ def _dir(p, at_end):
 def load_rows(bbox):
     w, s, e, n = bbox
     path = "data/pgh_segments.parquet"
-    if not os.path.exists(path):  # run from elsewhere (e.g. av_world_rl): the repo's own data folder
+    if not os.path.exists(path):  # run from elsewhere: the repo's own data folder, else the trimmed copy in the package
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), path)
+    if not os.path.exists(path):
+        from av_world import data_path
+        path = data_path("pgh_areas.parquet")
     rows = pq.read_table(path, columns=["id", "names", "class", "subclass", "connectors",
                                                                "access_restrictions", "speed_limits", "geometry", "bbox"]).to_pylist()
     return [r for r in rows if r["class"] in DRIVE and r["subclass"] != "link" and r["bbox"]["xmax"] >= w
             and r["bbox"]["xmin"] <= e and r["bbox"]["ymax"] >= s and r["bbox"]["ymin"] <= n]
 
 
-def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0):
+def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0, rows=None):
+    """`area`: a name in AREAS or a (west, south, east, north) box; `rows`: road segments in the Overture schema (default: the
+    Pittsburgh file; xnet.osm.rows_from_osm makes them from any OpenStreetMap extract)."""
     bbox = AREAS[area] if isinstance(area, str) else area
     rng = np.random.default_rng(seed)
-    rows = load_rows(bbox)
+    rows = load_rows(bbox) if rows is None else rows
     x0, y0 = to_m(bbox[0], bbox[1])
     x1, y1 = to_m(bbox[2], bbox[3])
     box = (float(x0), float(y0), float(x1), float(y1))

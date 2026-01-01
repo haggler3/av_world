@@ -27,6 +27,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from av_world import data_path
 from xnet import network as NW
 from xnet import sim as X
 
@@ -49,7 +50,7 @@ WORLDS = [
 
 
 def knobs():
-    return json.load(open(os.path.join(os.path.dirname(NW.__file__), "..", "results", "calibration.json")))["calibrated"]
+    return json.load(open(data_path("calibration.json")))["calibrated"]
 
 
 def world(level, n=N_ENVS):

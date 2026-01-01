@@ -26,6 +26,7 @@ import optax
 
 from wmplan import risk as RK
 from xnet import mutate as MU
+from av_world import data_path  # noqa: E402
 from xnet import network as NW
 from xnet import sim as X
 
@@ -33,7 +34,7 @@ from . import ladder as LD
 from . import xppo as P
 
 OUT = "results/dyn"
-START = "results/xnet3/policy.npz"
+START = data_path("policy.npz")
 REWARD = LD.REWARD | {"barrier": 0.3, "inside": 0.05, "veto": 1.0}  # the barrier function as the teacher
 IDX = {k: i for i, k in enumerate(X.METRICS)}
 UPDATES, CKPTS, EARLY = 100, (25, 50, 100), (5, 10, 15)  # EARLY: a 15-update rerun of the same seed (it is deterministic)

@@ -13,6 +13,7 @@ import time
 import jax
 import numpy as np
 
+from av_world import data_path
 from xnet import network as NW
 from xnet import sim as X
 
@@ -36,7 +37,7 @@ def run(net, beh, policy, n_envs=8, seconds=1800.0, warm=300.0, seed=11):
 def main(path, area="oakland", only=None):
     out = os.path.dirname(path)
     net, geo, info = NW.build(area)
-    knobs = json.load(open(os.path.join(os.path.dirname(NW.__file__), "..", "results", "calibration.json")))["calibrated"]
+    knobs = json.load(open(data_path("calibration.json")))["calibrated"]
     params = P.load(path)
     learned = P.deterministic(params)
     rows = []

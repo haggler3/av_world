@@ -1,9 +1,26 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "av_world"
-version = "0.2.0"
-description = "Batched JAX intersection and city-area traffic worlds (xworld, xnet) with Pittsburgh maps"
+version = "0.3.0"
+description = "Batched JAX city-scale traffic and AV simulator: reactive humans, typed crashes, a barrier-function safety filter, long-tail and adversary tools, OpenStreetMap import, CARLA export"
+readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["jax", "numpy", "scipy", "matplotlib", "pillow", "shapely", "pyarrow"]
+license = {text = "MIT"}
+dependencies = ["jax", "numpy", "scipy", "matplotlib", "pillow", "shapely", "pyarrow", "optax"]
+
+[project.optional-dependencies]
+gpu = ["jax[cuda12]"]
+dev = ["pytest"]
+carla = ["carla"]
+
+[project.scripts]
+av-world = "av_world.cli:main"
 
 [tool.setuptools]
-packages = ["xworld", "xnet", "pgh", "avrl", "dwm", "avlab", "wmplan"]
+packages = ["av_world", "xworld", "xnet", "pgh", "avrl", "dwm", "avlab", "wmplan"]
+
+[tool.setuptools.package-data]
+av_world = ["_data/*"]

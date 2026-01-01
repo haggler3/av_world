@@ -1,0 +1,26 @@
+[
+ {
+  "scene": "masked_ped_0",
+  "ego": 2,
+  "objects": 411,
+  "detected": 0.3795620437956204,
+  "occluded_share": 0.44038929440389296,
+  "vru_detected": 0.04,
+  "emerging_detected": 0.75,
+  "far_detected": 0.012345679012345678,
+  "ghost_frames": 7,
+  "dropout_share": 0.08
+ },
+ {
+  "scene": "masked_ped_1",
+  "ego": 2,
+  "objects": 707,
+  "detected": 0.31683168316831684,
+  "occluded_share": 0.24752475247524752,
+  "vru_detected": 0.7924528301886793,
+  "emerging_detected": 0.18181818181818182,
+  "far_detected": 0.2154696132596685,
+  "ghost_frames": 0,
+  "dropout_share": 0.0
+ }
+]
