@@ -1,0 +1,73 @@
+{
+ "learned policy A, no filter | none": {
+  "runs": 150,
+  "ego_crash_rate": 0.06,
+  "new_failures": 0,
+  "mean_min_gap_m": 47.12141931215922,
+  "hard_brake_rate": 0.22
+ },
+ "learned policy A, no filter | lead_brake": {
+  "runs": 29,
+  "ego_crash_rate": 0.10344827586206896,
+  "new_failures": 2,
+  "mean_min_gap_m": 17.260112828221814,
+  "hard_brake_rate": 0.1724137931034483
+ },
+ "learned policy A, no filter | lead_stop": {
+  "runs": 29,
+  "ego_crash_rate": 0.06896551724137931,
+  "new_failures": 1,
+  "mean_min_gap_m": 9.328609926947232,
+  "hard_brake_rate": 0.13793103448275862
+ },
+ "learned policy A, no filter | tailgater": {
+  "runs": 40,
+  "ego_crash_rate": 0.075,
+  "new_failures": 0,
+  "mean_min_gap_m": 41.07776863574982,
+  "hard_brake_rate": 0.325
+ },
+ "learned policy A, no filter | ped_dartout": {
+  "runs": 23,
+  "ego_crash_rate": 0.08695652173913043,
+  "new_failures": 2,
+  "mean_min_gap_m": 60.0,
+  "hard_brake_rate": 0.43478260869565216
+ },
+ "rule-based AV (IDM envelope) | none": {
+  "runs": 150,
+  "ego_crash_rate": 0.02,
+  "new_failures": 0,
+  "mean_min_gap_m": 44.54983663876851,
+  "hard_brake_rate": 0.3466666666666667
+ },
+ "rule-based AV (IDM envelope) | lead_brake": {
+  "runs": 29,
+  "ego_crash_rate": 0.034482758620689655,
+  "new_failures": 0,
+  "mean_min_gap_m": 11.314638244694677,
+  "hard_brake_rate": 0.1724137931034483
+ },
+ "rule-based AV (IDM envelope) | lead_stop": {
+  "runs": 29,
+  "ego_crash_rate": 0.0,
+  "new_failures": 0,
+  "mean_min_gap_m": 6.420817802692282,
+  "hard_brake_rate": 0.2413793103448276
+ },
+ "rule-based AV (IDM envelope) | tailgater": {
+  "runs": 40,
+  "ego_crash_rate": 0.025,
+  "new_failures": 0,
+  "mean_min_gap_m": 38.91739156246185,
+  "hard_brake_rate": 0.45
+ },
+ "rule-based AV (IDM envelope) | ped_dartout": {
+  "runs": 43,
+  "ego_crash_rate": 0.046511627906976744,
+  "new_failures": 2,
+  "mean_min_gap_m": 58.535881929619364,
+  "hard_brake_rate": 0.4186046511627907
+ },
+ "_note": "partial run: the job stopped when the container restarted; scenarios processed are those in counterfactual_rows.json; ped_dartout counts only runs where the pedestrian stepped out"
+}

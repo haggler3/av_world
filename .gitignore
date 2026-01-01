@@ -12,3 +12,6 @@ data/*
 results/wmplan/data*.npz
 results/avlab/*_warm.npz
 results/rare/pilot.npz
+build/
+dist/
+*.egg-info/

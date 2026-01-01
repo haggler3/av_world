@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "av_world"
-version = "0.3.0"
+version = "0.4.0"
 description = "Batched JAX city-scale traffic and AV simulator: reactive humans, typed crashes, a barrier-function safety filter, long-tail and adversary tools, OpenStreetMap import, CARLA export"
 readme = "README.md"
 requires-python = ">=3.10"

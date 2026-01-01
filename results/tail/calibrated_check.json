@@ -1,0 +1,44 @@
+{
+ "knobs": {
+  "T_med": 0.7573930066691607,
+  "T_sigma": 0.5205384974297427,
+  "accel_noise": 0.941175920349297,
+  "pulse_rate": 0.019258180331725057
+ },
+ "default drivers": {
+  "hard_brakes_per_h": 11.812573828586428,
+  "tight_follow_share": 0.0006854209505476073,
+  "ttc_under_2s_share": 0.001976054017004269,
+  "ttc_under_1s_share": 6.562541015881348e-05,
+  "loss": 9.303290827269372
+ },
+ "fitted drivers": {
+  "hard_brakes_per_h": 53.4259305952784,
+  "tight_follow_share": 0.002226080441469933,
+  "ttc_under_2s_share": 0.006966407077350932,
+  "ttc_under_1s_share": 0.0002017160270587642,
+  "loss": 5.295036940878325
+ },
+ "rule_based_av": {
+  "default drivers": {
+   "av_hours": 217.78314236111112,
+   "av_crashes": 2.0,
+   "av_hard_per_h": 18.674539984625696,
+   "av_near": 1.0,
+   "rear-end": 2.0
+  },
+  "fitted drivers": {
+   "av_hours": 217.3407986111111,
+   "av_crashes": 0.0,
+   "av_hard_per_h": 18.441084350534357,
+   "av_near": 0.0,
+   "rear-end": 3.0
+  }
+ },
+ "real": {
+  "hard_brakes_per_h": 43.205875999135856,
+  "tight_follow_share": 0.018512517702407513,
+  "ttc_under_2s_share": 0.010453421665346479,
+  "ttc_under_1s_share": 0.0035044766088187973
+ }
+}

@@ -73,7 +73,8 @@ class Rare:
                                     jnp.broadcast_to(ctx, (K_AV, 4))], 1)
             live = ok & (st.wreck_t[idx] <= 0)  # an AV that is still driving
             new = ok & (st.wreck_t[idx] > 0) & ~w0[idx]  # crashed in this window
-            return st, (st.m - m0)[X.METRICS.index("av_crash")], feat, live, new, idx, st.t0[idx], jnp.maximum(av.sum() - K_AV, 0)
+            ty = jnp.stack([(st.m - m0)[X.METRICS.index(k)] for k in X.AV_CRASH])
+            return (st, (st.m - m0)[X.METRICS.index("av_crash")], feat, live, new, idx, st.t0[idx], jnp.maximum(av.sum() - K_AV, 0)), ty
 
         self._win = jax.jit(jax.vmap(window_one))
         self._reset = jax.jit(jax.vmap(lambda k: X.reset(k, J, N_SLOTS)))
@@ -82,7 +83,8 @@ class Rare:
     def window(self, st, key):
         """-> state, AV crashes [n], and numpy: feat [n, K, NAV], live, new, slot, t0, overflow."""
         X.SHIELD = self.shield  # read when traced
-        out = self._win(st, jax.random.split(key, self.n))
+        out, ty = self._win(st, jax.random.split(key, self.n))
+        self.last_types = np.asarray(ty)  # [n, 7]: AV crashes of each type in this window
         return (out[0],) + tuple(np.asarray(o) for o in out[1:])
 
     def init(self, warm_s=200.0, seed=None):

@@ -7,6 +7,7 @@
   av-world fetch-av2 DIR [--n 20]            download Argoverse 2 scenarios (public bucket, no account)
   av-world import-av2 SCENARIO_DIR OUT       a logged scenario -> OUT.json (scene), OUT.xodr (OpenDRIVE map), OUT_net.npz (xnet road network)
   av-world validate-av2 DIR [--limit 100]    how well the simulator's drivers predict the logs (xnet.avdata.validate)
+  av-world tail METHOD                       the five long-tail methods: calibrate | counterfactual DIR | qd | novelty | explore (docs/LONG_TAIL_METHODS.md)
   av-world train [gpu_train options]         PPO on every device (python -m avrl.gpu_train)
   av-world survey | adversary | rare ...     the long-tail tools (python -m avlab.tails / adversary / rare)
 """
@@ -102,6 +103,16 @@ def main(argv=None):
         a = ap.parse_args(rest)
         from xnet import avdata as AV
         AV.validate(a.dir, a.limit)
+        return 0
+    if cmd == "tail":
+        table = {"calibrate": ("avlab.tail_calibrate", ["fit"]), "counterfactual": ("avlab.tail_counterfactual", []), "qd": ("avlab.tail_qd", ["run"]),
+                 "novelty": ("avlab.tail_novelty", []), "explore": ("avlab.tail_explore", [])}
+        if not rest or rest[0] not in table:
+            print("av-world tail " + " | ".join(table))
+            return 2
+        mod, pre = table[rest[0]]
+        sys.argv = [mod] + pre + rest[1:]
+        runpy.run_module(mod, run_name="__main__")
         return 0
     mods = {"train": "avrl.gpu_train", "survey": "avlab.tails", "adversary": "avlab.adversary", "rare": "avlab.rare"}
     if cmd in mods:

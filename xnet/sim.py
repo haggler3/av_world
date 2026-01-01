@@ -63,6 +63,12 @@ class Behaviour(NamedTuple):
     friction: float = 1.0  # road friction: the hardest possible braking is 9 m/s^2 x friction (wet ~0.6, snow ~0.3)
     perception_noise: float = 0.0  # AVs see gaps x (1 + noise x N(0, 1)), clipped to +-3 sigma
     p_close_pass: float = 5e-4  # an aggressive or distracted human overtaking a cyclist clips them
+    # the continuous tail of everyday human driving (0 = off): lognormal headways, acceleration noise, brake pulses; fitted to real logs by avlab.calibrate_drivers
+    T_med: float = 0.0  # median time headway [s] of human drivers (> 0: T = T_med * exp(T_sigma * N(0, 1)) instead of 1.0-1.8 s)
+    T_sigma: float = 0.0
+    accel_noise: float = 0.0  # standard deviation [m/s^2] of white noise added to every human driver's acceleration each step
+    pulse_rate: float = 0.0  # per second, a human driver brakes at pulse_a for one second without a visible reason
+    pulse_a: float = 4.5
     p_tailgate: float = 0.0  # share of human drivers who keep a time headway of 0.35-0.7 s instead of 1.0-1.8 s (0 = off)
     p_dart: float = 0.0  # a pedestrian steps out from behind a stopped bus or van at a crosswalk without checking for traffic (0 = off)
     # AV perception faults (0 = off): a blackout hides the leader and the stop target for 0.6-2 s; a ghost is a phantom
@@ -153,6 +159,7 @@ class State(NamedTuple):
     t0: jnp.ndarray  # trip start
     acc: jnp.ndarray  # acceleration applied last step
     gsc: jnp.ndarray  # gap-acceptance scale (AVs: chosen by the policy; 1.25 = the rule-based AV)
+    pulse_t: jnp.ndarray  # a human brake pulse left [s]
     blind_t: jnp.ndarray  # AV perception fault left [s]: > 0 blackout, < 0 phantom obstacle
     ped_t: jnp.ndarray  # [legs] crossing time left
     link_vs: jnp.ndarray  # [L] sum of speeds (routing)
@@ -179,7 +186,7 @@ def reset(key, net, n_slots):
     return State(key=key, t=jnp.zeros(()), alive=zb, trk=zi, s=z, v=z, dest=zi, nxt=zi, kind=zi, v0f=z + 1, T=z + 1.4,
                  amax=z + 1.5, b=z + 2.0, s0=z + 2.0, length=z + 4.6, runner=zb, nolook=zb, nosignal=zb, aggr=zb, av=zb,
                  react=z + 1.0, dist_t=z, stop_t=z, park_s=z - 1, broken=zb, wreck_t=z, stopped=zb, wait_t=z, red_t=z, ydec=zi,
-                 ran_red=zb, stuck_t=z, behind_t=z, lc_t=z, t0=z, acc=z, gsc=z + 1.25, blind_t=z, ped_t=jnp.zeros(net["leg_node"].shape[0]),
+                 ran_red=zb, stuck_t=z, behind_t=z, lc_t=z, t0=z, acc=z, gsc=z + 1.25, blind_t=z, pulse_t=z, ped_t=jnp.zeros(net["leg_node"].shape[0]),
                  link_vs=jnp.zeros(L), link_n=jnp.zeros(L), m=jnp.zeros(NM))
 
 
@@ -454,6 +461,12 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     acc = jnp.where(g_eff < 1e8, idm(st.v, v0, g_eff, vl_eff, st.amax, st.b, st.T, st.s0), st.amax * (1 - (st.v / jnp.maximum(v0, 0.1)) ** 4))
     acc = jnp.clip(acc, a_min, st.amax)
     acc = jnp.where(distracted, 0.0, acc)  # no reaction
+    human_drv = alive & ~st.av & ~wreck
+    pulse_start = human_drv & (st.pulse_t <= 0) & (st.v > 3.0) & (jax.random.uniform(jax.random.fold_in(st.key, 11), (N,)) < beh.pulse_rate * DT)
+    pulse_t = jnp.where(pulse_start, 1.0, jnp.maximum(st.pulse_t - DT, 0.0))
+    acc = jnp.where(human_drv, acc + beh.accel_noise * jax.random.normal(jax.random.fold_in(st.key, 10), (N,)), acc)
+    acc = jnp.where(human_drv & (pulse_t > 0), jnp.minimum(acc, -beh.pulse_a), acc)
+    acc = jnp.clip(acc, a_min, st.amax)
     halted = (st.stop_t > 0) | wreck
     # ---- the AV: the rule-based driver or a policy, under the safety filter
     g_stop = seen(jnp.minimum(stop_gap, park_gap))
@@ -718,7 +731,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     vals = dict(
         alive=jnp.ones(S, bool), trk=strk, s=s_sp, v=v_sp, dest=dst,
         nxt=jnp.where(src == net["dest_link"][dst], -1, nh[src, dst]), kind=jnp.where(is_bus, BUS, jnp.where(is_van, VAN, jnp.where(is_bike, BIKE, CAR))),
-        v0f=jnp.where(is_bus, 0.85, jnp.where(is_av, 1.0, 0.9 + 0.3 * u_sp[7])), T=jnp.where(is_av, 1.3, jnp.where(is_bus, 1.6, jnp.where(jnp.mod(u_sp[2] * 97.0, 1.0) < beh.p_tailgate, 0.35 + 0.35 * u_sp[5], 1.0 + 0.8 * u_sp[5]))),
+        v0f=jnp.where(is_bus, 0.85, jnp.where(is_av, 1.0, 0.9 + 0.3 * u_sp[7])), T=jnp.where(is_av, 1.3, jnp.where(is_bus, 1.6, jnp.where(beh.T_med > 0.0, jnp.clip(beh.T_med * jnp.exp(beh.T_sigma * jax.random.normal(jax.random.fold_in(st.key, 9), (u_sp.shape[1],))), 0.25, 3.0), jnp.where(jnp.mod(u_sp[2] * 97.0, 1.0) < beh.p_tailgate, 0.35 + 0.35 * u_sp[5], 1.0 + 0.8 * u_sp[5])))),
         amax=jnp.where(is_bus | is_van | is_bike, 1.0, jnp.where(is_av, 1.6, 1.2 + 0.8 * u_sp[2])), b=jnp.where(is_av, 2.0, 1.5 + 1.0 * u_sp[4]),
         s0=1.5 + 1.0 * u_sp[8], length=length,
         runner=human & (u_sp[9] < beh.p_red), nolook=human & (u_sp[10] < beh.p_nolook),
@@ -728,12 +741,12 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
                          jnp.where(is_van & (rk0 >= 2) & (u_sp[14] < beh.p_park), (0.3 + 0.4 * u_sp[15]) * net["link_len"][src], -1.0)),
         broken=jnp.zeros(S, bool), wreck_t=jnp.zeros(S), stopped=jnp.zeros(S, bool), wait_t=jnp.zeros(S), red_t=jnp.zeros(S),
         ydec=jnp.zeros(S, jnp.int32), ran_red=jnp.zeros(S, bool), stuck_t=jnp.zeros(S), behind_t=jnp.zeros(S), lc_t=jnp.zeros(S),
-        t0=jnp.full(S, st.t), acc=jnp.zeros(S), gsc=jnp.full(S, 1.25), blind_t=jnp.zeros(S))
+        t0=jnp.full(S, st.t), acc=jnp.zeros(S), gsc=jnp.full(S, 1.25), blind_t=jnp.zeros(S), pulse_t=jnp.zeros(S))
     cur = dict(alive=alive, trk=trk_new, s=s_new, v=v_new, dest=st.dest, nxt=nxt, kind=st.kind, v0f=st.v0f, T=st.T, amax=st.amax,
                b=st.b, s0=st.s0, length=st.length, runner=st.runner, nolook=st.nolook, nosignal=st.nosignal, aggr=st.aggr, av=st.av,
                react=st.react, dist_t=dist_t, stop_t=stop_t, park_s=park_s, broken=broken, wreck_t=wreck_t, stopped=stopped & alive,
                wait_t=wait_t, red_t=red_t, ydec=ydec, ran_red=ran_red, stuck_t=stuck_t, behind_t=behind_t, lc_t=lc_t, t0=st.t0,
-               acc=jnp.where(alive, acc, 0.0), gsc=gsc, blind_t=jnp.where(alive, blind_t, 0.0))
+               acc=jnp.where(alive, acc, 0.0), gsc=gsc, blind_t=jnp.where(alive, blind_t, 0.0), pulse_t=jnp.where(alive, pulse_t, 0.0))
     new = {k: cur[k].at[slots].set(jnp.where(ok_sp, vals[k], cur[k][slots])) for k in cur}
 
     lk = jnp.where(st.alive & on_link, link, L)

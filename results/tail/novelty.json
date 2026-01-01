@@ -1,0 +1,101 @@
+{
+ "mined_world": "humans x5, sensor faults, dart-outs, stalled cars, tight cut-ins, tailgaters",
+ "rows": 576272,
+ "av_crashes": 43,
+ "cross-world novelty (reference: ordinary traffic)": {
+  "base_rate": 0.00014576450009717634,
+  "crashes": 84,
+  "rows": 576272,
+  "top_0.001": {
+   "rate": 0.001736111111111111,
+   "enrichment": 11.910383597883596,
+   "crashes": 1,
+   "rows": 576
+  },
+  "top_0.01": {
+   "rate": 0.0006942034015966678,
+   "enrichment": 4.762499793391845,
+   "crashes": 4,
+   "rows": 5762
+  },
+  "top_0.05": {
+   "rate": 0.0004511852288897373,
+   "enrichment": 3.0953025502707936,
+   "crashes": 13,
+   "rows": 28813
+  },
+  "auc": 0.6181808178018616
+ },
+ "within-world rarity (reference: first half of the mined world)": {
+  "base_rate": 0.00018788218612666196,
+  "crashes": 64,
+  "rows": 340639,
+  "top_0.001": {
+   "rate": 0.0029411764705882353,
+   "enrichment": 15.654365808823528,
+   "crashes": 1,
+   "rows": 340
+  },
+  "top_0.01": {
+   "rate": 0.0008807985907222549,
+   "enrichment": 4.688036736641221,
+   "crashes": 3,
+   "rows": 3406
+  },
+  "top_0.05": {
+   "rate": 0.0006458810404556398,
+   "enrichment": 3.4376917459338854,
+   "crashes": 11,
+   "rows": 17031
+  },
+  "auc": 0.6175434008661822
+ },
+ "barrier margin (smaller is riskier), same rows": {
+  "base_rate": 0.00014576450009717634,
+  "crashes": 84,
+  "rows": 576272,
+  "top_0.001": {
+   "rate": 0.001736111111111111,
+   "enrichment": 11.910383597883596,
+   "crashes": 1,
+   "rows": 576
+  },
+  "top_0.01": {
+   "rate": 0.00017355085039916696,
+   "enrichment": 1.1906249483479612,
+   "crashes": 1,
+   "rows": 5762
+  },
+  "top_0.05": {
+   "rate": 0.0002429458924790893,
+   "enrichment": 1.6667013732227351,
+   "crashes": 7,
+   "rows": 28813
+  },
+  "auc": 0.5898402001397031
+ },
+ "random": {
+  "base_rate": 0.00014576450009717634,
+  "crashes": 84,
+  "rows": 576272,
+  "top_0.001": {
+   "rate": 0.0,
+   "enrichment": 0.0,
+   "crashes": 0,
+   "rows": 576
+  },
+  "top_0.01": {
+   "rate": 0.00017355085039916696,
+   "enrichment": 1.1906249483479612,
+   "crashes": 1,
+   "rows": 5762
+  },
+  "top_0.05": {
+   "rate": 0.00010411966820532398,
+   "enrichment": 0.7143005885240293,
+   "crashes": 3,
+   "rows": 28813
+  },
+  "auc": 0.48073167339231543
+ }
+}
