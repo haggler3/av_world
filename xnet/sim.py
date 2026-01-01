@@ -83,6 +83,15 @@ class Behaviour(NamedTuple):
     adv_brk: float = 1.0
     adv_cut: float = 1.0
     adv_budget: float = 1.0
+    # common random numbers (0 = off, the stored default): 1 draws every per-vehicle uniform from a hash of (step, vehicle id,
+    # stream) instead of from the vehicle's slot, so a vehicle keeps its dice when another world (a different policy, AV share
+    # or risk knob) puts it in another slot; worlds that differ in one knob then differ by the fewest possible events.
+    crn: float = 0.0
+    # learned human car-following (0 = off, the stored default; needs set_learned_follower(params) before the simulator is built): a
+    # human driver on a car-following gap takes the acceleration of the agent-token model of wm2 (leader variant, trained on Argoverse 2:
+    # its mean plus learned_noise x its own predicted spread) instead of IDM's. Stop lines, parked and courtesy gaps stay IDM.
+    learned: float = 0.0
+    learned_noise: float = 1.0
 
 
 class Reward(NamedTuple):
@@ -160,6 +169,7 @@ class State(NamedTuple):
     acc: jnp.ndarray  # acceleration applied last step
     gsc: jnp.ndarray  # gap-acceptance scale (AVs: chosen by the policy; 1.25 = the rule-based AV)
     pulse_t: jnp.ndarray  # a human brake pulse left [s]
+    uid: jnp.ndarray  # vehicle identity: the global index of the spawn attempt that created it (step * 24 + attempt)
     blind_t: jnp.ndarray  # AV perception fault left [s]: > 0 blackout, < 0 phantom obstacle
     ped_t: jnp.ndarray  # [legs] crossing time left
     link_vs: jnp.ndarray  # [L] sum of speeds (routing)
@@ -186,8 +196,48 @@ def reset(key, net, n_slots):
     return State(key=key, t=jnp.zeros(()), alive=zb, trk=zi, s=z, v=z, dest=zi, nxt=zi, kind=zi, v0f=z + 1, T=z + 1.4,
                  amax=z + 1.5, b=z + 2.0, s0=z + 2.0, length=z + 4.6, runner=zb, nolook=zb, nosignal=zb, aggr=zb, av=zb,
                  react=z + 1.0, dist_t=z, stop_t=z, park_s=z - 1, broken=zb, wreck_t=z, stopped=zb, wait_t=z, red_t=z, ydec=zi,
-                 ran_red=zb, stuck_t=z, behind_t=z, lc_t=z, t0=z, acc=z, gsc=z + 1.25, blind_t=z, pulse_t=z, ped_t=jnp.zeros(net["leg_node"].shape[0]),
+                 ran_red=zb, stuck_t=z, behind_t=z, lc_t=z, t0=z, acc=z, gsc=z + 1.25, blind_t=z, pulse_t=z, uid=zi, ped_t=jnp.zeros(net["leg_node"].shape[0]),
                  link_vs=jnp.zeros(L), link_n=jnp.zeros(L), m=jnp.zeros(NM))
+
+
+LEARNED = None  # parameters of wm2.model (read at trace time): set with set_learned_follower BEFORE building a Sim or tracing step
+
+
+def set_learned_follower(params):
+    global LEARNED
+    LEARNED = None if params is None else jax.tree.map(jnp.asarray, params)
+
+
+def learned_accel(params, v, prev_a, gap, v_lead, z, noise):
+    """Longitudinal acceleration [m/s^2] from the wm2 leader-variant token model: self token (car, speed, last acceleration) and one
+    neighbour token (the leader, ahead in lane). gap is the bumper gap; z a standard-normal draw per vehicle."""
+    from wm2 import model as WM
+
+    n = v.shape[0]
+    S = jnp.zeros((n, 7)).at[:, 0].set(1.0).at[:, 4].set(v / 10.0).at[:, 5].set(jnp.clip(prev_a, -9.0, 5.0) / 3.0)
+    NB = jnp.zeros((n, 1, 11)).at[:, 0, 0].set((gap + 4.5) / 20.0).at[:, 0, 2].set((v_lead - v) / 10.0).at[:, 0, 4].set(1.0).at[:, 0, 6].set(1.0)
+    mu, ls = WM.apply(params, S, NB, jnp.ones((n, 1), bool))
+    return 3.0 * mu[:, 0] + noise * 3.0 * jnp.exp(ls[:, 0]) * z
+
+
+def _mix(x):
+    """lowbias32 integer hash (Evensen's constants): uint32 -> uint32, a good avalanche for sequential inputs."""
+    x = x ^ (x >> 16)
+    x = x * jnp.uint32(0x7FEB352D)
+    x = x ^ (x >> 15)
+    x = x * jnp.uint32(0x846CA68B)
+    return x ^ (x >> 16)
+
+
+def hash_uniform(seed, uid, stream):
+    """U[0, 1) from (the step's seed, a vehicle id, a stream number): the same triple gives the same number in every world,
+    whichever slot the vehicle sits in. 24 mantissa bits, so it is exactly representable in float32."""
+    h = _mix(_mix(uid.astype(jnp.uint32) * jnp.uint32(0x9E3779B1) + jnp.uint32(stream) * jnp.uint32(0x85EBCA6B) + jnp.uint32(1)) ^ seed)
+    return (h >> 8).astype(jnp.float32) * (1.0 / 16777216.0)
+
+
+def hash_normal(seed, uid, stream):
+    return jax.scipy.special.ndtri(jnp.clip(hash_uniform(seed, uid, stream), 1e-6, 1.0 - 1e-6))
 
 
 def idm(v, v0, gap, vl, amax, b, T, s0):
@@ -229,7 +279,10 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     key, k_u, k_n, k_c = jax.random.split(st.key, 4)
     u = jax.random.uniform(k_u, (8 * N + 3 * G + 17 * 24,))
     a_min = -9.0 * beh.friction  # the hardest braking the road allows
-    u_lc, u_dist, u_dur, u_brk, u_misc, u_park, u_park2, u_pass = (u[i * N:(i + 1) * N] for i in range(8))
+    crn = beh.crn > 0.5
+    seed = jax.random.bits(jax.random.fold_in(st.key, 99), (), jnp.uint32)  # the step's seed: the key chain does not depend on the world
+    u_lc, u_dist, u_dur, u_brk, u_misc, u_park, u_park2, u_pass = (
+        jnp.where(crn, hash_uniform(seed, st.uid, i), u[i * N:(i + 1) * N]) for i in range(8))
     u_ped = u[8 * N:8 * N + 3 * G].reshape(3, G)
     u_sp = u[8 * N + 3 * G:].reshape(17, 24)
     bike = st.kind == BIKE
@@ -443,10 +496,10 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     v0 = jnp.where(in_box, jnp.minimum(net["mov_cap"][mbox], vlim * st.v0f), v0)
     v0 = jnp.where(bike, jnp.minimum(v0, 5.5), v0)  # cyclists ride at ~20 km/h
     # what AVs perceive: gaps with multiplicative sensor noise
-    nz = 1.0 + beh.perception_noise * jnp.clip(jax.random.normal(k_n, (N,)), -3.0, 3.0)
+    nz = 1.0 + beh.perception_noise * jnp.clip(jnp.where(crn, hash_normal(seed, st.uid, 11), jax.random.normal(k_n, (N,))), -3.0, 3.0)
 
     kb = jax.random.fold_in(st.key, 7)  # a separate stream: switching the faults on does not change the rest of the run
-    u_b = jax.random.uniform(kb, (3, N))
+    u_b = jnp.where(crn, jnp.stack([hash_uniform(seed, st.uid, 12 + i) for i in range(3)]), jax.random.uniform(kb, (3, N)))
     p_f = beh.p_blind + beh.p_ghost
     f_start = st.av & alive & (st.blind_t == 0) & (u_b[0] < p_f * DT)
     f_dur = 0.6 + 1.4 * u_b[2]
@@ -460,12 +513,18 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     vl_eff = jnp.where(ghost & (g_eff > 12.0), 0.0, vl_eff)
     g_eff = jnp.where(ghost, jnp.minimum(g_eff, 12.0), g_eff)
     acc = jnp.where(g_eff < 1e8, idm(st.v, v0, g_eff, vl_eff, st.amax, st.b, st.T, st.s0), st.amax * (1 - (st.v / jnp.maximum(v0, 0.1)) ** 4))
+    if LEARNED is not None:
+        z_l = jnp.where(crn, hash_normal(seed, st.uid, 13), jax.random.normal(jax.random.fold_in(st.key, 13), (N,)))
+        a_l = learned_accel(LEARNED, st.v, st.acc, jnp.minimum(gap_lead_c, 1e3), v_lead, z_l, beh.learned_noise)
+        use = ((beh.learned > 0.5) & alive & ~st.av & (st.kind == CAR) & (gap_lead_c < 1e8) & (gap_lead_c <= jnp.minimum(stop_gap, park_gap))
+               & ((st.v > 0.5) | (v_lead > 0.5)))
+        acc = jnp.where(use, jnp.minimum(a_l, st.amax * 1.5), acc)
     acc = jnp.clip(acc, a_min, st.amax)
     acc = jnp.where(distracted, 0.0, acc)  # no reaction
     human_drv = alive & ~st.av & ~wreck
-    pulse_start = human_drv & (st.pulse_t <= 0) & (st.v > 3.0) & (jax.random.uniform(jax.random.fold_in(st.key, 11), (N,)) < beh.pulse_rate * DT)
+    pulse_start = human_drv & (st.pulse_t <= 0) & (st.v > 3.0) & (jnp.where(crn, hash_uniform(seed, st.uid, 8), jax.random.uniform(jax.random.fold_in(st.key, 11), (N,))) < beh.pulse_rate * DT)
     pulse_t = jnp.where(pulse_start, 1.0, jnp.maximum(st.pulse_t - DT, 0.0))
-    acc = jnp.where(human_drv, acc + beh.accel_noise * jax.random.normal(jax.random.fold_in(st.key, 10), (N,)), acc)
+    acc = jnp.where(human_drv, acc + beh.accel_noise * jnp.where(crn, hash_normal(seed, st.uid, 9), jax.random.normal(jax.random.fold_in(st.key, 10), (N,))), acc)
     acc = jnp.where(human_drv & (pulse_t > 0), jnp.minimum(acc, -beh.pulse_a), acc)
     acc = jnp.clip(acc, a_min, st.amax)
     halted = (st.stop_t > 0) | wreck
@@ -588,7 +647,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     gap_beyond = jnp.where(lead[obst] >= 0, st.s[jnp.maximum(lead[obst], 0)] - st.length[jnp.maximum(lead[obst], 0)], tlen + 50.0)
     new_s_pass = st.s[obst] + 3.0 + st.length
     do_pass = (behind_t > 4.0) & (gap_beyond > new_s_pass + 3.0) & (new_s_pass < tlen - 5.0) & (u_pass < 0.2) & ~distracted
-    close_pass = do_pass & bike[obst] & ~st.av & (st.aggr | distracted) & (jax.random.uniform(k_c, (N,)) < beh.p_close_pass)
+    close_pass = do_pass & bike[obst] & ~st.av & (st.aggr | distracted) & (jnp.where(crn, hash_uniform(seed, st.uid, 10), jax.random.uniform(k_c, (N,))) < beh.p_close_pass)
     s_new = jnp.where(do_pass, new_s_pass, s_new)
     behind_t = jnp.where(do_pass, 0.0, behind_t)
 
@@ -746,12 +805,14 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
                          jnp.where(is_van & (rk0 >= 2) & (u_sp[14] < beh.p_park), (0.3 + 0.4 * u_sp[15]) * net["link_len"][src], -1.0)),
         broken=jnp.zeros(S, bool), wreck_t=jnp.zeros(S), stopped=jnp.zeros(S, bool), wait_t=jnp.zeros(S), red_t=jnp.zeros(S),
         ydec=jnp.zeros(S, jnp.int32), ran_red=jnp.zeros(S, bool), stuck_t=jnp.zeros(S), behind_t=jnp.zeros(S), lc_t=jnp.zeros(S),
-        t0=jnp.full(S, st.t), acc=jnp.zeros(S), gsc=jnp.full(S, 1.25), blind_t=jnp.zeros(S), pulse_t=jnp.zeros(S))
+        t0=jnp.full(S, st.t), acc=jnp.zeros(S), gsc=jnp.full(S, 1.25), blind_t=jnp.zeros(S), pulse_t=jnp.zeros(S),
+        uid=jnp.round(st.t / DT).astype(jnp.int32) * S + jnp.arange(S, dtype=jnp.int32))  # the attempt index: stable across worlds, blocked or not
     cur = dict(alive=alive, trk=trk_new, s=s_new, v=v_new, dest=st.dest, nxt=nxt, kind=st.kind, v0f=st.v0f, T=st.T, amax=st.amax,
                b=st.b, s0=st.s0, length=st.length, runner=st.runner, nolook=st.nolook, nosignal=st.nosignal, aggr=st.aggr, av=st.av,
                react=st.react, dist_t=dist_t, stop_t=stop_t, park_s=park_s, broken=broken, wreck_t=wreck_t, stopped=stopped & alive,
                wait_t=wait_t, red_t=red_t, ydec=ydec, ran_red=ran_red, stuck_t=stuck_t, behind_t=behind_t, lc_t=lc_t, t0=st.t0,
-               acc=jnp.where(alive, acc, 0.0), gsc=gsc, blind_t=jnp.where(alive, blind_t, 0.0), pulse_t=jnp.where(alive, pulse_t, 0.0))
+               acc=jnp.where(alive, acc, 0.0), gsc=gsc, blind_t=jnp.where(alive, blind_t, 0.0), pulse_t=jnp.where(alive, pulse_t, 0.0),
+               uid=st.uid)
     new = {k: cur[k].at[slots].set(jnp.where(ok_sp, vals[k], cur[k][slots])) for k in cur}
 
     lk = jnp.where(st.alive & on_link, link, L)

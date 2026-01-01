@@ -1,0 +1,253 @@
+<title>World Model Upgrades</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column with full-width figures; a verdict table up top, then one section per idea (claim, math, figure, numbers, limits). */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #14171c; --muted: #565c66; --line: #dde0e6; --accent: #2a78d6; --accent-2: #eb6834;
+  --math-bg: #eef1f6; --ok: #0e7a55; --ok-bg: #dff3ea; --mixed: #8a5a00; --mixed-bg: #fbecc8; --skip: #565c66; --skip-bg: #e7e9ee; --shadow: 0 1px 2px rgba(20,23,28,.06);
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --serif: "IBM Plex Serif", Georgia, serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1216; --surface: #171b21; --fg: #e8ebf0; --muted: #a2a9b4; --line: #2a303a; --accent: #5a9cf0; --accent-2: #f08457;
+  --math-bg: #1d232c; --ok: #5fd6a4; --ok-bg: #123a2c; --mixed: #f0c35a; --mixed-bg: #3a2e10; --skip: #a2a9b4; --skip-bg: #242a33; --shadow: none; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #171b21; --fg: #e8ebf0; --muted: #a2a9b4; --line: #2a303a; --accent: #5a9cf0; --accent-2: #f08457;
+  --math-bg: #1d232c; --ok: #5fd6a4; --ok-bg: #123a2c; --mixed: #f0c35a; --mixed-bg: #3a2e10; --skip: #a2a9b4; --skip-bg: #242a33; --shadow: none; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-block: 40px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+header { display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(32px, 5vw, 48px); line-height: 1.1; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.lede { font-size: 18px; color: var(--muted); margin: 0; max-width: 62ch; }
+h2 { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.2; margin: 0; text-wrap: balance; }
+h3 { font-size: 13px; font-family: var(--mono); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+p { margin: 0; max-width: 68ch; }
+section { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px; }
+.idea { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.pill { font-family: var(--mono); font-size: 12px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
+.ok { background: var(--ok-bg); color: var(--ok); } .mixed { background: var(--mixed-bg); color: var(--mixed); } .skip { background: var(--skip-bg); color: var(--skip); }
+.claim { font-size: 17px; font-weight: 500; max-width: 68ch; }
+.math { font-family: var(--mono); font-size: 14px; background: var(--math-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; line-height: 1.9; white-space: pre; margin: 0; max-width: 100%; }
+.math b { font-weight: 500; color: var(--accent); }
+figure { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+figure .card { background: #fcfcfb; border: 1px solid var(--line); border-radius: 8px; padding: 8px; box-shadow: var(--shadow); }
+figure img { display: block; width: 100%; height: auto; border-radius: 4px; }
+figure.gif .card { background: #0d1117; border-color: #2a303a; padding: 0; overflow: hidden; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 80ch; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); max-width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 560px; }
+th, td { padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+tr.hi td { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.note { border-left: 3px solid var(--accent-2); padding: 2px 0 2px 14px; max-width: 68ch; color: var(--fg); }
+.note b { font-weight: 600; }
+code { font-family: var(--mono); font-size: .9em; background: var(--math-bg); padding: 1px 5px; border-radius: 4px; }
+pre.cmd { font-family: var(--mono); font-size: 13px; background: var(--math-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; margin: 0; line-height: 1.7; }
+footer { color: var(--muted); font-size: 14px; max-width: 68ch; }
+a { color: var(--accent); }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } main { gap: 44px; } .math { font-size: 12.5px; } }
+</style>
+
+<body>
+<main>
+<header>
+  <div class="eyebrow">av_world · ten ideas from the world-model literature, built and measured</div>
+  <h1>World Model Upgrades</h1>
+  <p class="lede">A survey of world-model research produced ten ideas, rated for return against effort. Seven were built, three were skipped as rated. Each result below comes from a run in the repository, with its confidence interval, its test, and where it did not work.</p>
+</header>
+
+<section aria-labelledby="summary">
+  <h2 id="summary">What happened to each idea</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>#</th><th>Idea</th><th>Verdict</th><th>The number</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Identity-keyed common random numbers</td><td><span class="pill ok">works, modestly</span></td><td>Worlds stay coupled: 0.85 vs 0.42 after 600 s. Variance ratio 1.3 to 3.4; crashes 2.1 for AV share</td></tr>
+      <tr><td>2</td><td>Conservative imagination</td><td><span class="pill ok">works, with the right signal</span></td><td>Exploitation gap 1.54 → 0.19–0.31 with a distance-from-data penalty. Ensemble disagreement did nothing</td></tr>
+      <tr><td>3</td><td>Per-road-user agent tokens</td><td><span class="pill mixed">small gain</span></td><td>3 s error −0.90 m vs constant velocity with a leader token; 8 neighbours −0.65 m, worse</td></tr>
+      <tr><td>4</td><td>History and multi-step rollout loss</td><td><span class="pill mixed">mixed</span></td><td>3 s speed error 1.22 → 0.33 km/h; 3 s gap error 5.6 → 7.1 m</td></tr>
+      <tr><td>5</td><td>Human drivers learned from real logs</td><td><span class="pill mixed">modest</span></td><td>Tail loss vs real traffic 9.83 → 8.15; TTC &lt; 1 s ×8; hard braking unchanged</td></tr>
+      <tr><td>6</td><td>RL fine-tuning for realism</td><td><span class="pill skip">not built</span></td><td>Conditional on idea 5 giving a strong base; it gave about 1 %</td></tr>
+      <tr><td>7</td><td>Gaussian-regularised latent (SIGReg)</td><td><span class="pill ok">works as a guard</span></td><td>Embedding spread 0.0001 → 0.99; probes mixed</td></tr>
+      <tr><td>8</td><td>Learned terminal value for the planner</td><td><span class="pill mixed">no measurable gain</span></td><td>h = 5: −0.003 [−0.006, −0.001]; h = 10: +0.15 [−0.31, 0.82]</td></tr>
+      <tr><td>9</td><td>Diffusion crash-risk guide for splitting</td><td><span class="pill skip">not built</span></td><td>Rated skip: splitting already lost to plain Monte Carlo</td></tr>
+      <tr><td>10</td><td>Pixel-space generative world model</td><td><span class="pill skip">not built</span></td><td>Rated skip: the simulator has no sensors</td></tr>
+    </tbody></table></div>
+  <p class="note">Everything is off by default. <code>Behaviour.crn = 0</code> and <code>Behaviour.learned = 0</code> reproduce every stored result exactly, and a test pins it.</p>
+</section>
+
+<section aria-labelledby="s1">
+  <div class="head"><span class="idea">IDEA 1</span><h2 id="s1">Common random numbers keyed to the vehicle</h2><span class="pill ok">works, modestly</span></div>
+  <p class="claim">Most questions here are differences between two worlds in a rare outcome. Pairing the worlds with the same dice makes the difference far less noisy, but only if each driver keeps its dice in both worlds.</p>
+  <pre class="math">Var(Δ̂) = (σ₀² + σ₁² − 2ρ·σ₀σ₁) / n          R = (σ₀² + σ₁²) / Var(Y₁ − Y₀) = 1 / (1 − ρ)   when σ₀ = σ₁
+
+before   u = uniform(key, (8N, …))            one number per array slot; a new car takes the first free slot
+now      uid = tick·24 + attempt              the spawn attempt that created the car, assigned at the attempt
+         U(i,t,s) = 2⁻²⁴ · ⌊ h( h(uid·c₁ + s·c₂ + 1) ⊕ seed_t ) / 2⁸ ⌋        h = lowbias32; seed_t depends on the key chain only
+
+monotone thinning     event fires iff U(i,t,s) &lt; λ·Δt      {U &lt; λ₀Δt} ⊆ {U &lt; λ₁Δt}  for λ₀ ≤ λ₁</pre>
+  <p>With slot-indexed dice, the first crash or wreck in one world reshuffles which car sits in which slot, and the two worlds stop sharing dice. With identity-keyed dice, raising a rate only adds events, so two worlds differ by the fewest possible. Each world keeps its exact marginal law.</p>
+  <figure><div class="card"><img src="img/crn.png" alt="Left: share of drivers distracted at the low rate that are also distracted at the high rate over 600 seconds, 0.85 with identity-keyed dice and 0.42 with slot-indexed dice. Right: variance ratios per outcome for two comparisons, before and with the change."></div>
+    <figcaption>Left: distraction at 1/60 s against 1/20 s, same seed, 8 copies. Right: variance ratio on 64 copies × 600 s. A ratio of 2 means half the copies for the same interval. “Before” is already paired by seed and warm state.</figcaption></figure>
+  <figure class="gif"><div class="card"><img src="img/crn_coupling.gif" alt="Four map panels of the same city. Orange cars are distracted. In the identity-keyed row nearly every distracted car at the low rate is also distracted at the high rate; in the slot-indexed row far fewer are." loading="lazy"></div>
+    <figcaption>Same city, same seed, two distraction rates. White ring: distracted at the other rate too. Top row: slot-indexed dice. Bottom row: identity-keyed.</figcaption></figure>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Comparison</th><th>Outcome</th><th class="n">Before</th><th class="n">With CRN</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="5">25 % AVs vs none</td><td>crashes</td><td class="n">1.40</td><td class="n">2.13</td></tr>
+      <tr><td>mean speed</td><td class="n">1.33</td><td class="n">3.40</td></tr>
+      <tr><td>red-light runs</td><td class="n">1.06</td><td class="n">2.72</td></tr>
+      <tr><td>lane changes</td><td class="n">1.67</td><td class="n">2.45</td></tr>
+      <tr><td>pedestrian crossings</td><td class="n">2.66</td><td class="n">4.30</td></tr>
+      <tr><td rowspan="5">Distraction ×2</td><td>crashes</td><td class="n">1.11</td><td class="n">1.31</td></tr>
+      <tr><td>mean speed</td><td class="n">1.50</td><td class="n">2.53</td></tr>
+      <tr><td>red-light runs</td><td class="n">1.26</td><td class="n">1.40</td></tr>
+      <tr><td>lane changes</td><td class="n">1.34</td><td class="n">1.53</td></tr>
+      <tr><td>pedestrian crossings</td><td class="n">2.88</td><td class="n">3.09</td></tr>
+    </tbody></table></div>
+  <p class="note"><b>Limit.</b> Crashes cascade, so the correlation stays modest, and the gain on crashes is 1.3 to 2.1, not the 5 to 10 a clean thinning would give. It does not touch the GPU/CPU score drift, which is floating-point, not dice.</p>
+</section>
+
+<section aria-labelledby="s2">
+  <div class="head"><span class="idea">IDEA 2</span><h2 id="s2">Pricing the model’s mistakes</h2><span class="pill ok">works, with the right signal</span></div>
+  <p class="claim">A planner pointed at a learned model finds the plans where the model is most wrong in its favour. A penalty on distance from the training data removes most of that. A penalty on ensemble disagreement removes none.</p>
+  <pre class="math">winner’s curse     Ĵ(a) = J(a) + ε(a),  E ε(a) = 0 for each fixed a   ⇒   E ε(a*) &gt; 0  for  a* = argmax Ĵ
+
+naive      J = Σ γᵗ rₜ
+MOPO       J = Σ γᵗ ( rₜ − λ·sₜ )                          J(π) ≥ Ĵ(π) − λ·E[u]  when u bounds the error
+WIMLE      J = Σ γᵗ wₜ rₜ ,   wₜ = exp( −Σ_{j≤t} s_j / τ )
+truncate   J = Σ_{t&lt;T*} γᵗ rₜ ,   T* = min { t : sₜ &gt; s_max }
+
+signal 1   sₜ = ensemble SD of the predicted change
+signal 2   sₜ = max { 0, d(xₜ, R) / q − 1 }      xₜ = (oₜ, uₜ), R = 2,000 training inputs, q = median held-out nearest-neighbour distance</pre>
+  <p>A model is fitted to 20,000 transitions of a cautious controller in the corridor environment. A cross-entropy planner picks 2 s plans from 256 real states for a greedy task, and the plans run in the real environment with the safety shield off. Reward is the same function of the observation on both sides, so imagined minus real is model error alone.</p>
+  <figure><div class="card"><img src="img/conservative.png" alt="Left: exploitation gap for eight planners; the three distance-from-data planners are near zero while the others sit between 1.5 and 2.1. Right: real return minus the naive planner's, positive only for the distance-from-data planners."></div>
+    <figcaption>Orange: ensemble-disagreement signal. Blue: distance-from-data signal. 95 % bootstrap intervals, paired over the same 256 start states. “Truncate, ensemble” never triggers, so it equals naive.</figcaption></figure>
+  <figure class="gif"><div class="card"><img src="img/planning_exploitation.gif" alt="Animated lines: the naive plan's real speed climbs well above what the model predicted and its real return collapses at 1.3 seconds, while the support-penalised plan stays close to its prediction." loading="lazy"></div>
+    <figcaption>64 start states. Dashed: what the model promises. Solid: what happens. The naive plan’s return drops when its real run hits a collision penalty.</figcaption></figure>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Planner</th><th class="n">Imagined</th><th class="n">Real</th><th class="n">Gap [95 % CI]</th><th class="n">Real − naive [95 % CI]</th></tr></thead>
+    <tbody>
+      <tr><td>naive</td><td class="n">1.47</td><td class="n">−0.07</td><td class="n">1.54 [0.90, 2.21]</td><td class="n">—</td></tr>
+      <tr><td>MOPO, ensemble</td><td class="n">1.47</td><td class="n">−0.39</td><td class="n">1.85 [1.17, 2.61]</td><td class="n">−0.32 [−0.93, 0.24]</td></tr>
+      <tr><td>MOPO ×4, ensemble</td><td class="n">1.41</td><td class="n">−0.68</td><td class="n">2.09 [1.32, 2.93]</td><td class="n">−0.62 [−1.43, 0.17]</td></tr>
+      <tr><td>WIMLE, ensemble</td><td class="n">1.44</td><td class="n">−0.29</td><td class="n">1.73 [1.08, 2.48]</td><td class="n">−0.22 [−0.68, 0.23]</td></tr>
+      <tr class="hi"><td>MOPO, distance</td><td class="n">1.17</td><td class="n">0.86</td><td class="n">0.31 [0.06, 0.64]</td><td class="n">+0.92 [0.30, 1.58]</td></tr>
+      <tr class="hi"><td>MOPO ×4, distance</td><td class="n">1.05</td><td class="n">0.87</td><td class="n">0.19 [−0.11, 0.54]</td><td class="n">+0.93 [0.28, 1.66]</td></tr>
+      <tr class="hi"><td>truncate, distance</td><td class="n">0.71</td><td class="n">0.79</td><td class="n">−0.08 [−1.14, 0.72]</td><td class="n">+0.85 [0.15, 1.58]</td></tr>
+    </tbody></table></div>
+  <p class="note"><b>Why the ensemble fails.</b> The three members agree almost everywhere: mean spread 0.025 on the planner’s plans against 0.026 on the training data. A model can predict well and all its copies can be wrong together. <b>Limits:</b> one fitted model, one task, open-loop 2 s plans, and a data-poor regime chosen so that exploitation exists.</p>
+</section>
+
+<section aria-labelledby="s3">
+  <div class="head"><span class="idea">IDEAS 3 AND 5</span><h2 id="s3">An agent-token model, and drivers learned from real logs</h2><span class="pill mixed">small gain beyond the leader</span></div>
+  <p class="claim">A transformer over the agent and its neighbours, trained on 400 Argoverse 2 scenes, predicts real driving better than IDM over 3 s. What helps is the leader. Eight neighbours do worse than one.</p>
+  <pre class="math">tokens        self (kind, speed, last acceleration, last yaw rate)  +  8 nearest agents within 30 m, in the agent’s own frame
+attention     X⁽ˡ⁺¹⁾ = X⁽ˡ⁾ + softmax( Q Kᵀ / √d_h  +  M ) V          M masks padding and the neighbours a variant may not see
+head          (μ_a, μ_ω, log σ_a, log σ_ω)  from the self token       trained by Gaussian negative log-likelihood
+targets       a = ( |v_{t+1}| − |v_t| ) / Δt        ω = wrap( h_{t+1} − h_t ) / Δt
+variants      none  ·  leader (nearest ahead in lane)  ·  all</pre>
+  <figure><div class="card"><img src="img/wm2.png" alt="Left: one-step acceleration error for six models; persistence and the token models are all near 0.61, zero and fitted IDM are 1.24 and 1.44. Right: closed-loop 3 second position error relative to constant velocity; the leader-token model is lowest at minus 0.90 metres."></div>
+    <figcaption>136,500 training and 33,232 test samples, split by scene. Right: 420 agents in 80 held-out scenes, 95 % bootstrap intervals.</figcaption></figure>
+  <figure class="gif"><div class="card"><img src="img/wm2_rollout.gif" alt="Top-down animation of vehicles in a held-out scene. Grey dots are the logged positions, blue dots the token model driving, orange dots constant velocity. The blue dots stay closer to grey." loading="lazy"></div>
+    <figcaption>A 3 s closed-loop rollout. Every tracked car is driven by the model; everyone else replays the log.</figcaption></figure>
+  <div class="two">
+    <div class="tablewrap"><table style="min-width:0">
+      <thead><tr><th>One step, acceleration MAE (m/s²)</th><th class="n">All</th><th class="n">Leader</th></tr></thead>
+      <tbody>
+        <tr><td>zero (constant velocity)</td><td class="n">1.241</td><td class="n">1.278</td></tr>
+        <tr><td>IDM, parameters fitted</td><td class="n">1.439</td><td class="n">1.793</td></tr>
+        <tr><td>last step’s acceleration</td><td class="n">0.616</td><td class="n">0.602</td></tr>
+        <tr><td>token, agent alone</td><td class="n">0.611</td><td class="n">0.600</td></tr>
+        <tr class="hi"><td>token, + leader</td><td class="n">0.611</td><td class="n">0.596</td></tr>
+        <tr><td>token, + 8 neighbours</td><td class="n">0.613</td><td class="n">0.597</td></tr>
+      </tbody></table></div>
+    <div class="tablewrap"><table style="min-width:0">
+      <thead><tr><th>Closed loop, 3 s</th><th class="n">Final error</th><th class="n">− const. vel. [CI]</th></tr></thead>
+      <tbody>
+        <tr><td>constant velocity</td><td class="n">4.20 m</td><td class="n">—</td></tr>
+        <tr><td>IDM, fitted</td><td class="n">4.36 m</td><td class="n">+0.16 [−0.12, 0.42]</td></tr>
+        <tr><td>token, agent alone</td><td class="n">3.66 m</td><td class="n">−0.54 [−0.81, −0.27]</td></tr>
+        <tr class="hi"><td>token, + leader</td><td class="n">3.30 m</td><td class="n">−0.90 [−1.15, −0.64]</td></tr>
+        <tr><td>token, + 8 neighbours</td><td class="n">3.55 m</td><td class="n">−0.65 [−0.94, −0.37]</td></tr>
+      </tbody></table></div>
+  </div>
+  <p class="note"><b>Reading it.</b> One step ahead, the last acceleration is nearly everything: persistence is within 1 % of every learned model, and IDM with its best parameters is worse than predicting zero. Over 3 s the learned models cut error by 13 to 21 %. The eight-neighbour model losing to the leader-only one is overfitting at 136 k samples, so the gain from agent tokens beyond the leader is not shown at this scale.</p>
+  <h3>Idea 5: the leader model as the simulator’s human driver</h3>
+  <p>A human on a car-following gap takes its acceleration from the leader model; stop lines, parked cars and courtesy gaps stay IDM. Scored with the statistics measured on Argoverse 2, 3 replicates of 60 s in Oakland.</p>
+  <figure><div class="card"><img src="img/extras.png" alt="Three panels. Left: embedding spread with and without SIGReg. Middle: real 20-step return for five planning horizons. Right: log ratio of simulated to real tail statistics for three driver populations."></div>
+    <figcaption>Right panel: log₁₀ of simulated over real traffic, 0 means a match. The learned follower sits closest on close approaches; the fitted knobs are closest on hard braking. Left and middle panels belong to ideas 7 and 8, below.</figcaption></figure>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Driver population</th><th class="n">Hard brakes /h</th><th class="n">Headway &lt; 0.8 s</th><th class="n">TTC &lt; 2 s</th><th class="n">TTC &lt; 1 s</th><th class="n">Loss</th></tr></thead>
+    <tbody>
+      <tr><td>real (Argoverse 2)</td><td class="n">43.2</td><td class="n">1.85 %</td><td class="n">1.05 %</td><td class="n">0.350 %</td><td class="n"></td></tr>
+      <tr><td>IDM default</td><td class="n">14.0</td><td class="n">0.037 %</td><td class="n">0.173 %</td><td class="n">0.0053 %</td><td class="n">9.83</td></tr>
+      <tr><td>IDM, four tail knobs fitted to these rates</td><td class="n">48.2</td><td class="n">0.165 %</td><td class="n">0.521 %</td><td class="n">0.0104 %</td><td class="n">6.24</td></tr>
+      <tr class="hi"><td>learned follower, nothing fitted</td><td class="n">14.1</td><td class="n">0.052 %</td><td class="n">0.147 %</td><td class="n">0.0449 %</td><td class="n">8.15</td></tr>
+      <tr><td>learned follower + fitted knobs</td><td class="n">49.5</td><td class="n">0.079 %</td><td class="n">0.208 %</td><td class="n">0.0666 %</td><td class="n">6.22</td></tr>
+    </tbody></table></div>
+  <p>Close approaches (TTC under 1 s) rise eightfold and the aggregate loss falls from 9.8 to 8.1 without the model being told these statistics. It does not produce hard braking, which the fitted pulse knob does, and added to the fitted knobs it is no better than they are alone.</p>
+</section>
+
+<section aria-labelledby="s4">
+  <div class="head"><span class="idea">IDEA 4</span><h2 id="s4">Looking back, and training on the model’s own rollouts</h2><span class="pill mixed">mixed</span></div>
+  <p class="claim">The rollout loss removes 73 % of the 3 s speed error and makes the gap error larger. Use it for speed, not for gaps.</p>
+  <pre class="math">L = Σ_{k&lt;K} γᵏ · ℓ( ô_{t+k+1}, o_{t+k+1} ) / Σ_{k&lt;K} γᵏ          ô_{t+k+1} = f( ô_{t+k}, …, ô_{t+k−H+1} ; u_{t+k}, … )
+
+one-step training never sees its own errors; a linearised error obeys  e_{k+1} ≈ A·e_k + ε  and grows like ‖A‖ᵏ
+(H, K) = (1, 1) is the old model, so {1, 3} × {1, 10} is an ablation on the same data</pre>
+  <figure><div class="card"><img src="img/multistep.png" alt="Bar charts of 3 second speed error (1.22, 0.87, 0.36, 0.33 km/h) and gap error (5.58, 5.30, 8.24, 7.12 m) for one-step, history, rollout and history plus rollout models."></div>
+    <figcaption>Held-out city vehicles from the small_av_world logs, open-loop, 600 windows per model, 95 % intervals.</figcaption></figure>
+  <div class="tablewrap"><table>
+    <thead><tr><th>3 s open-loop MAE</th><th class="n">Speed km/h</th><th class="n">Gap m</th><th class="n">Speed, following</th><th class="n">Gap, following</th></tr></thead>
+    <tbody>
+      <tr><td>one-step (old)</td><td class="n">1.22</td><td class="n">5.58</td><td class="n">0.93</td><td class="n">5.80</td></tr>
+      <tr><td>history only</td><td class="n">0.87</td><td class="n">5.30</td><td class="n">0.92</td><td class="n">5.40</td></tr>
+      <tr><td>rollout loss only</td><td class="n">0.36</td><td class="n">8.24</td><td class="n">0.41</td><td class="n">11.26</td></tr>
+      <tr class="hi"><td>history + rollout</td><td class="n">0.33</td><td class="n">7.12</td><td class="n">0.37</td><td class="n">9.26</td></tr>
+    </tbody></table></div>
+  <p class="note"><b>Cause, as far as it is known.</b> A Huber loss on all continuous features, weighted equally, trades the gap (hard to predict from the policy’s 22 features) for the speed. Per-feature weights were not tried.</p>
+</section>
+
+<section aria-labelledby="s7">
+  <div class="head"><span class="idea">IDEAS 7 AND 8</span><h2 id="s7">A collapse guard, and a terminal value</h2><span class="pill mixed">one guard, one null</span></div>
+  <h3>Idea 7: SIGReg</h3>
+  <p>A joint-embedding model minimises ‖g(f(o), u) − f(o′)‖², which a constant f minimises perfectly. The regulariser pushes embeddings towards a standard Gaussian, tested on random projections.</p>
+  <pre class="math">EP(x) = N · ∫ | φ̂(t) − e^(−t²/2) |² e^(−t²/2) dt        φ̂(t) = (1/N) Σₙ e^(i t xₙ)        SIGReg(z) = E over unit w of EP( ⟨z, w⟩ )
+
+for true Gaussian input  E[EP] = √(2π) − √(2π/3) ≈ 1.06  (not zero, and it does not grow with N);  constant or two-point input: 400 to 1,600</pre>
+  <p>On the corridor environment’s 380 k transitions the embedding collapses without the term (spread 0.0001, prediction loss 0) and keeps a spread of 0.99 with it (left panel of the figure above). Linear probes are mixed: speed R² 0.95 without against 0.74 with, gap R² 0.44 against 0.81. It is a collapse guard, not an accuracy gain.</p>
+  <h3>Idea 8: a learned terminal value</h3>
+  <pre class="math">J_h(a) = Σ_{t&lt;h} γᵗ rₜ + γʰ · V(o_h)          V regressed on 30-step Monte-Carlo returns, held-out R² = 0.995</pre>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Real 20-step return, 256 states</th><th class="n">Mean [95 % CI]</th><th class="n">Value − no value [CI]</th></tr></thead>
+    <tbody>
+      <tr><td>h = 5, no value</td><td class="n">1.07 [0.79, 1.35]</td><td class="n"></td></tr>
+      <tr><td>h = 5, with value</td><td class="n">1.07 [0.78, 1.35]</td><td class="n">−0.003 [−0.006, −0.001]</td></tr>
+      <tr><td>h = 10, no value</td><td class="n">0.49 [−0.47, 1.12]</td><td class="n"></td></tr>
+      <tr><td>h = 10, with value</td><td class="n">0.64 [0.09, 1.07]</td><td class="n">+0.15 [−0.31, 0.82]</td></tr>
+      <tr><td>h = 20, plan only</td><td class="n">−0.07 [−0.87, 0.70]</td><td class="n"></td></tr>
+    </tbody></table></div>
+  <p class="note"><b>Limit.</b> The value adds nothing measurable. The large gap between h = 5 and h = 20 (+1.13 [0.54, 1.81]) compares a plan followed by a cautious controller with an open-loop 20-step plan, so it mixes horizon with fallback; this experiment cannot separate them.</p>
+</section>
+
+<section aria-labelledby="repro">
+  <h2 id="repro">Reproduce</h2>
+  <pre class="cmd">python -m avlab.crn_decay &amp;&amp; python -m avlab.paired 64 600          # 1
+python -m wmplan.conservative 256 15                             # 2
+python -m wm2.run                                                 # 3, 5 (Argoverse 2 scenarios; root is the first argument)
+python -m avlab.learned_humans 3                                  # 5 in the simulator
+python -m avrl.wm_multistep 2500 3                                # 4
+python -m wmplan.sigreg &amp;&amp; python -m wmplan.terminal_value        # 7, 8
+python scripts/make_wm_figures.py &amp;&amp; python scripts/make_wm_gifs.py all
+pytest tests/test_crn.py tests/test_conservative.py tests/test_wm_multistep.py tests/test_wm2.py tests/test_extras.py</pre>
+  <footer>Written up in <code>docs/WORLD_MODEL_UPGRADES.md</code>. The literature behind the ideas: Waymo World Model (Genie 3), NVIDIA OmniDreams, Dreamer 4, V-JEPA 2, LeWorldModel, SMART and SMART-R1, WIMLE, and a 2026 preprint on model uncertainty as a risk signal (arXiv 2607.16591, read from its search summary only).</footer>
+</section>
+</main>
+</body>
