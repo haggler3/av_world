@@ -1,0 +1,304 @@
+{
+ "date": "2026-11-03",
+ "candidates": [
+  {
+   "id": "c1",
+   "idea": "Twin-run chaos test: nudge a warmed city, measure how far twins drift",
+   "artefact": "figure + GIF",
+   "minutes": 6,
+   "prior": 0.7,
+   "novelty": 0.9,
+   "relevance": 0.9,
+   "visual": 0.8,
+   "holds_up": 0.8
+  },
+  {
+   "id": "c2",
+   "idea": "AVBench scores of the rule-based AV under a rounding-sized nudge vs a new random stream (is the CPU/GPU drift rounding or the random stream?)",
+   "artefact": "table + figure",
+   "minutes": 10,
+   "prior": 0.6,
+   "novelty": 0.8,
+   "relevance": 1.0,
+   "visual": 0.5,
+   "holds_up": 0.7
+  },
+  {
+   "id": "c3",
+   "idea": "Several seeds per leaderboard row with intervals (FIXES #14's proposed fix)",
+   "artefact": "table",
+   "minutes": 40,
+   "prior": 0.6,
+   "novelty": 0.5,
+   "relevance": 1.0,
+   "visual": 0.3,
+   "holds_up": 0.7
+  },
+  {
+   "id": "c4",
+   "idea": "Settle H4's AV-share curve shape with more data",
+   "artefact": "figure",
+   "minutes": 120,
+   "prior": 0.3,
+   "novelty": 0.4,
+   "relevance": 0.8,
+   "visual": 0.5,
+   "holds_up": 0.4
+  },
+  {
+   "id": "c5",
+   "idea": "Speed-limit power model: crash rate vs limit scale (Nilsson/Elvik exponent)",
+   "artefact": "figure",
+   "minutes": 15,
+   "prior": 0.5,
+   "novelty": 0.7,
+   "relevance": 0.7,
+   "visual": 0.6,
+   "holds_up": 0.5
+  },
+  {
+   "id": "c6",
+   "idea": "Phantom-jam space-time diagram from one braking event",
+   "artefact": "GIF",
+   "minutes": 8,
+   "prior": 0.5,
+   "novelty": 0.6,
+   "relevance": 0.5,
+   "visual": 0.9,
+   "holds_up": 0.6
+  },
+  {
+   "id": "c7",
+   "idea": "One-AV damping of stop-and-go waves (Stern et al. 2018 analogue)",
+   "artefact": "figure",
+   "minutes": 20,
+   "prior": 0.4,
+   "novelty": 0.6,
+   "relevance": 0.7,
+   "visual": 0.7,
+   "holds_up": 0.4
+  },
+  {
+   "id": "c8",
+   "idea": "Signals dark (power cut): crashes with all lights off",
+   "artefact": "figure",
+   "minutes": 10,
+   "prior": 0.5,
+   "novelty": 0.7,
+   "relevance": 0.6,
+   "visual": 0.6,
+   "holds_up": 0.5
+  },
+  {
+   "id": "c9",
+   "idea": "Close a street: Braess-style speed change after removing a link",
+   "artefact": "figure",
+   "minutes": 25,
+   "prior": 0.3,
+   "novelty": 0.8,
+   "relevance": 0.6,
+   "visual": 0.6,
+   "holds_up": 0.3
+  },
+  {
+   "id": "c10",
+   "idea": "Tutorial 'which doc do I read' decision page",
+   "artefact": "doc",
+   "minutes": 5,
+   "prior": 0.8,
+   "novelty": 0.2,
+   "relevance": 0.5,
+   "visual": 0.1,
+   "holds_up": 0.9
+  },
+  {
+   "id": "c11",
+   "idea": "Per-crash-type spatial map GIF",
+   "artefact": "GIF",
+   "minutes": 10,
+   "prior": 0.5,
+   "novelty": 0.3,
+   "relevance": 0.5,
+   "visual": 0.8,
+   "holds_up": 0.6
+  },
+  {
+   "id": "c12",
+   "idea": "Wet-road H3 with 8x copies to cross 1.5",
+   "artefact": "figure",
+   "minutes": 30,
+   "prior": 0.4,
+   "novelty": 0.4,
+   "relevance": 0.6,
+   "visual": 0.4,
+   "holds_up": 0.5
+  },
+  {
+   "id": "c13",
+   "idea": "Notebook for the twin test",
+   "artefact": "notebook",
+   "minutes": 15,
+   "prior": 0.5,
+   "novelty": 0.3,
+   "relevance": 0.5,
+   "visual": 0.4,
+   "holds_up": 0.7
+  },
+  {
+   "id": "c14",
+   "idea": "Wild card: sonify the city's flow",
+   "artefact": "audio",
+   "minutes": 10,
+   "prior": 0.2,
+   "novelty": 0.9,
+   "relevance": 0.1,
+   "visual": 0.3,
+   "holds_up": 0.5
+  },
+  {
+   "id": "c15",
+   "idea": "Perturbation of an AV policy (policy brittleness to 1-step observation noise)",
+   "artefact": "table",
+   "minutes": 15,
+   "prior": 0.4,
+   "novelty": 0.6,
+   "relevance": 0.7,
+   "visual": 0.4,
+   "holds_up": 0.5
+  },
+  {
+   "id": "c16",
+   "idea": "Replay-determinism check across JAX PRNG implementations (threefry vs unsafe_rbg) on AVBench",
+   "artefact": "table",
+   "minutes": 10,
+   "prior": 0.5,
+   "novelty": 0.7,
+   "relevance": 0.9,
+   "visual": 0.4,
+   "holds_up": 0.6
+  }
+ ],
+ "rounds": [
+  {
+   "round": 1,
+   "picked": "c1",
+   "probe": "ran a 4-copy probe: 1 car +1e-2 and +0.5 m/s dies out; +3 m/s leaves 2% displaced in one of 4 -> sensitive dependence is rare, not absent; Q x1.4",
+   "Q_after": 0.296
+  },
+  {
+   "round": 2,
+   "picked": "c1",
+   "probe": "ran a 4-copy probe: 1 car +1e-2 and +0.5 m/s dies out; +3 m/s leaves 2% displaced in one of 4 -> sensitive dependence is rare, not absent; Q x1.4",
+   "Q_after": 0.415
+  },
+  {
+   "round": 3,
+   "picked": "c1",
+   "probe": "ran a 4-copy probe: 1 car +1e-2 and +0.5 m/s dies out; +3 m/s leaves 2% displaced in one of 4 -> sensitive dependence is rare, not absent; Q x1.4",
+   "Q_after": 0.581
+  }
+ ],
+ "final": {
+  "c1": {
+   "Q": 0.581,
+   "N": 3,
+   "P": 0.091
+  },
+  "c2": {
+   "Q": 0.089,
+   "N": 0,
+   "P": 0.078
+  },
+  "c3": {
+   "Q": 0.017,
+   "N": 0,
+   "P": 0.078
+  },
+  "c4": {
+   "Q": 0.006,
+   "N": 0,
+   "P": 0.039
+  },
+  "c5": {
+   "Q": 0.038,
+   "N": 0,
+   "P": 0.065
+  },
+  "c6": {
+   "Q": 0.057,
+   "N": 0,
+   "P": 0.065
+  },
+  "c7": {
+   "Q": 0.026,
+   "N": 0,
+   "P": 0.052
+  },
+  "c8": {
+   "Q": 0.04,
+   "N": 0,
+   "P": 0.065
+  },
+  "c9": {
+   "Q": 0.017,
+   "N": 0,
+   "P": 0.039
+  },
+  "c10": {
+   "Q": 0.004,
+   "N": 0,
+   "P": 0.104
+  },
+  "c11": {
+   "Q": 0.023,
+   "N": 0,
+   "P": 0.065
+  },
+  "c12": {
+   "Q": 0.009,
+   "N": 0,
+   "P": 0.052
+  },
+  "c13": {
+   "Q": 0.011,
+   "N": 0,
+   "P": 0.065
+  },
+  "c14": {
+   "Q": 0.004,
+   "N": 0,
+   "P": 0.026
+  },
+  "c15": {
+   "Q": 0.022,
+   "N": 0,
+   "P": 0.052
+  },
+  "c16": {
+   "Q": 0.048,
+   "N": 0,
+   "P": 0.065
+  }
+ },
+ "kept": [
+  "c1",
+  "c2"
+ ],
+ "dropped": {
+  "c3": "40 min of compute (over budget); c2 gives its answer on 4 scenarios",
+  "c4": "needs ~18x the data (GPU)",
+  "c5": "no speed-limit knob in Behaviour; would need xnet changes",
+  "c6": "visually good but duplicates the existing gridlock/fundamental-diagram story; Q low",
+  "c7": "needs a ring road; the city has none",
+  "c8": "no knob to switch signals off without changing xnet",
+  "c9": "needs network editing",
+  "c10": "low novelty",
+  "c11": "overlaps hotspots",
+  "c12": "30 min for a marginal change in an already-undecided result",
+  "c13": "after the tools exist, if time",
+  "c14": "wild card with no honest metric",
+  "c15": "lower relevance",
+  "c16": "merged into c2"
+ },
+ "note": "Probes marked 'ran' were executed; the others are a read of the code or a judgement. Q = novelty x relevance x visual x holds / sqrt(minutes); PUCT c=1.2. The PUCT formula picked c1 in all three rounds (its prior and Q are highest); c2 was kept by hand as a child of c1 that shares its warm-state machinery, and c16 was merged into it. The probe text under rounds 2 and 3 repeats the round-1 probe: only one probe was actually run on c1."
+}

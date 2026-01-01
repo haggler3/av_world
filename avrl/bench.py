@@ -142,16 +142,24 @@ def rates(m):
             "human_crash_per_h": (crashes - d["av_crash"]) / (hum_s / 3600), "teleports": d["teleports"]}
 
 
-def runner(area, beh, chunks=1, planner=None):
+def runner(area, beh, chunks=1, planner=None, seed=123, key_seed=7, kick=0.0, restream=0):
     """Jitted rollouts from one fixed warm state: rule-based, and a policy with / without the envelope (or under the CBF).
-    planner: a policy function for xnet.sim.step(rl=(f, key, True)) instead of PPO parameters (the latent planner)."""
+    planner: a policy function for xnet.sim.step(rl=(f, key, True)) instead of PPO parameters (the latent planner).
+    seed, key_seed: the warm-up and rollout random numbers (the leaderboard's values by default); kick: add this many m/s to every
+    vehicle's speed after the warm-up (avlab.twins: a perturbation test; 0 changes nothing); restream: fold this number into the
+    simulator's own random key after the warm-up (another random stream for the same traffic; 0 changes nothing). key_seed only
+    reaches a learned policy: the rule-based AV and the humans draw from the state's key."""
     net, geo, info = NW.build(area)
     J, nh = X.to_jnp(net), jnp.asarray(net["nh"])
-    sim = X.Sim(net, n_envs=N_ENVS, beh=beh, seed=123, reroute_s=0)
+    sim = X.Sim(net, n_envs=N_ENVS, beh=beh, seed=seed, reroute_s=0)
     sim.run(WARM)
     st0 = sim.st
+    if kick:
+        st0 = st0._replace(v=st0.v + kick * st0.alive)
+    if restream:
+        st0 = st0._replace(key=jax.vmap(lambda k: jax.random.fold_in(k, restream))(st0.key))
     n = int(SECONDS / X.DT)
-    keys = jax.random.split(jax.random.PRNGKey(7), n)
+    keys = jax.random.split(jax.random.PRNGKey(key_seed), n)
     parts = np.array_split(np.arange(n), chunks)  # the same steps and keys, in pieces (identical results, shorter jobs)
 
     def make(shield):
@@ -181,11 +189,11 @@ def runner(area, beh, chunks=1, planner=None):
     return {"shielded": make("idm"), "raw": make("off"), "cbf": make("cbf")}
 
 
-def evaluate(policy, scenarios=("nominal",)):
+def evaluate(policy, scenarios=("nominal",), **run_kw):
     """The scorecard of one policy on bench scenarios, from the same warm states and random numbers as the leaderboard:
     {"av_score": mean, "scenarios": {name: scorecard}}. `policy`: a checkpoint path, PPO parameters, None for the rule-based AV, or
     any function f(obs [N, 28], key) -> (u [N, 2], aux) (see av_world.sil.OBS_NAMES). An objective for model selection or a
-    hyperparameter search (~1 min per scenario)."""
+    hyperparameter search (~1 min per scenario). `run_kw`: seed, key_seed, kick (see `runner`)."""
     from . import scorecard as SC
     fn = policy if callable(policy) else None
     params = None if fn else (P.load(policy) if isinstance(policy, str) else policy)
@@ -193,11 +201,11 @@ def evaluate(policy, scenarios=("nominal",)):
     for n in scenarios:
         area, over = SCENARIOS[n]
         if fn is not None:  # a plain function: run it through the planner hook (obs, key, mask)
-            r = runner(area, behaviour(over), planner=lambda o, k, m: fn(o, k))
+            r = runner(area, behaviour(over), planner=lambda o, k, m: fn(o, k), **run_kw)
             raw = r["raw"](None)
             out[n] = SC.scorecard(raw, r["shielded"](None))
             continue
-        r = runner(area, behaviour(over))
+        r = runner(area, behaviour(over), **run_kw)
         raw = r["raw"](params)
         out[n] = SC.scorecard(raw, r["shielded"](params) if params is not None else raw)
     return {"av_score": float(np.mean([v["av_score"] for v in out.values()])), "scenarios": out}
