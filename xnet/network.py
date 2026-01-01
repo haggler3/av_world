@@ -17,6 +17,7 @@ Everything here is NumPy, computed once per area:
 `Net` (jnp arrays) is what the simulator uses; `Geo` keeps polylines for drawing.
 """
 import math
+import os
 from collections import defaultdict
 from typing import NamedTuple
 
@@ -151,7 +152,10 @@ def _dir(p, at_end):
 
 def load_rows(bbox):
     w, s, e, n = bbox
-    rows = pq.read_table("data/pgh_segments.parquet", columns=["id", "names", "class", "subclass", "connectors",
+    path = "data/pgh_segments.parquet"
+    if not os.path.exists(path):  # run from elsewhere (e.g. av_world_rl): the repo's own data folder
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), path)
+    rows = pq.read_table(path, columns=["id", "names", "class", "subclass", "connectors",
                                                                "access_restrictions", "speed_limits", "geometry", "bbox"]).to_pylist()
     return [r for r in rows if r["class"] in DRIVE and r["subclass"] != "link" and r["bbox"]["xmax"] >= w
             and r["bbox"]["xmin"] <= e and r["bbox"]["ymax"] >= s and r["bbox"]["ymin"] <= n]
@@ -421,6 +425,7 @@ def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0):
             if cnt[m] < KC:
                 mov_c[m, cnt[m]], mov_side[m, cnt[m]], mov_cs[m, cnt[m]] = ci, side, s_
                 cnt[m] += 1
+    kc_used = max(int(cnt.max()), 1)  # trim the per-move conflict list to the widest one actually used
     # ---------------------------------------------------------------- control (inferred)
     cross_pairs = set()  # (in-link, in-link) whose through / right-turn paths cross or merge
     for a_, b_, _sa, _sb, _k in confs:
@@ -539,7 +544,7 @@ def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0):
         mov_in=np.array([m["i"] for m in moves], np.int32), mov_lane=np.array([m["lane"] for m in moves], np.int32), mov_out=np.array([m["o"] for m in moves], np.int32),
         mov_out_lane=np.array([m["ol"] for m in moves], np.int32), mov_len=np.array([m["len"] for m in moves], np.float32),
         mov_cap=np.array([m["cap"] for m in moves], np.float32), mov_turn=np.array([m["turn"] for m in moves], np.int32),
-        mov_node=np.array([m["node"] for m in moves], np.int32), mov_c=mov_c, mov_side=mov_side, mov_cs=mov_cs,
+        mov_node=np.array([m["node"] for m in moves], np.int32), mov_c=mov_c[:, :kc_used], mov_side=mov_side[:, :kc_used], mov_cs=mov_cs[:, :kc_used],
         c_type=np.array([c[4] for c in confs] or [0], np.int32), c_mov=np.array([(c[0], c[1]) for c in confs] or [(0, 0)], np.int32),
         node_signal=node_signal, node_cycle=cycle, node_g0=node_g0, node_offset=node_offset,
         leg_node=np.array(leg_node, np.int32), leg_axis=np.array(leg_axis, np.int32), leg_rate=np.array(leg_rate, np.float32),

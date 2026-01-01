@@ -68,8 +68,23 @@ junction entries and 43,000 trips per world):
   calibration (0.62) and the published 0.78. But it rests on only 13 extra crashes (about ±40 %).
 - **The pedestrian violation rate (3 %) is a guess, not calibrated.**
 
-**Speed:** 8 copies of Oakland (about 470 vehicles each, 2,048 vehicle slots) run at about **190x real time in total**
-on 4 CPU cores. That is one simulated hour of the whole area in about 19 s, or about 8 simulated hours in 3 minutes.
+**Speed:** 8 copies of Oakland, with about 600 vehicles each in 1,024 vehicle slots, run at about **380x real time in
+total** on 4 CPU cores. That is about 8 simulated hours in 75 s, 2.1x faster than the first version. Profiling the
+compiled step found where the time went:
+
+- **Vehicle slots:** cost is linear in slots, and 1,024 is enough for a moderate hour.
+- **"Last car on a track" lookups:** these were three binary searches per step. They are now one scatter of each
+  track's rearmost car.
+- **Free slots:** found with `nonzero` instead of a full sort.
+- **Conflict lists:** trimmed to the widest one actually used (10 instead of 16).
+
+Results are identical to before at the same slot count.
+
+**Driving AVs with a learned policy:** `xnet.sim.step(..., rl=(policy_fn, key))` lets a policy drive every AV. The
+policy reads a 28-feature observation and returns an acceleration command, capped by a classical safety envelope, and a
+gap-acceptance scale. The step also returns the transition (reward, valid, done) for training.
+[`av_world_rl`](https://github.com/haggler3/av_world_rl) trains such a policy with multi-agent PPO
+(`pip install -e .` here first).
 
 ![six Pittsburgh intersections simulated in one batch](docs/pgh_grid.gif)
 
