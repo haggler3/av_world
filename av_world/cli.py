@@ -121,11 +121,12 @@ def main(argv=None):
         ap.add_argument("--seed", type=int, default=0)
         ap.add_argument("--no-3d", action="store_true", help="roads and agents only, no buildings / furniture")
         ap.add_argument("--fetch", action="store_true", help="download the area's 3-D layers from Overture if missing")
+        ap.add_argument("--no-clip", action="store_true", help="skip compare.gif (the av_world view and the 3-D stage side by side)")
         a = ap.parse_args(rest)
         import json
 
         from xnet import nvidia
-        print(json.dumps(nvidia.export(a.out, a.area, a.scenario, a.intensity, a.seconds, a.warm, a.av2, a.seed, world3d=not a.no_3d, fetch=a.fetch),
+        print(json.dumps(nvidia.export(a.out, a.area, a.scenario, a.intensity, a.seconds, a.warm, a.av2, a.seed, world3d=not a.no_3d, fetch=a.fetch, clip=not a.no_clip),
                          indent=1, default=float))
         return 0
     if cmd == "sil":

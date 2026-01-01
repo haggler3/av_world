@@ -313,8 +313,8 @@ def to_usda(net, geo, scene, path, name="av_world_scene", meta=None, world=None)
         w('            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]')
         w("            token visibility.timeSamples = { " + ", ".join(f'{k}: "{s}"' for k, s in sorted(vis.items())) + " }")
         if world is not None:  # body, cabin, wheels
-            from .scene3d import vehicle_parts
-            for pname, shape, (cx, cy, cz), size, mat in vehicle_parts(kind, v.get("length", 4.5), hash(str(v["id"])) % 97):
+            from .scene3d import stable_hash, vehicle_parts
+            for pname, shape, (cx, cy, cz), size, mat in vehicle_parts(kind, v.get("length", 4.5), stable_hash(v["id"]) % 97):
                 sh = {"cube": "Cube", "capsule": "Capsule", "wheel": "Cylinder", "wheel_z": "Cylinder"}[shape]
                 _shape_lines(w, pname, sh, cz, size, mat[0], looks, "            ", xy=(cx, cy), axis="Y" if shape == "wheel" else "Z")
         else:
@@ -463,11 +463,156 @@ def control_video(net, geo, scene, ego_id, out_dir, camera=None, max_range=80.0,
     return {"frames": n, "camera": meta}
 
 
-def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm=120.0, av2=None, seed=0, every=1, world3d=True, fetch=False, previews=True):
+def _font(size):
+    from PIL import ImageFont
+    for f in ("DejaVuSans-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"):
+        try:
+            return ImageFont.truetype(f, size)
+        except OSError:
+            pass
+    return ImageFont.load_default()
+
+
+class TopDown:
+    """The av_world view of a scene (the simulator's own map style), following the ego: one image per frame."""
+
+    def __init__(self, net, geo, info, size=(480, 360), span=120.0):
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        from . import render as R
+        self.R, self.net, self.geo, self.span = R, net, geo, span
+        self.fig = plt.figure(figsize=(size[0] / 100, size[1] / 100), dpi=100, facecolor=R.BG)
+        self.ax = self.fig.add_axes([0, 0, 1, 1], facecolor=R.GROUND)
+        self.ax.set_aspect("equal")
+        self.ax.axis("off")
+        R.Map(net, geo, info).draw(self.ax, labels=False)
+        self.heads = R.signal_heads(net, geo)
+        self.arts = []
+
+    def frame(self, scene, k, ego=None, lights=None):
+        from matplotlib.collections import PolyCollection
+        R, ax = self.R, self.ax
+        for a in self.arts:
+            a.remove()
+        self.arts = []
+        P, C, E = [], [], []
+        pose = None
+        for v in scene["vehicles"]:
+            j = k - v["start"]
+            if not 0 <= j < len(v["x"]):
+                continue
+            kind = v["kind"]
+            wd = {"bus": 2.5, "van": 2.1, "bike": 0.7}.get(kind, 1.85)
+            P.append(R.car_polys(np.array([v["x"][j]]), np.array([v["y"][j]]), np.array([v["yaw"][j]]), np.array([v.get("length", 4.5) - 0.3]), np.array([wd]))[0])
+            C.append({"av": R.AVC, "bus": R.BUS, "van": R.VAN, "bike": R.BIKE}.get(kind, R.CARS[v["id"] % len(R.CARS)]))
+            E.append("white" if v["id"] == ego else (R.WRECK if v["crashed"] and j == len(v["x"]) - 1 else "none"))
+            if v["id"] == ego:
+                pose = (v["x"][j], v["y"][j])
+        if P:
+            self.arts.append(ax.add_collection(PolyCollection(P, facecolors=C, edgecolors=E, linewidths=1.4, zorder=7)))
+        peds = scene3d_peds(scene, k)
+        if peds:
+            q = np.array(peds)
+            self.arts.append(ax.scatter(q[:, 0], q[:, 1], s=16, c="#f778ba", edgecolors="white", lw=0.5, zorder=10))
+        hx, hy, li = self.heads
+        if lights is not None and len(hx):
+            self.arts.append(ax.scatter(hx, hy, s=14, c=R.LIGHT[np.asarray(lights)[li]], lw=0, zorder=9))
+        if pose is not None:
+            w, h = self.fig.get_size_inches()
+            ax.set_xlim(pose[0] - self.span / 2, pose[0] + self.span / 2)
+            ax.set_ylim(pose[1] - self.span * h / w / 2, pose[1] + self.span * h / w / 2)
+        self.fig.canvas.draw()
+        return np.asarray(self.fig.canvas.buffer_rgba())[..., :3].copy()
+
+    def close(self):
+        import matplotlib.pyplot as plt
+        plt.close(self.fig)
+
+
+def scene3d_peds(scene, k):
+    from .scene3d import _ped_positions
+    return _ped_positions(scene, k)
+
+
+def pick_clip(scene, n):
+    """(AV id, start frame) of the most watchable n frames: an AV that covers ground with traffic around it."""
+    best = (-1.0, None, None)
+    for v in scene["vehicles"]:
+        if not v["av"] or len(v["x"]) < min(n, scene["frames"]) // 2:
+            continue
+        sp = np.asarray(v["v"])
+        m = min(n, len(sp))
+        dist = np.convolve(sp, np.ones(m), "valid")
+        j = int(np.argmax(dist))
+        k = v["start"] + j + m // 2
+        x, y = v["x"][j + m // 2], v["y"][j + m // 2]
+        crowd = sum(1 for u in scene["vehicles"] if u is not v and 0 <= k - u["start"] < len(u["x"])
+                    and (u["x"][k - u["start"]] - x) ** 2 + (u["y"][k - u["start"]] - y) ** 2 < 50 ** 2)
+        score = dist[j] * scene["dt"] * (1 + 0.15 * min(crowd, 8))
+        if score > best[0]:
+            best = (score, v["id"], v["start"] + j)
+    return best[1], best[2]
+
+
+def compare_clip(net, geo, info, scene, world, ego_id, out, seconds=8.0, start=None, panel=(480, 360), fps=None, t0=None,
+                 labels=("av_world simulation", "OpenUSD stage for Omniverse")):
+    """A side-by-side GIF of one scene: the av_world view on the left, the 3-D stage (as exported) on the right, both following the ego
+    (ego_id None: the AV that makes the most watchable clip), with the simulator's signal states when the scene's start time t0 is known.
+    Returns the path, or None if pyvista cannot render here."""
+    from PIL import Image, ImageDraw
+
+    from . import scene3d as S3
+    from . import sim as X
+    n = int(round(seconds / scene["dt"]))
+    if ego_id is None:
+        ego_id, start = pick_clip(scene, n)
+    ego = next(v for v in scene["vehicles"] if v["id"] == ego_id)
+    n = min(n, len(ego["x"]))
+    if start is None:  # the stretch of the ego's life where it moves most
+        sp = np.convolve(ego["v"], np.ones(n), "valid") if len(ego["v"]) >= n else np.array([0.0])
+        start = ego["start"] + int(np.argmax(sp))
+    ks = [k for k in range(start, start + n) if 0 <= k - ego["start"] < len(ego["x"])]
+    xs = np.array([ego["x"][k - ego["start"]] for k in ks])
+    ys = np.array([ego["y"][k - ego["start"]] for k in ks])
+    focus = ((xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2)
+    radius = 220.0 + 0.5 * float(np.hypot(np.ptp(xs), np.ptp(ys)))
+    try:
+        r3 = S3.Renderer(world, focus, radius, size=panel)
+    except Exception:  # no pyvista / offscreen OpenGL: the export is complete without the clip
+        return None
+    td = TopDown(net, geo, info, size=panel)
+    netn = {k: np.asarray(v) for k, v in net.items()} if t0 is not None else None
+    bar = 30
+    font = _font(15)
+    frames = []
+    for k in ks:
+        lights = np.asarray(X.signal_state(netn, t0 + k * scene["dt"])) if t0 is not None else None
+        a = td.frame(scene, k, ego_id, lights)
+        b = r3.frame(scene, k, ego_id, "street", lights)
+        img = Image.new("RGB", (2 * panel[0] + 4, panel[1] + bar), (13, 17, 23))
+        img.paste(Image.fromarray(a).resize(panel), (0, bar))
+        img.paste(Image.fromarray(b).resize(panel), (panel[0] + 4, bar))
+        d = ImageDraw.Draw(img)
+        for i, t in enumerate(labels):
+            d.text((i * (panel[0] + 4) + 12, 7), t, fill=(230, 237, 243), font=font)
+        t = f"{(k - ks[0]) * scene['dt']:.1f} s"
+        d.text((img.width - 12 - d.textlength(t, font=font), 7), t, fill=(139, 148, 158), font=font)
+        frames.append(img)
+    td.close()
+    r3.close()
+    pal = [f.convert("P", palette=Image.ADAPTIVE, colors=128) for f in frames]
+    pal[0].save(out, save_all=True, append_images=pal[1:], duration=int(1000 * (1 / fps if fps else scene["dt"])), loop=0, optimize=True)
+    return out
+
+
+def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm=120.0, av2=None, seed=0, every=1, world3d=True, fetch=False, previews=True, clip=True):
     """A long-tail scene, ready for NVIDIA tools: out/scene.usda, out/scene.json, out/control/ (frames, camera.json, control.mp4), out/meta.json.
     From the simulator (`area`, optionally a famous-event `scenario` of avlab.famous at `intensity`) or from a real log (`av2`: an Argoverse 2
     scenario directory). With `world3d`, the city around the roads is fused in from Overture (xnet.scene3d; `fetch` downloads it first if it is
-    not in data/scene3d); with `previews`, two offscreen renders are written if pyvista can render here."""
+    not in data/scene3d); with `previews`, two offscreen renders are written if pyvista can render here, and with `clip` out/compare.gif: the
+    av_world view and the 3-D stage side by side, following the ego."""
     import jax
 
     from . import carla_export as CE
@@ -492,6 +637,7 @@ def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm
             beh = X.Behaviour(p_av=0.25)
         sim = X.Sim(net, n_envs=1, beh=beh, seed=seed, reroute_s=0)
         sim.run(warm)
+        meta["t0"] = float(np.asarray(sim.st.t).reshape(-1)[0])
         m0 = np.asarray(sim.st.m)[0]
         frames = sim.run(seconds, record=(0, every))
         scene = CE.trajectories(net, geo, frames, step_s=X.DT * every)
@@ -505,15 +651,14 @@ def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm
     meta.update(ego=ego["id"], ego_crashed=ego["crashed"], frames=scene["frames"], dt=scene["dt"], vehicles=len(scene["vehicles"]))
     json.dump(scene, open(os.path.join(out, "scene.json"), "w"), separators=(",", ":"))
     world = None
-    if world3d and not av2:
+    if world3d:
         from . import scene3d as S3
-        if fetch and not os.path.exists(f"{S3.DIR}/{area}_buildings.parquet"):
+        if fetch and not av2 and not os.path.exists(f"{S3.DIR}/{area}_buildings.parquet"):
             S3.fetch(area)
-        if os.path.exists(f"{S3.DIR}/{area}_buildings.parquet"):
-            world = S3.build_world(area, net, geo, info)
-            meta["world3d"] = world.stats
-        else:
-            meta["world3d"] = f"no 3-D data for {area}: run `python -m xnet.scene3d fetch {area}` or pass fetch=True"
+        world = S3.build_world(area if not av2 else None, net, geo, info)  # without map layers: roads, sidewalks, markings, signals
+        meta["world3d"] = world.stats
+        if not av2 and not os.path.exists(f"{S3.DIR}/{area}_buildings.parquet"):
+            meta["world3d_note"] = f"no map layers for {area}: run `python -m xnet.scene3d fetch {area}` or pass fetch=True for buildings and trees"
     to_usda(net, geo, scene, os.path.join(out, "scene.usda"), meta={k: v for k, v in meta.items() if k not in ("knobs", "events", "world3d")}, world=world)
     if world is not None and previews:
         try:
@@ -524,6 +669,12 @@ def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm
             meta["previews"] = True
         except Exception as e:  # pyvista or an offscreen OpenGL is missing: the USD is still complete
             meta["previews"] = f"skipped ({type(e).__name__})"
+    if world is not None and clip:  # the av_world view and the 3-D stage side by side
+        try:
+            meta["clip"] = os.path.basename(compare_clip(net, geo, info, scene, world, ego["id"] if ego["crashed"] else None,
+                                                         os.path.join(out, "compare.gif"), t0=meta.get("t0")) or "")
+        except Exception as e:
+            meta["clip"] = f"skipped ({type(e).__name__}: {e})"
     r = control_video(net, geo, scene, ego["id"], os.path.join(out, "control"))
     meta["control_frames"] = r["frames"]
     json.dump(meta, open(os.path.join(out, "meta.json"), "w"), indent=1, default=float)

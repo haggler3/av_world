@@ -77,3 +77,26 @@ def test_world_fuses_layers_and_opens_in_usd(tmp_path):
     assert stage.GetPrimAtPath("/World/Environment").IsValid() and stage.GetPrimAtPath("/World/Furniture").IsValid()
     meshes = [q for q in stage.Traverse() if q.IsA(UsdGeom.Mesh)]
     assert len(meshes) >= 6 and pxr is not None
+
+
+def test_clip_picks_a_moving_av_and_renders_both_views(tmp_path):
+    from tests.test_osm import grid_osm
+    from xnet import osm
+    net, geo, info = osm.import_osm(grid_osm())
+    _, _, sc = scene()
+    ego, start = NV.pick_clip(sc, 10)
+    v = next(u for u in sc["vehicles"] if u["id"] == ego)
+    assert v["av"] and v["start"] <= start
+    td = NV.TopDown(net, geo, info, size=(160, 120))
+    img = td.frame(sc, start, ego)
+    td.close()
+    assert img.shape == (120, 160, 3) and img.std() > 0
+    pytest.importorskip("pyvista")
+    w = S3.build_world(None, net, geo, info)  # no geographic layers: roads, markings, signals only
+    assert w.stats["buildings"] == 0 and w.meshes["road_surface"].n > 0
+    out = NV.compare_clip(net, geo, info, sc, w, None, str(tmp_path / "c.gif"), seconds=1.0, panel=(160, 120), t0=0.0)
+    if out is None:
+        pytest.skip("no offscreen OpenGL here")
+    from PIL import Image
+    g = Image.open(out)
+    assert g.n_frames == 5 and g.size == (2 * 160 + 4, 120 + 30)

@@ -22,6 +22,7 @@ used. The heights, colours and furniture are as mapped; where the map is silent,
 import math
 import os
 import sys
+import zlib
 
 import numpy as np
 import shapely
@@ -91,6 +92,11 @@ def _load(area, name, d=DIR):
     import pyarrow.parquet as pq
     p = f"{d}/{area}_{name}.parquet"
     return pq.read_table(p).to_pylist() if os.path.exists(p) else []
+
+
+def stable_hash(x):
+    """A hash that is the same in every process (str hashes are salted), so colours and sizes do not change between exports."""
+    return zlib.crc32(str(x).encode())
 
 
 def _hex(c):
@@ -170,7 +176,7 @@ def dashes(poly, on=3.0, off=6.0):
 # ------------------------------------------------------------------------------------------------------------- the world
 class World:
     def __init__(self):
-        self.meshes, self.instances, self.stats = {}, {}, {}
+        self.meshes, self.instances, self.stats, self.signal_links = {}, {}, {}, np.zeros(0, int)
 
     def mesh(self, name, material, color=None):
         if name not in self.meshes:
@@ -184,7 +190,16 @@ class World:
 def build_world(area, net, geo, info, data_dir=DIR, margin=60.0):
     """Fuse the map layers with the simulator's road network into a World (meshes + furniture instances, in the scene's metres)."""
     from . import render as R
-    bbox, (lat0, lon0) = area_info(area, info)
+    try:
+        bbox, (lat0, lon0) = area_info(area, info)
+    except ValueError:  # no geographic frame (a log in its own coordinates): the roads, markings and signals only
+        lat0 = lon0 = None
+    if lat0 is None:
+        def _load(*a):  # noqa: E306
+            return []
+        lat0 = lon0 = 0.0
+    else:
+        _load = globals()["_load"]
     kx, ky = 111320.0 * math.cos(math.radians(lat0)), 110540.0
 
     def proj(g):
@@ -201,7 +216,7 @@ def build_world(area, net, geo, info, data_dir=DIR, margin=60.0):
     walk = road.buffer(SIDEWALK_M, join_style=2).difference(road)
     W.mesh("sidewalks", "sidewalk").add(*triangulate(walk, CURB_M))
     W.mesh("curbs", "curb").add(*walls(road, 0.0, CURB_M))
-    ground = frame.difference(road.buffer(SIDEWALK_M, join_style=2))
+    ground = frame.difference(road)  # under the sidewalks too: no seam at their outer edge
     # markings
     white, yellow = W.mesh("markings_white", "paint_white"), W.mesh("markings_yellow", "paint_yellow")
     for li, p in enumerate(geo.link_pts):
@@ -245,7 +260,7 @@ def build_world(area, net, geo, info, data_dir=DIR, margin=60.0):
     wa = shapely.union_all(water).intersection(frame) if water else Polygon()
     W.mesh("grass", "grass").add(*triangulate(gr.difference(wa), 0.03))
     W.mesh("water", "water").add(*triangulate(wa, -0.4))
-    W.mesh("ground", "ground").add(*triangulate(ground.difference(gr).difference(wa), 0.0))
+    W.mesh("ground", "ground").add(*triangulate(ground.difference(wa), 0.0))  # under the grass too: no slivers between the two
     # buildings, grouped by facade colour
     nb, mapped = 0, 0
     for r in _load(area, "buildings", data_dir):
@@ -261,7 +276,7 @@ def build_world(area, net, geo, info, data_dir=DIR, margin=60.0):
         mapped += h is not None
         h = float(h or DEFAULT_H)
         z0 = float(r["min_height"] or 0.0)
-        col = _hex(r["facade_color"]) or FACADES[hash(r["id"]) % len(FACADES)]
+        col = _hex(r["facade_color"]) or FACADES[stable_hash(r["id"]) % len(FACADES)]
         q = tuple(round(c * 6) / 6 for c in col)  # a few dozen facade materials at most
         m = W.meshes.setdefault(f"facade_{int(q[0] * 6)}{int(q[1] * 6)}{int(q[2] * 6)}", Mesh("facade", q))
         m.add(*walls(g, z0, h))
@@ -276,7 +291,7 @@ def build_world(area, net, geo, info, data_dir=DIR, margin=60.0):
         if r["class"] == "tree":
             g = proj(wkb.loads(r["geometry"]))
             if g.geom_type == "Point":
-                pts.append(("tree", g.x, g.y, 0.8 + 0.4 * ((hash(r["id"]) % 100) / 100)))
+                pts.append(("tree", g.x, g.y, 0.8 + 0.4 * ((stable_hash(r["id"]) % 100) / 100)))
     for r in _load(area, "infrastructure", data_dir):
         if r["class"] in FURNITURE and r["class"] != "traffic_signals":
             g = proj(wkb.loads(r["geometry"]))
@@ -290,6 +305,7 @@ def build_world(area, net, geo, info, data_dir=DIR, margin=60.0):
                 W.instance(q[0], q[1], q[2], q[3])
     ntree = len(W.instances.get("tree", []))
     hx, hy, hl = R.signal_heads(net, geo)
+    W.signal_links = np.asarray(hl, int)  # the link each traffic_signal instance faces, in order (for its light state)
     for x, y, li in zip(hx, hy, hl):
         d = NW._dir(geo.link_pts[li], True)
         W.instance("traffic_signal", x, y, 1.0, math.atan2(d[1], d[0]))
@@ -331,55 +347,25 @@ def vehicle_parts(kind, length, seed):
     return parts
 
 
-# ------------------------------------------------------------------------------------------------------------- preview
-def preview(world, scene, out, frame=None, ego=None, view="street", size=(1280, 720), radius=None):
-    """Render the fused scene offscreen (pyvista + OSMesa; optional): view = "street" (behind the ego) or "aerial". Geometry farther than
-    `radius` metres from the focus is left out (default 260 m street, 700 m aerial) to keep software rendering fast."""
-    import pyvista as pv
-    pv.global_theme.allow_empty_mesh = True
-    T = scene["frames"]
-    k = T // 2 if frame is None else frame
-    egov = None
+# ------------------------------------------------------------------------------------------------------------- rendering
+LIGHTS = [(0.95, 0.15, 0.12), (1.0, 0.7, 0.1), (0.2, 0.9, 0.4)]  # red, yellow, green
+SKY = ((0.70, 0.80, 0.90), (0.36, 0.55, 0.80))
+
+
+def _ego_pose(scene, k, ego, smooth=4):
+    """(x, y, yaw) of the ego at frame k, the heading averaged over a few frames so a chase camera does not shake."""
     for v in scene["vehicles"]:
         j = k - v["start"]
-        if ego is not None and v["id"] == ego and 0 <= j < len(v["x"]):
-            egov = (v["x"][j], v["y"][j], v["yaw"][j])
-    fx, fy = (egov[0], egov[1]) if egov else ((world.frame[0] + world.frame[2]) / 2, (world.frame[1] + world.frame[3]) / 2)
-    R_ = radius or (260.0 if view == "street" else 700.0)
-    near = lambda x, y: (np.asarray(x) - fx) ** 2 + (np.asarray(y) - fy) ** 2 < R_ ** 2  # noqa: E731
-    p = pv.Plotter(off_screen=True, window_size=size, lighting="three lights")
-    p.set_background((0.70, 0.80, 0.90), top=(0.36, 0.55, 0.80))
-    for name, m in world.meshes.items():
-        V, F = m.arrays()
-        if not len(F):
-            continue
-        keep = near(V[F[:, 0], 0], V[F[:, 0], 1])
-        if not keep.any():
-            continue
-        F = F[keep]
-        col = m.color if m.color is not None else MATERIALS.get(m.material, ((0.5, 0.5, 0.5),))[0]
-        p.add_mesh(pv.PolyData(V, np.c_[np.full(len(F), 3), F].ravel()), color=col, specular=0.3 if m.material == "water" else 0.0)
-    # furniture as glyphs: one mesh per kind
-    def glyphs(kind, geom, z, scaled=True):
-        q = np.array([(x, y, s) for x, y, s, _ in world.instances.get(kind, []) if near(x, y)]).reshape(-1, 3)
-        if not len(q):
-            return None
-        pd = pv.PolyData(np.c_[q[:, 0], q[:, 1], z * q[:, 2]])
-        pd["s"] = q[:, 2] if scaled else np.ones(len(q))
-        return pd.glyph(geom=geom, scale="s", orient=False)
-    for kind, geom, z, col in (("tree", pv.Cylinder(direction=(0, 0, 1), radius=0.18, height=3.0, resolution=8), 1.5, MATERIALS["bark"][0]),
-                               ("tree", pv.Sphere(radius=2.3, theta_resolution=10, phi_resolution=8), 4.3, MATERIALS["foliage"][0]),
-                               ("street_lamp", pv.Cylinder(direction=(0, 0, 1), radius=0.08, height=7.0, resolution=8), 3.5, MATERIALS["metal"][0]),
-                               ("street_lamp", pv.Sphere(radius=0.25), 7.0, (0.95, 0.92, 0.75)),
-                               ("traffic_signal", pv.Cylinder(direction=(0, 0, 1), radius=0.09, height=5.5, resolution=8), 2.75, MATERIALS["metal"][0]),
-                               ("traffic_signal", pv.Box(bounds=(-0.2, 0.2, -0.2, 0.2, -0.6, 0.6)), 4.9, (0.08, 0.08, 0.08)),
-                               ("stop_sign", pv.Cylinder(direction=(0, 0, 1), radius=0.05, height=2.3, resolution=6), 1.15, MATERIALS["metal"][0]),
-                               ("stop_sign", pv.Cylinder(direction=(1, 0, 0), radius=0.38, height=0.05, resolution=8), 2.3, MATERIALS["sign_red"][0]),
-                               ("bench", pv.Box(bounds=(-0.9, 0.9, -0.25, 0.25, -0.25, 0.25)), 0.4, MATERIALS["wood"][0])):
-        g = glyphs(kind, geom, z)
-        if g is not None:
-            p.add_mesh(g, color=col)
-    # agents: one mesh per colour
+        if v["id"] == ego and 0 <= j < len(v["x"]):
+            lo, hi = max(j - smooth, 0), min(j + smooth + 1, len(v["x"]))
+            yaw = math.atan2(np.mean(np.sin(v["yaw"][lo:hi])), np.mean(np.cos(v["yaw"][lo:hi])))
+            return v["x"][j], v["y"][j], yaw
+    return None
+
+
+def _agent_meshes(scene, k, near):
+    """The agents at frame k as pyvista meshes, merged per colour."""
+    import pyvista as pv
     parts = {}
     for v in scene["vehicles"]:
         j = k - v["start"]
@@ -387,7 +373,7 @@ def preview(world, scene, out, frame=None, ego=None, view="street", size=(1280, 
             continue
         x, y, yaw = v["x"][j], v["y"][j], v["yaw"][j]
         c, s_ = math.cos(yaw), math.sin(yaw)
-        for name, shape, (cx, cy, cz), size, mat in vehicle_parts(v["kind"], v.get("length", 4.5), hash(str(v["id"])) % 97):
+        for name, shape, (cx, cy, cz), size, mat in vehicle_parts(v["kind"], v.get("length", 4.5), stable_hash(v["id"]) % 97):
             wx, wy = x + cx * c - cy * s_, y + cx * s_ + cy * c
             colr = mat[0] if isinstance(mat[0], tuple) else MATERIALS[mat[0]][0]
             if shape == "cube":
@@ -397,32 +383,106 @@ def preview(world, scene, out, frame=None, ego=None, view="street", size=(1280, 
             else:
                 m = pv.Cylinder(center=(wx, wy, cz), direction=(-s_, c, 0), radius=size[0], height=size[1], resolution=12)
             parts.setdefault(colr, []).append(m)
+    for pos in _ped_positions(scene, k):
+        if near(*pos):
+            parts.setdefault((0.3, 0.3, 0.45), []).append(pv.Cylinder(center=(pos[0], pos[1], 0.9), direction=(0, 0, 1), radius=0.25, height=1.7, resolution=10))
+    return {c: pv.merge(ms) for c, ms in parts.items()}
+
+
+def _ped_positions(scene, k):
+    out = []
     for ped in scene.get("pedestrians", []):
         if "x" in ped:
             j = k - ped.get("start", 0)
-            pos = (ped["x"][j], ped["y"][j]) if 0 <= j < len(ped["x"]) else None
+            if 0 <= j < len(ped["x"]):
+                out.append((ped["x"][j], ped["y"][j]))
         else:
             f = (k * scene["dt"] - ped["t"]) / ped["duration"]
-            pos = tuple(np.asarray(ped["from"]) + f * (np.asarray(ped["to"]) - np.asarray(ped["from"]))) if 0 <= f <= 1 else None
-        if pos is not None and near(*pos):
-            parts.setdefault((0.3, 0.3, 0.45), []).append(pv.Cylinder(center=(pos[0], pos[1], 0.9), direction=(0, 0, 1), radius=0.25, height=1.7, resolution=10))
-    for colr, ms in parts.items():
-        p.add_mesh(pv.merge(ms), color=colr)
-    if view == "street" and egov is not None:
-        x, y, yaw = egov
-        p.camera_position = [(x - 10 * math.cos(yaw), y - 10 * math.sin(yaw), 3.4), (x + 30 * math.cos(yaw), y + 30 * math.sin(yaw), 2.0), (0, 0, 1)]
-        p.camera.view_angle = 65
-    else:
-        p.camera_position = [(fx - 230, fy - 280, 240), (fx, fy, 0), (0, 0, 1)]
-        p.camera.view_angle = 40
-    p.screenshot(out)
-    p.close()
+            if 0 <= f <= 1:
+                out.append(tuple(np.asarray(ped["from"]) + f * (np.asarray(ped["to"]) - np.asarray(ped["from"]))))
     return out
 
 
-if __name__ == "__main__":
-    for a in sys.argv[2:]:
-        fetch(a)
+class Renderer:
+    """An offscreen view of a World (pyvista + OSMesa; optional) that loads the static city once and redraws only the agents and signal
+    lights per frame, so a whole clip renders in seconds. Geometry farther than `radius` from `focus` is left out."""
+
+    def __init__(self, world, focus, radius=260.0, size=(1280, 720)):
+        import pyvista as pv
+        pv.global_theme.allow_empty_mesh = True
+        self.world, self.fx, self.fy, self.R = world, focus[0], focus[1], radius
+        self.p = p = pv.Plotter(off_screen=True, window_size=size, lighting="three lights")
+        p.set_background(SKY[0], top=SKY[1])
+        for name, m in world.meshes.items():
+            V, F = m.arrays()
+            if not len(F):
+                continue
+            T = V[F][:, :, :2]  # keep a triangle if its bounding box meets the focus square (large ground triangles span it)
+            F = F[(T[:, :, 0].max(1) > self.fx - self.R) & (T[:, :, 0].min(1) < self.fx + self.R)
+                  & (T[:, :, 1].max(1) > self.fy - self.R) & (T[:, :, 1].min(1) < self.fy + self.R)]
+            if len(F):
+                col = m.color if m.color is not None else MATERIALS.get(m.material, ((0.5, 0.5, 0.5),))[0]
+                p.add_mesh(pv.PolyData(V, np.c_[np.full(len(F), 3), F].ravel()), color=col, specular=0.15 if m.material == "water" else 0.0)
+        for kind, geom, z, col in (("tree", pv.Cylinder(direction=(0, 0, 1), radius=0.18, height=3.0, resolution=8), 1.5, MATERIALS["bark"][0]),
+                                   ("tree", pv.Sphere(radius=2.3, theta_resolution=10, phi_resolution=8), 4.3, MATERIALS["foliage"][0]),
+                                   ("street_lamp", pv.Cylinder(direction=(0, 0, 1), radius=0.08, height=7.0, resolution=8), 3.5, MATERIALS["metal"][0]),
+                                   ("street_lamp", pv.Sphere(radius=0.25), 7.0, (0.95, 0.92, 0.75)),
+                                   ("traffic_signal", pv.Cylinder(direction=(0, 0, 1), radius=0.09, height=5.5, resolution=8), 2.75, MATERIALS["metal"][0]),
+                                   ("traffic_signal", pv.Box(bounds=(-0.2, 0.2, -0.2, 0.2, -0.6, 0.6)), 4.9, (0.08, 0.08, 0.08)),
+                                   ("stop_sign", pv.Cylinder(direction=(0, 0, 1), radius=0.05, height=2.3, resolution=6), 1.15, MATERIALS["metal"][0]),
+                                   ("stop_sign", pv.Cylinder(direction=(1, 0, 0), radius=0.38, height=0.05, resolution=8), 2.3, MATERIALS["sign_red"][0]),
+                                   ("bench", pv.Box(bounds=(-0.9, 0.9, -0.25, 0.25, -0.25, 0.25)), 0.4, MATERIALS["wood"][0])):
+            q = np.array([(x, y, s) for x, y, s, _ in world.instances.get(kind, []) if self.near(x, y)]).reshape(-1, 3)
+            if len(q):
+                pd = pv.PolyData(np.c_[q[:, 0], q[:, 1], z * q[:, 2]])
+                pd["s"] = q[:, 2]
+                p.add_mesh(pd.glyph(geom=geom, scale="s", orient=False), color=col)
+        sig = world.instances.get("traffic_signal", [])
+        self.sig_xy = np.array([(x, y) for x, y, _, _ in sig]).reshape(-1, 2)
+        self.sig_on = self.near(self.sig_xy[:, 0], self.sig_xy[:, 1]) if len(sig) else np.zeros(0, bool)
+        self.actors = []
+
+    def near(self, x, y):
+        return (np.asarray(x) - self.fx) ** 2 + (np.asarray(y) - self.fy) ** 2 < self.R ** 2
+
+    def frame(self, scene, k, ego=None, view="street", lights=None):
+        """The image (h, w, 3) at frame k. `lights`: 0 red / 1 yellow / 2 green per link (xnet.sim.signal_state), else the heads stay dark."""
+        import pyvista as pv
+        for a in self.actors:
+            self.p.remove_actor(a)
+        self.actors = [self.p.add_mesh(m, color=c) for c, m in _agent_meshes(scene, k, self.near).items()]
+        if lights is not None and self.sig_on.any():
+            st = np.asarray(lights)[self.world.signal_links]
+            for s in range(3):
+                on = self.sig_on & (st == s)
+                if on.any():
+                    pts = pv.PolyData(np.c_[self.sig_xy[on], np.full(on.sum(), 4.9)])
+                    self.actors.append(self.p.add_mesh(pts.glyph(geom=pv.Sphere(radius=0.32), orient=False, scale=False), color=LIGHTS[s]))
+        pose = _ego_pose(scene, k, ego) if ego is not None else None
+        if view == "street" and pose is not None:
+            x, y, yaw = pose
+            self.p.camera_position = [(x - 10 * math.cos(yaw), y - 10 * math.sin(yaw), 3.4), (x + 30 * math.cos(yaw), y + 30 * math.sin(yaw), 2.0), (0, 0, 1)]
+            self.p.camera.view_angle = 65
+        else:
+            fx, fy = (pose[0], pose[1]) if pose is not None else (self.fx, self.fy)
+            self.p.camera_position = [(fx - 230, fy - 280, 240), (fx, fy, 0), (0, 0, 1)]
+            self.p.camera.view_angle = 40
+        return self.p.screenshot(return_img=True)
+
+    def close(self):
+        self.p.close()
+
+
+def preview(world, scene, out, frame=None, ego=None, view="street", size=(1280, 720), radius=None):
+    """One offscreen render of the fused scene: view = "street" (behind the ego) or "aerial"; the default radius is 260 m street, 700 m aerial."""
+    from PIL import Image
+    k = scene["frames"] // 2 if frame is None else frame
+    pose = _ego_pose(scene, k, ego) if ego is not None else None
+    focus = pose[:2] if pose else ((world.frame[0] + world.frame[2]) / 2, (world.frame[1] + world.frame[3]) / 2)
+    r = Renderer(world, focus, radius or (260.0 if view == "street" else 700.0), size)
+    Image.fromarray(r.frame(scene, k, ego, view)).save(out)
+    r.close()
+    return out
 
 
 def render_usd(path, out, time=None, eye=None, target=None, size=(1280, 720)):
@@ -501,3 +561,8 @@ def render_usd(path, out, time=None, eye=None, target=None, size=(1280, 720)):
     p.screenshot(out)
     p.close()
     return out
+
+
+if __name__ == "__main__":
+    for a in sys.argv[2:]:
+        fetch(a)
