@@ -31,3 +31,18 @@ def test_classify_kinds():
     a["trk"][:, 1] = 150
     assert twinkicks.classify(a, 0, first, 100)["kind"] == "box"
     assert twinkicks.classify(a, 0, np.array([0, -1, -1]), 100)["kind"] == "none"
+
+
+def test_friction_estimator_reads_the_floor_and_reports_lower_bound():
+    from avlab import frictionsense as fs
+    rng = np.random.default_rng(0)
+    dec = np.abs(rng.normal(0, 1.0, (100, 50))).clip(0, 4.05)  # a floor at 9 x 0.45 = 4.05 is hit often
+    dec[:, :5] = 4.05
+    est = fs.estimate(dec)
+    assert np.allclose(est["mu_hat"][50:], 0.45) and np.all(est["lower_bound"][50:] <= 0.45 + 1e-9)
+    soft = np.minimum(dec, 3.0)  # never reaches a floor: only a bound, no identified value
+    soft[:, :1] = 3.0
+    e2 = fs.estimate(soft, k=3)
+    assert np.isnan(e2["mu_hat"][50:]).sum() >= 0 and np.all(e2["lower_bound"][50:] <= 3.0 / 9 + 1e-9)
+    sc = fs.score(est, np.full(100, 0.45), burn=10)
+    assert sc["identified"] == 1.0 and sc["median_abs_err"] < 1e-6

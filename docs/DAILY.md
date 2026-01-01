@@ -17,7 +17,7 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 8. **Why does a half-AV city lose its advantage when the road is slick?** Rate ratio 0.55 (dry) to 0.95 (friction 0.3), but no single interval excludes 1; ~4x the copies at friction 1.0, 0.6 and 0.3 would decide it (AVBench's wet_road is the rule-based AV's worst scenario).
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
 
-11. **Friction-aware AVs** (2026-11-09): tune the clamp (speed exponent 0.25..1) for the safety-speed frontier; 48 copies per cell; slow only near crossings.
+11. **Close the loop** (2026-11-09 follow-up): clamp the AV with `mu_hat` from `avlab.frictionsense` instead of the true mu; spatial friction patches need a per-road value in xnet. **Friction-aware AVs** (2026-11-09): tune the clamp (speed exponent 0.25..1) for the safety-speed frontier; 48 copies per cell; slow only near crossings.
 12. **Twin kicks**: 100+ kicks to settle junction-box vs car-following origin of divergences; kick size vs divergence probability.
 
 ---
@@ -61,6 +61,31 @@ Caveat: 3 and 5 AV crashes per cell, one network, one initial-state set, clamp v
 * Tune the AV clamp: speed-only with sqrt(mu)^k, k in 0.25..1, to draw the safety-vs-speed frontier; more copies (48) per cell.
 * Does an AV that slows only near pedestrian crossings keep the gain at a smaller speed price?
 * 100+ kicks (cheap: 1-2 s per pair) to settle box vs following, and kick size vs divergence probability.
+
+### Follow-up (same day): can an AV learn the friction from its own braking?
+
+Question from the review of the first result: the clamp above was an oracle (`mu` read from the config). `avlab/frictionsense.py` asks whether it can be *measured*. xnet has one city-wide friction value that only caps braking (`a = max(a_cmd, -9 x friction)`), so the patches here are **patches in time** (1.0 -> 0.45 -> 0.7 -> 0.3 -> 1.0, 50 s ramps), not in space; spatial patches would need a per-road friction inside `xnet/sim.py`, which we do not change. Prior art on road-friction estimation from vehicle braking and slip is large (tyre-force and slip-slope methods); this is the simplest version, a cap detector, and I did not review the literature further.
+
+```
+frictionsense.py: 8 copies of half-AV Oakland, friction = mu(t) interpolated inside the scan; each second keep, per slot, the largest deceleration
+                  applied by an AV moving > 1 m/s (st.acc); the estimator never sees mu
+estimate(W = 30 s): f = largest deceleration of the fleet in the window; n = events within 3 % of f; n >= 3 -> mu_hat = f / 9, else only mu >= f / 9
+```
+
+Predictions ([file](../results/daily/2026-11-09/predictions3.md)) and results ([json](../results/frictionsense/frictionsense.json)):
+
+![friction sense](img/frictionsense.png)
+
+![friction sense animation](img/frictionsense.gif)
+
+* **R1 held.** On slick road (mu < 0.6) the estimate is identified 87 % of the time, within 0.1 of the truth in 84 % of those seconds (median error ~0: the cap is exact).
+* **R2 failed.** On dry road it is identified 88 % of the time, not < 20 %: AVs brake at the 9 m/s^2 limit often enough (emergency stops) that the floor is visible even when dry. I checked that the scripted "halted" branch (where xnet sets acc = cap) is not the source: it accounts for 1e-5 of floor events.
+* **R3 failed on the fleet size.** One AV alone identifies the floor in 1.1 % of seconds (3 AVs 4 %, 10 AVs 12 %, 30 AVs 21 %); the full fleet (807 slots that were ever an AV braking) 88 %. So the information is a fleet or cloud one, not a single vehicle's.
+* **Delay.** After a ramp ends the estimate needs 19 to 28 s to reach the new value going to 0.45 (median 23 s) and 16 to 19 s going to 0.3, mostly the 30 s window; ramp-downs are tracked with a lag, ramp-ups (to 0.7, 1.0) show a bound before an identified value.
+* **Noise.** Adding accelerometer noise (sigma 0.2 / 0.5 m/s^2) to the recorded decelerations: the naive largest-value estimator is identified only 55 % / 23 % of slick seconds; a robust one (mean of the top 5, band 2 sigma) stays at 100 % with a bias of +0.04 / +0.11 in mu.
+Caveats: the simulator's cap is exact and noise-free, which flatters the estimator; patches are temporal and city-wide; one network, 8 copies; real tyres have a slip-dependent curve, not a hard cap. **Test**: `tests/test_daily_1109.py`.
+
+**Next:** feed the estimate back into the AV (clamp with `mu_hat` instead of `mu`) and re-run the crash comparison; spatial patches (needs per-road friction in xnet, a design change to discuss); a noise-aware floor detector (mode of the top cluster rather than top-5 mean).
 
 ---
 
