@@ -136,7 +136,7 @@
       <div class="stat"><b>380×</b><span>real time: 8 copies of a whole neighbourhood on 4 CPU cores</span></div>
       <div class="stat"><b>10,205</b><span>real Pittsburgh intersections auto-mined from OpenStreetMap</span></div>
       <div class="stat"><b>+20 %</b><span>early learning gain from training in the most dynamic world</span></div>
-      <div class="stat"><b>88</b><span>AVBench checks across 11 stress scenarios: the bar the RL has to clear</span></div>
+      <div class="stat"><b>144</b><span>AVBench checks across 18 scenarios, 7 of them long-tail incidents: the bar the RL has to clear</span></div>
     </div>
   </div>
 </header>
@@ -266,13 +266,18 @@
       <figure><img width="2550" height="840" src="img/avbench.png" alt="AVBench: checks passed per policy, crash rates with and without the safety envelope, and the speed-safety trade-off" loading="lazy"></figure>
       <div class="text">
         <div><h3>AVBench: the bar the learned driver has to clear</h3>
-          <p>Eleven scenarios (rush hour, red runners, inattentive humans, jaywalkers, blockages, an 80 % AV world,
-            cyclists, a wet road and two unseen neighbourhoods) × eight checks, each against the rule-based AV driving the
-            same traffic. Every policy runs with the IDM envelope, with the barrier function, and with no filter.</p></div>
+          <p>Eighteen scenarios: eleven stress tests (rush hour, red runners, inattentive humans, jaywalkers, blockages, an
+            80 % AV world, cyclists, a wet road and two unseen neighbourhoods) and seven long-tail incidents (sun glare, phantom
+            braking, a missed stalled car, a misclassified jaywalker, a bus dart-out, cut-ins, black ice). Each gets eight
+            checks with fixed bars from outside the simulator (half the human crash rate, nuPlan's comfort bound, no red-light
+            runs), which the rule-based AV can fail too. Every policy runs with the IDM envelope, with the barrier function,
+            and with no filter. <a href="https://github.com/haggler3/av_world/blob/main/results/bench/leaderboard.md">Full leaderboard</a> ·
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/METRICS.md">metrics</a>.</p></div>
         <ul>
-          <li>Trained with the barrier function as its teacher, the best policy crashes <span class="big">15×</span> less with no filter (0.64 → 0.044 per AV-hour) and fully overcomes its first two scenarios.</li>
-          <li>Unaided, the 62k-step policies crash <span class="big">63–80</span> times per AV-hour, across all seven crash types: they accelerate and let the filter brake, which the training score cannot see.</li>
-          <li>What it still misses is mostly speed: 95–96 % of the rule-based AV's, against a 97 % bar.</li>
+          <li>Trained with the barrier function as its teacher, the best policy passes <span class="big">123</span> of 144 checks; the rule-based AV passes 104 and clears no scenario (it fails comfort in 16 of 18).</li>
+          <li>The rule-based AV still has the best score on the core scenarios (77.2 against 56.8): with no filter the learned policies crash 1.3–1.6× as often. On the long tail they catch up (40.9 against 39.0).</li>
+          <li>Retraining the same recipe on a GPU moved the score by up to <span class="big">10</span> points: one run per policy is not enough to rank them.</li>
+          <li>Unaided, the 62k-step policies crash 63–80 times per AV-hour: they accelerate and let the filter brake, which the training score cannot see.</li>
         </ul>
       </div>
     </div>
@@ -413,7 +418,7 @@
   <div class="wrap">
     <h2>What's next</h2>
     <ol class="next">
-      <li><div><b>Finish passing AVBench unaided</b><span>The barrier-taught policy is 2 % short on speed and has one or two unaided crashes where the rule-based AV has none. Distil the latent planner's junction timing into it. Target: all 88 checks.</span></div></li>
+      <li><div><b>Finish passing AVBench unaided</b><span>With no filter, the barrier-taught policy still crashes 1.3–1.6× as often as the rule-based AV, and every policy scores under 6 on the perception-fault incidents. Distil the latent planner's junction timing into it and train several seeds. Target: all 144 checks.</span></div></li>
       <li><div><b>Amortise the planner</b><span>Train the policy on the planner's choices in imagined rollouts (Dreamer / TD-MPC style), keeping the foresight at the policy's speed.</span></div></li>
       <li><div><b>Close the operating-domain gaps</b><span>A barrier whose braking assumption adapts to the road, training with sensor noise, and one policy across Oakland, Squirrel Hill and Downtown.</span></div></li>
       <li><div><b>Scale the simulation on a GPU</b><span>Test the fitted power laws 4–16× further out (62 k → 1 M simulator steps); the jitted step moves unchanged.</span></div></li>
