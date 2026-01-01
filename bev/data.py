@@ -8,7 +8,7 @@ and for each ego every `stride`-th frame:
   occluded  [T, N] bool                  another vehicle hides it from the ego (xnet.perception's 2-D line-of-sight test)
   ego2img   [n_cams, 4, 4]               BEVFormer's lidar2img
 
-    python -m bev.data new_york 2        # -> data/bev/new_york_s2.npz (a few minutes; needs pyvista + OSMesa)
+    python -m bev.data new_york 2 bus_dartout 40 6   # city, seed, scenario, seconds, egos -> data/bev/new_york_bus_dartout_s2.npz
 """
 import json
 import math
@@ -24,6 +24,7 @@ CLASSES = ("car", "truck", "bus", "cyclist", "pedestrian")
 KIND = {"car": 0, "av": 0, "van": 1, "bus": 2, "bike": 3, "ped": 4}
 OUT = "data/bev"
 BEV_RANGE = 32.0  # metres each way: the BEV grid covers [-32, 32] x [-32, 32] around the ego
+SEGMENT, RADIUS = 25, 150.0  # the renderer is re-centred every 25 samples and loads the city within 150 m (cost grows with geometry)
 
 
 def dims(kind, length):
@@ -92,7 +93,7 @@ def pick_egos(scene, n, stride, min_frames=40):
     return [v for v in scene["vehicles"] if v["id"] in best]
 
 
-def generate(area="new_york", seconds=20.0, warm=200.0, egos=3, stride=2, seed=0, rig=None, knobs=None, out=OUT):
+def generate(area="new_york", seconds=20.0, warm=200.0, egos=3, stride=2, seed=0, rig=None, knobs=None, out=OUT, scenario=None):
     """Simulate, render and label. -> path of the .npz (all egos' sequences concatenated, with `seq` marking each one)."""
     from xnet import carla_export as CE
     from xnet import cities
@@ -104,7 +105,11 @@ def generate(area="new_york", seconds=20.0, warm=200.0, egos=3, stride=2, seed=0
     net, geo, info = cities.build(area) if area in cities.CITIES else NW.build(area)
     world = S3.build_world(area, net, geo, info)
     # denser than the simulator's calibrated default: a detector needs objects in view (demand x2.5, pedestrians x4)
-    beh = X.Behaviour(**({"p_av": 0.25, "ped_scale": 4.0, "p_bike": 0.05, "demand": 2.5} | (knobs or {})))
+    over = {}
+    if scenario:  # a famous-incident archetype at intensity 1 (avlab.famous), e.g. bus_dartout for pedestrians and buses
+        from avlab import famous as FM
+        over = FM.SCENARIOS[scenario][2](1.0)
+    beh = X.Behaviour(**({"p_av": 0.25, "ped_scale": 4.0, "p_bike": 0.05, "demand": 2.5} | over | (knobs or {})))
     sim = X.Sim(net, n_envs=1, beh=beh, seed=seed, reroute_s=0)
     sim.run(warm)
     t0 = float(np.asarray(sim.st.t).reshape(-1)[0])
@@ -116,29 +121,31 @@ def generate(area="new_york", seconds=20.0, warm=200.0, egos=3, stride=2, seed=0
     t_render = 0.0
     for si, ego in enumerate(avs):
         js = list(range(0, len(ego["x"]), stride))
-        xs, ys = np.array(ego["x"])[js], np.array(ego["y"])[js]
-        r = S3.Renderer(world, ((xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2),
-                        90.0 + 0.5 * float(np.hypot(np.ptp(xs), np.ptp(ys))), size=(rig.width, rig.height))
-        for j in js:
-            k = ego["start"] + j
-            pose = (ego["x"][j], ego["y"][j], ego["yaw"][j])
-            t1 = time.time()
-            r.set_agents(scene, k, np.asarray(X.signal_state(netn, t0 + k * scene["dt"])), hide=ego["id"])
-            views = []
-            for i in range(rig.n):
-                eye, target = rig.world_eye_target(i, pose)
-                views.append(r.shoot(eye, target, rig.vfov(i), fresh=True))
-            t_render += time.time() - t1
-            B, C, O = labels(scene, k, ego["id"], pose)
-            for key, val in (("imgs", np.stack(views)), ("pose", pose), ("boxes", B), ("cls", C), ("occluded", O), ("seq", si), ("frame", k)):
-                acc[key].append(val)
-        r.close()
+        for seg in range(0, len(js), SEGMENT):  # re-centre the renderer every SEGMENT samples: geometry within RADIUS only
+            part = js[seg:seg + SEGMENT]
+            xs, ys = np.array(ego["x"])[part], np.array(ego["y"])[part]
+            r = S3.Renderer(world, ((xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2),
+                            max(RADIUS, 90.0 + 0.5 * float(np.hypot(np.ptp(xs), np.ptp(ys)))), size=(rig.width, rig.height))
+            for j in part:
+                k = ego["start"] + j
+                pose = (ego["x"][j], ego["y"][j], ego["yaw"][j])
+                t1 = time.time()
+                r.set_agents(scene, k, np.asarray(X.signal_state(netn, t0 + k * scene["dt"])), hide=ego["id"])
+                views = []
+                for i in range(rig.n):
+                    eye, target = rig.world_eye_target(i, pose)
+                    views.append(r.shoot(eye, target, rig.vfov(i), fresh=True))
+                t_render += time.time() - t1
+                B, C, O = labels(scene, k, ego["id"], pose)
+                for key, val in (("imgs", np.stack(views)), ("pose", pose), ("boxes", B), ("cls", C), ("occluded", O), ("seq", si), ("frame", k)):
+                    acc[key].append(val)
+            r.close()
     os.makedirs(out, exist_ok=True)
-    path = f"{out}/{area}_s{seed}.npz"
+    path = f"{out}/{area}_{scenario or 'everyday'}_s{seed}.npz"
     arrays = {k: np.asarray(v) for k, v in acc.items()}
     arrays["pose"] = arrays["pose"].astype(np.float32)
     np.savez_compressed(path, ego2img=E2I, dt=np.float32(scene["dt"] * stride), **arrays)
-    meta = {"area": area, "seed": seed, "samples": len(acc["seq"]), "egos": len(avs), "rig": {"width": rig.width, "height": rig.height,
+    meta = {"area": area, "scenario": scenario, "seed": seed, "samples": len(acc["seq"]), "egos": len(avs), "rig": {"width": rig.width, "height": rig.height,
             "cams": rig.cams}, "classes": CLASSES, "bev_range": BEV_RANGE, "render_s": round(t_render, 1),
             "render_s_per_sample": round(t_render / max(len(acc["seq"]), 1), 3), "total_s": round(time.time() - t_start, 1)}
     json.dump(meta, open(path.replace(".npz", ".json"), "w"), indent=1)
@@ -152,5 +159,6 @@ def load(path):
 
 if __name__ == "__main__":
     a = sys.argv[1:]
-    p = generate(a[0] if a else "new_york", seed=int(a[1]) if len(a) > 1 else 0)
+    p = generate(a[0] if a else "new_york", seed=int(a[1]) if len(a) > 1 else 0, scenario=(a[2] if len(a) > 2 and a[2] != "everyday" else None),
+                 seconds=float(a[3]) if len(a) > 3 else 20.0, egos=int(a[4]) if len(a) > 4 else 3)
     print(p, json.load(open(p.replace(".npz", ".json"))))

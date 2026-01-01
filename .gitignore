@@ -19,3 +19,5 @@ results/wmplan/v2/data*.npz
 results/wmplan/v3/data*.npz
 results/wmplan/v3/converge_event*.pkl
 results/bev/*_params.npz
+results/bev/*_ckpt.pkl
+results/bev/snaps/

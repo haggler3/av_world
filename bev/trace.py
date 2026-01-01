@@ -253,4 +253,4 @@ def figures(cfg, rig, d, t, imgs, boxes, cls, hits, pr, loc, valid, h_prev, h_no
 
 
 if __name__ == "__main__":
-    run(sys.argv[1] if len(sys.argv) > 1 else sorted(__import__("glob").glob(f"{D.OUT}/*.npz"))[0])
+    run(sys.argv[1] if len(sys.argv) > 1 else sorted(__import__("glob").glob(f"{D.OUT}/*_s[0-9]*.npz"))[0])
