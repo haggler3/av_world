@@ -4,3 +4,6 @@ __pycache__/
 results/*.log
 data/*.parquet
 *.egg-info/
+results/smoke*/
+results/main*/
+results/main*.log

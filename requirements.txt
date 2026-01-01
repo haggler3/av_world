@@ -6,3 +6,4 @@ pillow
 pytest
 shapely
 pyarrow
+optax
