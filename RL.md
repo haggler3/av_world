@@ -1,4 +1,4 @@
-# av_world_rl
+# Driving policies and world models (formerly av_world_rl)
 
 Learning on top of [`small_av_world`](https://github.com/haggler3/small_av_world), the Rust city simulator:
 
@@ -17,7 +17,7 @@ in their own repo, [`av_world`](https://github.com/haggler3/av_world).
 
 ## The city-area driver (`avrl/xppo.py`)
 
-![learned AVs in Oakland](docs/img/xnet_learned_avs.gif)
+![learned AVs in Oakland](img/xnet_learned_avs.gif)
 
 **What changed from the corridor driver:**
 
@@ -46,7 +46,7 @@ in their own repo, [`av_world`](https://github.com/haggler3/av_world).
 - **The next one cruised at 70 % of the desired speed on free road.** Under exploration noise, speed means more hard
   braking later. Fine-tuning with progress at 0.04/m fixed it.
 
-![training](docs/img/xnet_training.png)
+![training](img/xnet_training.png)
 
 *Training statistics include exploration noise. The reward jump at the dashed line is the reward change, not a jump in
 skill.*
@@ -107,7 +107,7 @@ DWM_SOURCE=xnet python -m dwm.train --data data/dwm_xnet --budget 180 --out resu
 
 ## The corridor driver and the city world models (`small_av_world`)
 
-![the learned driver vs a rule-based driver](docs/img/compare.gif)
+![the learned driver vs a rule-based driver](img/compare.gif)
 
 ### Headline results
 
@@ -164,9 +164,9 @@ on 4 CPU cores). `avrl/ppo.py` trains a 22 → 64 → 64 → 1 MLP; `avrl/export
 check the forward pass and the envelope against JAX. The trainer draws live curves and a time-space diagram of a fixed
 scenario at every checkpoint:
 
-![learning progress](docs/img/learning_progress.png)
+![learning progress](img/learning_progress.png)
 
-It took six versions to get safe; every fix came from the city's collision and red-light logs ([`docs/HISTORY.md`](docs/HISTORY.md)).
+It took six versions to get safe; every fix came from the city's collision and red-light logs ([`docs/HISTORY.md`](HISTORY.md)).
 
 ## 2. World models (`dwm/`)
 
@@ -176,9 +176,9 @@ motion follows from its actions, so the models only learn how the world deviates
 
 | | |
 |---|---|
-| ![DCT](docs/img/dwm_dct.gif) | ![flow matching](docs/img/dwm_flow_dct.gif) |
+| ![DCT](img/dwm_dct.gif) | ![flow matching](img/dwm_flow_dct.gif) |
 
-What the experiments showed (all tables in [`docs/WORLD_MODELS.md`](docs/WORLD_MODELS.md)):
+What the experiments showed (all tables in [`docs/WORLD_MODELS.md`](WORLD_MODELS.md)):
 * the physics residual and conditioning on the planned actions are essential;
 * diffusion beats a deterministic regressor with the same network once trained long enough, and gives calibrated uncertainty;
 * smooth output bases (DCT) fix jagged samples; flow matching beats diffusion at equal training;
@@ -186,9 +186,9 @@ What the experiments showed (all tables in [`docs/WORLD_MODELS.md`](docs/WORLD_M
 
 ## Documentation
 
-* [`docs/METHODS.md`](docs/METHODS.md): pipelines and math (the MDP, PPO, the safety envelope, diffusion, flow matching, bases, CRPS)
-* [`docs/HISTORY.md`](docs/HISTORY.md): the six versions of the learned driver and what is still wrong
-* [`docs/WORLD_MODELS.md`](docs/WORLD_MODELS.md): every world-model experiment, ablation and benchmark table
+* [`docs/METHODS.md`](METHODS.md): pipelines and math (the MDP, PPO, the safety envelope, diffusion, flow matching, bases, CRPS)
+* [`docs/HISTORY.md`](HISTORY.md): the six versions of the learned driver and what is still wrong
+* [`docs/WORLD_MODELS.md`](WORLD_MODELS.md): every world-model experiment, ablation and benchmark table
 
 ## Layout
 
