@@ -1,0 +1,142 @@
+{
+ "date": "2026-11-02",
+ "method": "PUCT, c=1.2, 3 rounds, on paper with quick probes",
+ "candidates": [
+  {
+   "id": "butterfly",
+   "idea": "1 mm nudge -> chaos? explains leaderboard drift (FIXES #14)",
+   "artefact": "figure+GIF",
+   "compute_min": 10,
+   "prior": 0.7,
+   "probe": "probe: quick run 1 min; one-car nudge decays -> reframed to threshold search",
+   "outcome": "KEPT"
+  },
+  {
+   "id": "watchtime",
+   "idea": "AUC of AV-vs-human as function of watch time (3-60 s)",
+   "artefact": "figure",
+   "compute_min": 10,
+   "prior": 0.7,
+   "probe": "probe: quick run, curve rises 0.62->0.80 for PPO",
+   "outcome": "KEPT"
+  },
+  {
+   "id": "seeds_leaderboard",
+   "idea": "several seeds per AVBench score with intervals",
+   "artefact": "table",
+   "compute_min": 40,
+   "prior": 0.6,
+   "probe": "needs >12 min on CPU",
+   "outcome": "dropped: too slow"
+  },
+  {
+   "id": "sobol_speed",
+   "idea": "Sobol sensitivity of speed/crashes to 8 behaviour parameters",
+   "artefact": "tornado",
+   "compute_min": 15,
+   "prior": 0.5,
+   "probe": "overlaps attribution.py",
+   "outcome": "dropped: duplicates"
+  },
+  {
+   "id": "trip_level_gail",
+   "idea": "trip-level discriminator for human-like reward (FIXES #9 next step)",
+   "artefact": "table",
+   "compute_min": 30,
+   "prior": 0.5,
+   "probe": "needs PPO fine-tuning",
+   "outcome": "dropped: too slow"
+  },
+  {
+   "id": "h4_shape",
+   "idea": "settle AV-share curvature",
+   "artefact": "figure",
+   "compute_min": 300,
+   "prior": 0.4,
+   "probe": "FIXES says ~18x data (GPU)",
+   "outcome": "dropped: GPU"
+  },
+  {
+   "id": "ttc_surrogate",
+   "idea": "do TTC surrogate measures predict crashes",
+   "artefact": "figure",
+   "compute_min": 15,
+   "prior": 0.4,
+   "probe": "needs per-step recording of 100s of crashes",
+   "outcome": "dropped"
+  },
+  {
+   "id": "shockwave",
+   "idea": "one AV damping a stop-and-go wave",
+   "artefact": "GIF",
+   "compute_min": 12,
+   "prior": 0.3,
+   "probe": "city sim has no ring road",
+   "outcome": "dropped"
+  },
+  {
+   "id": "signal_failure",
+   "idea": "blackout of a junction cluster, recovery time",
+   "artefact": "GIF",
+   "compute_min": 8,
+   "prior": 0.4,
+   "probe": "hook for signal outage not found",
+   "outcome": "dropped"
+  },
+  {
+   "id": "wet_h3",
+   "idea": "more copies for H3",
+   "artefact": "table",
+   "compute_min": 40,
+   "prior": 0.4,
+   "probe": "duplicates fix 2",
+   "outcome": "dropped"
+  },
+  {
+   "id": "doctor_docs",
+   "idea": "README quick start refresh",
+   "artefact": "doc",
+   "compute_min": 2,
+   "prior": 0.6,
+   "probe": "cleanup only",
+   "outcome": "folded into step 4"
+  },
+  {
+   "id": "pop_pyramid",
+   "idea": "distribution of trip lengths vs real OD",
+   "artefact": "figure",
+   "compute_min": 5,
+   "prior": 0.3,
+   "probe": "no real data",
+   "outcome": "dropped"
+  },
+  {
+   "id": "wildcard_sound",
+   "idea": "sonify a city",
+   "artefact": "audio",
+   "compute_min": 5,
+   "prior": 0.2,
+   "probe": "no audience",
+   "outcome": "dropped"
+  },
+  {
+   "id": "jerk_cdf",
+   "idea": "human vs AV jerk CDFs",
+   "artefact": "figure",
+   "compute_min": 6,
+   "prior": 0.5,
+   "probe": "subsumed by watchtime",
+   "outcome": "merged into watchtime"
+  }
+ ],
+ "final": {
+  "butterfly": {
+   "Q": "0.9 (after probe)",
+   "N": 3
+  },
+  "watchtime": {
+   "Q": "0.8",
+   "N": 2
+  }
+ }
+}
