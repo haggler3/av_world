@@ -18,7 +18,7 @@ av-world export-nvidia out --area chicago --fetch                               
 ```
 out/scene.usda          the city (roads, sidewalks, markings, buildings, trees, furniture) and every agent as an animated prim
 out/preview_*.png       street-level and aerial renders of the stage (when pyvista can render offscreen)
-out/compare.gif         the av_world view and the 3-D stage side by side, following an AV (automatic; --no-clip to skip)
+out/compare.gif, .mp4   the av_world view and the 3-D stage side by side at 20 fps, following an AV (automatic; --no-clip to skip)
 out/scene.json          the trajectories (xnet.carla_export format; also replayable in CARLA)
 out/control/            frame_XXXX.png, control.mp4, camera.json (intrinsics, per-frame camera pose)
 out/meta.json           source, area, scenario and its knobs, the events in the run (crash types, tail tags), the ego
@@ -41,14 +41,31 @@ really there.
 the scene. Right: the exported OpenUSD stage from a chase camera. Same frames, same signal states (the lights turn on both sides at once),
 same vehicles.*
 
-**Every export makes this clip automatically.** `export-nvidia` writes `out/compare.gif` next to the stage. It follows the ego if the ego
-crashed (the long-tail moment is the point). Otherwise it picks the AV and 8 s window that make the most watchable clip: most distance
-covered, with traffic around. It needs pyvista with an offscreen OpenGL; without one, the clip is skipped and `meta.json` says so.
-`--no-clip` turns it off. From Python, `nvidia.compare_clip(net, geo, info, scene, world, ego_id, "clip.gif")` renders any scene.
+**Every export makes this clip automatically.** `export-nvidia` writes `out/compare.gif`, and `out/compare.mp4` when ffmpeg is installed.
+It follows the ego into its crash if the ego crashes on camera. Otherwise it picks the AV and 8 s window with the most distance covered and
+traffic around it. Three frames are interpolated between each pair of simulator steps (positions linearly, headings the short way round),
+so clips play at 20 fps instead of the simulator's 5. The clip needs pyvista with an offscreen OpenGL; without one, it is skipped and
+`meta.json` says so. `--no-clip` turns it off. From Python, `nvidia.compare_clip(net, geo, info, scene, world, ego_id, "clip.mp4")`
+renders any scene.
 
-The clip renders in about 15 s. The static city is loaded into the renderer once, and only the agents and the signal lights are redrawn per
-frame (`scene3d.Renderer`). Without Overture layers for an area (or for an Argoverse 2 log, which has no geographic frame), the world is
-still built from the simulator's own network: road surface, sidewalks, markings, signals and stop signs, just no buildings or trees.
+**Filming a crash: `--find-crash S`.** AV crashes are rare, about one every few AV-hours, so a random 20 s run almost never contains one
+(about 54 random 20 s runs of the famous-incident scenarios at intensity 1.2, in New York and Chicago, had none on camera). With `--find-crash 600`, the exporter runs 8 copies of the city in 20 s
+chunks for up to 600 simulated seconds. When an AV crash is counted, it restores that chunk's starting state and replays the one copy with
+recording on, then checks that the crash is in the recording. In New York this found a crash in 13-18 s of wall-clock time for each of
+three scenarios. A wreck is marked with an orange cone on the 3-D side and an orange outline on the av_world side. `scene.json` now tells the
+two cases apart: `crashed` means the crash happens during the recording, at `crash_frame`, while `wrecked` covers a vehicle already
+wrecked when the recording starts.
+
+```bash
+av-world export-nvidia out --area new_york --scenario red_light_runner --intensity 1.2 --find-crash 600
+```
+
+More clips, including three crashes and a real Argoverse 2 log, are on the website's [3-D scenes page](https://haggler3.github.io/av_world/scenes.html).
+
+The static city is loaded into the renderer once, and only the agents and signal lights are redrawn per frame (`scene3d.Renderer`).
+The 160 frames of an 8 s clip take about 2 minutes on 4 CPU cores with software OpenGL. Without Overture layers for an area (or for an
+Argoverse 2 log, which has no geographic frame), the world is still built from the simulator's own network: road surface, sidewalks,
+markings, signals and stop signs, without buildings or trees.
 
 ![Chicago, street level](img/nvidia3d_chicago_street.png)
 

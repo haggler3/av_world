@@ -357,7 +357,8 @@ def _ego_pose(scene, k, ego, smooth=4):
     for v in scene["vehicles"]:
         j = k - v["start"]
         if v["id"] == ego and 0 <= j < len(v["x"]):
-            lo, hi = max(j - smooth, 0), min(j + smooth + 1, len(v["x"]))
+            w = smooth * scene.get("sub", 1)  # the same time window when frames were interpolated
+            lo, hi = max(j - w, 0), min(j + w + 1, len(v["x"]))
             yaw = math.atan2(np.mean(np.sin(v["yaw"][lo:hi])), np.mean(np.cos(v["yaw"][lo:hi])))
             return v["x"][j], v["y"][j], yaw
     return None
@@ -383,6 +384,9 @@ def _agent_meshes(scene, k, near):
             else:
                 m = pv.Cylinder(center=(wx, wy, cz), direction=(-s_, c, 0), radius=size[0], height=size[1], resolution=12)
             parts.setdefault(colr, []).append(m)
+        cf = v.get("crash_frame")
+        if v.get("wrecked") and (cf is None or j >= cf * scene.get("sub", 1)):  # a hazard marker over a wreck, as on the av_world side
+            parts.setdefault((1.0, 0.45, 0.1), []).append(pv.Cone(center=(x, y, {"bus": 4.0, "van": 3.1}.get(v["kind"], 2.3)), direction=(0, 0, -1), height=0.7, radius=0.35, resolution=12))
     for pos in _ped_positions(scene, k):
         if near(*pos):
             parts.setdefault((0.3, 0.3, 0.45), []).append(pv.Cylinder(center=(pos[0], pos[1], 0.9), direction=(0, 0, 1), radius=0.25, height=1.7, resolution=10))
