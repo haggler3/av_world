@@ -7,3 +7,5 @@ data/*.parquet
 results/smoke*/
 results/main*/
 results/main*.log
+data/*
+!data/pgh_intersections.json
