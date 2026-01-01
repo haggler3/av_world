@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>av_world · Driving worlds that teach</title>
+<meta name="description" content="A city-scale, crash-calibrated driving simulator in pure JAX, and the research stack on top of it: multi-agent RL, generative world models, scaling laws, and controlled experiments on what makes a simulator a good teacher.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117; --bg-2: #11161d; --panel: #161b22; --line: #2a313a; --ink: #e6edf3; --ink-2: #a3adb8; --ink-3: #6e7681;
+    --accent: #3987e5; --accent-2: #6da7ec; --warm: #f0883e; --good: #3ddc84;
+    --font: "Inter", system-ui, -apple-system, Segoe UI, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  nav.top { position: sticky; top: 0; z-index: 10; background: rgba(13, 17, 23, 0.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav.top .wrap { display: flex; align-items: center; gap: 22px; height: 56px; }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
+  .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 14px var(--accent); }
+  nav.top .links { display: flex; gap: 20px; margin-left: auto; font-size: 14px; }
+  nav.top .links a { color: var(--ink-2); }
+  nav.top .links a:hover { color: var(--ink); text-decoration: none; }
+  header.hero { padding: 76px 0 40px; background: radial-gradient(1000px 420px at 70% -10%, rgba(57, 135, 229, 0.18), transparent 70%); }
+  .eyebrow { font: 500 13px var(--mono); color: var(--accent-2); letter-spacing: 0.04em; text-transform: uppercase; }
+  h1 { font-size: clamp(34px, 5.4vw, 58px); line-height: 1.06; letter-spacing: -0.03em; margin: 14px 0 18px; font-weight: 800; max-width: 900px; }
+  h1 em { font-style: normal; background: linear-gradient(90deg, #6da7ec, #3987e5 60%, #b7d3f6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lede { font-size: 19px; color: var(--ink-2); max-width: 760px; margin: 0 0 28px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 10px; font-weight: 600; font-size: 15px; border: 1px solid var(--line); color: var(--ink); background: var(--panel); }
+  .btn:hover { text-decoration: none; border-color: var(--ink-3); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #2f7ad6; }
+  .hero-media { margin: 44px auto 0; max-width: 560px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: #10151b; position: relative; }
+  .hero-media img { display: block; width: 100%; height: auto; }
+  img { max-width: 100%; height: auto; }
+  .hero-media figcaption { position: absolute; left: 14px; bottom: 12px; background: rgba(13, 17, 23, 0.82); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--ink-2); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 34px 0 0; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .stat b { display: block; font: 700 28px var(--mono); letter-spacing: -0.02em; }
+  .stat span { color: var(--ink-2); font-size: 14px; }
+  section { padding: 72px 0 8px; }
+  h2 { font-size: clamp(26px, 3.4vw, 36px); letter-spacing: -0.02em; margin: 0 0 12px; line-height: 1.15; }
+  .sub { color: var(--ink-2); max-width: 760px; margin: 0 0 30px; font-size: 17px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+  .card h3 { margin: 0 0 8px; font-size: 17px; letter-spacing: -0.01em; }
+  .card p { margin: 0; color: var(--ink-2); font-size: 15px; }
+  .card .k { font: 500 12px var(--mono); color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; display: block; }
+  .result { display: grid; grid-template-columns: 1fr; gap: 18px; margin-bottom: 46px; }
+  .result figure { margin: 0; background: #1a1a19; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .result img { display: block; width: 100%; height: auto; }
+  .result .text { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .result h3 { font-size: 21px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .result p { margin: 0 0 10px; color: var(--ink-2); }
+  .result ul { margin: 0; padding-left: 18px; color: var(--ink-2); }
+  .result li { margin-bottom: 6px; }
+  .big { font: 700 15px var(--mono); color: var(--ink); }
+  .scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+  table { border-collapse: collapse; width: 100%; min-width: 820px; font-size: 14px; }
+  th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: var(--panel); font-weight: 600; color: var(--ink); position: sticky; top: 0; }
+  tbody th { color: var(--ink-2); font-weight: 500; white-space: nowrap; }
+  td.us { background: rgba(57, 135, 229, 0.08); color: var(--ink); font-weight: 500; }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+  .trends { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .trend { border-left: 3px solid var(--accent); padding: 4px 0 4px 18px; }
+  .trend h3 { margin: 0 0 4px; font-size: 16px; }
+  .trend p { margin: 0; color: var(--ink-2); font-size: 15px; }
+  .trend .here { color: var(--ink); }
+  .project { display: grid; grid-template-columns: 300px 1fr; gap: 22px; align-items: center; }
+  .project img { width: 100%; border-radius: 10px; border: 1px solid var(--line); display: block; background: #10151b; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .tags span { font: 500 12px var(--mono); color: var(--ink-2); border: 1px solid var(--line); border-radius: 99px; padding: 2px 9px; }
+  .viewer-cta { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; align-items: center; background: linear-gradient(135deg, rgba(57, 135, 229, 0.16), rgba(57, 135, 229, 0.02)); border: 1px solid var(--line); border-radius: 18px; padding: 30px; }
+  .viewer-cta ul { margin: 12px 0 20px; padding-left: 18px; color: var(--ink-2); }
+  ol.next { counter-reset: n; list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  ol.next li { counter-increment: n; display: grid; grid-template-columns: 36px 1fr; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  ol.next li::before { content: counter(n); font: 700 15px var(--mono); color: var(--accent-2); background: rgba(57, 135, 229, 0.12); border-radius: 8px; height: 30px; display: grid; place-items: center; }
+  ol.next b { display: block; margin-bottom: 2px; }
+  ol.next span { color: var(--ink-2); font-size: 15px; }
+  footer { margin-top: 80px; border-top: 1px solid var(--line); padding: 30px 0 50px; color: var(--ink-3); font-size: 13.5px; }
+  footer a { color: var(--ink-2); }
+  code { font: 13.5px var(--mono); background: var(--panel); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+  @media (max-width: 900px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .grid3, .grid2, .trends, .result .text, .project, .viewer-cta { grid-template-columns: 1fr; }
+    nav.top .links a.opt { display: none; }
+    header.hero { padding-top: 48px; }
+    .wrap { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+<nav class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><span class="dot"></span>av_world</a>
+    <div class="links">
+      <a class="opt" href="#unique">Why it's different</a>
+      <a class="opt" href="#results">Results</a>
+      <a class="opt" href="#research">Research</a>
+      <a href="#projects">Projects</a>
+      <a href="viewer/">Viewer</a>
+      <a href="https://github.com/haggler3/av_world">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Autonomous driving research · pure JAX · Pittsburgh</div>
+    <h1>Driving worlds that <em>teach</em>: a crash-calibrated city in JAX, and what it does to the AV that learns in it.</h1>
+    <p class="lede">A whole Pittsburgh neighbourhood simulated at 380× real time on a laptop CPU, with human drivers
+      whose mistakes match published crash statistics. On top of it: multi-agent RL, diffusion world models, scaling laws,
+      and controlled experiments on which simulated data makes a driving policy learn fastest.</p>
+    <div class="cta">
+      <a class="btn primary" href="viewer/">▶ Explore the simulations</a>
+      <a class="btn" href="https://github.com/haggler3/av_world">View on GitHub</a>
+      <a class="btn" href="#results">See the results</a>
+    </div>
+    <figure class="hero-media">
+      <img width="518" height="547" src="img/xnet_learned_avs.gif" alt="Learned AVs (blue) driving among human traffic, buses and pedestrians in Oakland, Pittsburgh" loading="eager">
+    </figure>
+    <div class="stats">
+      <div class="stat"><b>380×</b><span>real time: 8 copies of a whole neighbourhood on 4 CPU cores</span></div>
+      <div class="stat"><b>10,205</b><span>real Pittsburgh intersections auto-mined from OpenStreetMap</span></div>
+      <div class="stat"><b>+20 %</b><span>early learning gain from training in the most dynamic world</span></div>
+      <div class="stat"><b>~5×</b><span>fewer hard brakes for the learned AV vs the rule-based one</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="unique">
+  <div class="wrap">
+    <h2>What this does that common tools don't</h2>
+    <p class="sub">Driving simulation has split into log replay (realistic but bounded by its logs) and self-play
+      (scales, but every agent is the policy). av_world sits in between: a synthetic, open-ended city whose human
+      drivers make the mistakes real humans make, at the rates they make them.</p>
+    <div class="grid3">
+      <div class="card"><span class="k">01 · Calibrated risk</span><h3>Crashes by type, matched to real data</h3>
+        <p>Red-light runners, drivers who don't look, distraction and breakdowns are tuned so rear-end, angle, left-turn
+          and sideswipe rates match published intersection statistics. Most simulators are collision-free by default or inherit their logs.</p></div>
+      <div class="card"><span class="k">02 · The simulator as the variable</span><h3>Experiments on the teacher</h3>
+        <p>The dynamics ladder turns on one source of dynamics at a time and measures what it buys the learner.
+          Active scenario selection asks which simulated data teaches fastest.</p></div>
+      <div class="card"><span class="k">03 · One stack</span><h3>Sim → RL → world model → scaling laws</h3>
+        <p>The same simulator logs train multi-agent PPO and diffusion / flow-matching world models, so their scaling
+          laws can be compared directly, in one repository.</p></div>
+      <div class="card"><span class="k">04 · Any city</span><h3>From open map data to a live neighbourhood</h3>
+        <p>Lanes, junction boxes, conflict points, signals, stop signs, crosswalks and demand built automatically from
+          Overture Maps / OpenStreetMap. Oakland, Squirrel Hill and Downtown ship ready.</p></div>
+      <div class="card"><span class="k">05 · Long horizons</span><h3>Minutes to hours, not 9-second snippets</h3>
+        <p>Traffic forms, queues spill back, buses bunch, vans double-park and drivers reroute around congestion. The
+          AV meets the consequences of its own behaviour.</p></div>
+      <div class="card"><span class="k">06 · Inspectable</span><h3>Every key moment, one click away</h3>
+        <p>The browser viewer indexes each crash, red run and breakdown, so you can jump straight to it, follow any AV
+          and watch the area from three camera views.</p></div>
+    </div>
+
+    <h3 style="margin:44px 0 14px;font-size:19px">Compared with the common tools</h3>
+    <div class="scroll">
+      <table>
+        <thead><tr><th></th><th>av_world</th><th>Waymax</th><th>GPUDrive</th><th>Gigaflow</th><th>MetaDrive</th><th>CARLA</th><th>SUMO</th></tr></thead>
+        <tbody>
+          <tr><th>Framework</th><td class="us">JAX</td><td>JAX</td><td>C++/CUDA (Madrona)</td><td>GPU batch sim</td><td>Python / Panda3D</td><td>Unreal Engine</td><td>C++</td></tr>
+          <tr><th>Scenes</th><td class="us">whole neighbourhoods from any OSM map, unbounded duration</td><td>~9 s logged snippets (WOMD)</td><td>~9 s logged snippets (WOMD)</td><td>procedural maps</td><td>procedural + imported</td><td>hand-built towns</td><td>any OSM map</td></tr>
+          <tr><th>Other road users</th><td class="us">calibrated humans, pedestrians, buses, vans, breakdowns</td><td>logs or IDM</td><td>logs or the policy</td><td>the policy (self-play)</td><td>rule-based traffic</td><td>traffic manager</td><td>car-following models</td></tr>
+          <tr><th>Crashes</th><td class="us">modelled, calibrated by crash type</td><td>detected</td><td>detected</td><td>detected</td><td>detected</td><td>detected</td><td>collision-free by default</td></tr>
+          <tr><th>RL + world models + scaling laws</th><td class="us">in one repo</td><td>sim + baselines</td><td>sim + baselines</td><td>not released</td><td>sim + baselines</td><td>sim</td><td>sim</td></tr>
+          <tr><th>Hardware</th><td class="us">laptop CPU, 380× real time</td><td>CPU / GPU</td><td>GPU</td><td>multi-GPU node</td><td>CPU</td><td>GPU</td><td>CPU</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap">
+    <h2>Results</h2>
+    <p class="sub">Every experiment is a set of jobs of five minutes or less on four CPU cores. Every policy is scored
+      in the same held-out world with all dynamics on and humans 5× riskier than calibrated.</p>
+
+    <div class="result">
+      <figure><img width="1860" height="624" src="img/dynamics_ladder.png" alt="Dynamics ladder: test score vs simulation steps for five training worlds" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Does a more dynamic world train a better driver?</h3>
+          <p>Five training worlds on one map, each adding a source of dynamics: AVs alone → human traffic → pedestrians →
+            buses, vans and breakdowns → risky humans.</p></div>
+        <ul>
+          <li><span class="big">+12 %</span> score for the full world after 7,800 steps, starting from imitation.</li>
+          <li><span class="big">+20 %</span> from scratch: with no imitation start, the world is the only teacher.</li>
+          <li>Every world converges by ~60 k steps. Dynamics buy <b>sample efficiency</b>; steps set the ceiling.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
+      <figure><img width="1920" height="648" src="img/scaling_laws.png" alt="Scaling laws for world-model error vs compute and data, and RL score vs simulation steps" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Scaling laws across architectures</h3>
+          <p>World models trained on 2.8 M simulated AV decisions; error = a·x<sup>−b</sup> fitted in log-log space.
+            The driving policy's score follows a power law in simulator steps too.</p></div>
+        <ul>
+          <li>Compute exponents <span class="big">0.11–0.17</span> for MLPs and flow matching (R² &gt; 0.9).</li>
+          <li>A 1 M-parameter MLP gains <b>2×</b> more per unit of simulated data than a 0.2 M one: capacity decides how much simulation helps.</li>
+          <li>RL score vs steps: <span class="big">b ≈ 0.77</span>, the same law in the simplest and the full world.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
+      <figure><img width="2100" height="780" src="img/active_learning.png" alt="Active learning: uniform vs prioritised and failure-focused scenario selection" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Active learning: which simulated data teaches fastest?</h3>
+          <p>54 scenarios (demand × human risk × pedestrians × AV share). Uniform sampling vs prioritised level replay,
+            failure-focused replay, and a critic warm-up, all at an equal budget of simulator steps.</p></div>
+        <ul>
+          <li>Failure-focused replay leads at mid-budget (<span class="big">+2.6 %</span> at 31 k steps), and all three selection rules finish within 2 %.</li>
+          <li>The least informative scenario still carries <b>73 %</b> of the learning signal of the most informative one, so every corner of the city still teaches.</li>
+          <li>At this stage the lever is the <b>volume</b> of dynamic simulation; selection pays once the common cases are mastered.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="viewer-cta">
+      <div>
+        <h2 style="font-size:28px">Look around the simulations yourself</h2>
+        <p class="sub" style="margin:0">Three recorded runs from Oakland and Squirrel Hill, replayed in your browser.</p>
+        <ul>
+          <li>Zoom from the whole neighbourhood down to a single lane; pan, pinch, scroll.</li>
+          <li>Area, street and follow-an-AV cameras; colour by vehicle type or speed.</li>
+          <li>Indexed key moments: crashes, red-light runs, breakdowns, buses and double-parked vans.</li>
+        </ul>
+        <a class="btn primary" href="viewer/">▶ Open the viewer</a>
+      </div>
+      <a href="viewer/"><img width="691" height="547" src="xnet_oakland_overview.gif" alt="Every vehicle in Oakland coloured by speed" style="width:100%;border-radius:12px;border:1px solid var(--line);display:block" loading="lazy"></a>
+    </div>
+  </div>
+</section>
+
+<section id="research">
+  <div class="wrap">
+    <h2>Where this sits in current research</h2>
+    <p class="sub">The field's 2023–2025 trends, and the question this project asks of each.</p>
+    <div class="trends">
+      <div class="trend"><h3>Scale beats hand-tuning</h3>
+        <p><a href="https://arxiv.org/abs/2502.03349">Gigaflow</a> (ICML 2025) trained one self-play policy on 1.6 billion km
+          and set the state of the art on CARLA, nuPlan and Waymax without human data. <span class="here">Here: the same bet at
+          laptop scale, with calibrated humans as the hard part of the world.</span></p></div>
+      <div class="trend"><h3>Throughput is the bottleneck</h3>
+        <p><a href="https://arxiv.org/abs/2408.01584">GPUDrive</a> (ICLR 2025) runs over a million steps per second on a GPU.
+          <span class="here">Here: jitted end to end with fixed shapes, already 380× real time on CPU and ready to move to a GPU.</span></p></div>
+      <div class="trend"><h3>Scaling laws for driving</h3>
+        <p><a href="https://waymo.com/research/scaling-laws-of-motion-forecasting-and-planning">Waymo (2025)</a> found power
+          laws in compute for motion forecasting and planning. <span class="here">Here: the same laws for policy score vs simulator
+          steps and for world-model error vs compute and data, across four architectures.</span></p></div>
+      <div class="trend"><h3>Generative world models</h3>
+        <p><a href="https://arxiv.org/abs/2503.20523">GAIA-2</a> (Wayve, 2025) generates multi-camera driving video with latent
+          diffusion. <span class="here">Here: diffusion and flow matching on the traffic state itself, sampling 3 s futures in 0.06 ms.</span></p></div>
+      <div class="trend"><h3>Data-driven simulation in JAX</h3>
+        <p><a href="https://arxiv.org/abs/2310.08710">Waymax</a> (NeurIPS 2023) made log-replay simulation batched and
+          accelerator-native. <span class="here">Here: the same pure-<code>step</code>, vmapped-worlds style, but the world generates its own traffic.</span></p></div>
+      <div class="trend"><h3>Adaptive curricula</h3>
+        <p><a href="https://arxiv.org/abs/2010.03934">Prioritised level replay</a> picks training environments by learning
+          potential. <span class="here">Here: tested head-to-head against uniform sampling on a 54-scenario city grid.</span></p></div>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="wrap">
+    <h2>The projects</h2>
+    <p class="sub">Four repositories, one path: a single-vehicle stack, then a city around it, then the learning on top.</p>
+    <div class="grid2" style="grid-template-columns:1fr">
+      <div class="card project">
+        <img width="518" height="547" src="img/xnet_learned_avs.gif" alt="av_world: learned AVs in Oakland" loading="lazy">
+        <div><span class="k">Monorepo · JAX</span><h3><a href="https://github.com/haggler3/av_world">av_world</a></h3>
+          <p>The world and the driver: <code>xworld</code> (crash-calibrated intersections), <code>pgh</code> (10,205 mined
+            Pittsburgh intersections), <code>xnet</code> (whole neighbourhoods), <code>avrl</code> (multi-agent PPO, dynamics
+            ladder, active learning), <code>dwm</code> (diffusion / flow world models, scaling laws), and the browser viewer.</p>
+          <div class="tags"><span>JAX</span><span>multi-agent PPO</span><span>diffusion</span><span>OpenStreetMap</span><span>scaling laws</span></div></div>
+      </div>
+      <div class="card project">
+        <img width="768" height="432" src="img/diffusion_world_model.gif" alt="av_world_rl: diffusion world model samples" loading="lazy">
+        <div><span class="k">Merged into av_world</span><h3><a href="https://github.com/haggler3/av_world_rl">av_world_rl</a></h3>
+          <p>Where the learning started: a pure-JAX copy of a city corridor, a PPO driver exported to Rust that replaced a
+            sampling planner (75–97 % of the AV's CPU time), and the first generative world models. Now lives in
+            <code>av_world/avrl</code> and <code>av_world/dwm</code> with full history.</p>
+          <div class="tags"><span>PPO</span><span>Rust export</span><span>flow matching</span></div></div>
+      </div>
+      <div class="card project">
+        <img width="720" height="450" src="site/small_av_world.gif" alt="small_av_world: a city of traffic in Rust" loading="lazy">
+        <div><span class="k">Rust · city scale</span><h3><a href="https://github.com/haggler3/small_av_world">small_av_world</a></h3>
+          <p>A deterministic city traffic simulator in Rust: 1,500 road segments, 400 signalised intersections, ~70,000 trips
+            a day following a real daily rhythm, congestion-aware routing and incidents. A full day in ~14 s on one core
+            (~6,000× real time), with a browser viewer.</p>
+          <div class="tags"><span>Rust</span><span>24 h traffic</span><span>routing</span><span>incidents</span></div></div>
+      </div>
+      <div class="card project">
+        <img width="560" height="315" src="site/small_av.gif" alt="small_av: LiDAR perception to control with an occluded pedestrian" loading="lazy">
+        <div><span class="k">Python + Rust · full stack</span><h3><a href="https://github.com/haggler3/small_av">small_av</a></h3>
+          <p>A complete classical AV stack on CPU, from raw LiDAR to steering and throttle: perception → tracking →
+            prediction → behaviour → planning → control. Includes a forecasting model trained on Argoverse 2 and an
+            ablation of which parts of the stack matter.</p>
+          <div class="tags"><span>LiDAR</span><span>tracking</span><span>prediction</span><span>planning</span><span>Argoverse 2</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="next">
+  <div class="wrap">
+    <h2>What's next</h2>
+    <ol class="next">
+      <li><div><b>Scale the simulation on a GPU</b><span>Test the fitted power laws 4–16× further out (62 k → 1 M simulator steps); the jitted step moves unchanged.</span></div></li>
+      <li><div><b>Train the driver inside the world model</b><span>The diffusion model samples a 3 s future in 0.06 ms. Use imagined rollouts (Dreamer-style) and compare steps-to-score with the dynamics ladder.</span></div></li>
+      <li><div><b>Failure-focused replay at scale</b><span>The failure score separates scenarios far more than the learning signal. Oversample where AVs still brake hard or nearly collide, and mine new scenarios from the viewer's key moments.</span></div></li>
+      <li><div><b>One policy, many neighbourhoods</b><span>Train across Oakland, Squirrel Hill and Downtown and measure transfer to an unseen part of the city.</span></div></li>
+      <li><div><b>Close the loop with Rust</b><span>Port the 28-feature observation to small_av_world so the city-area policy runs in the Rust AV stack, as the corridor driver already does.</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Map data: Overture Maps / © OpenStreetMap contributors (ODbL). Crash calibration: Massachusetts crash rate data,
+    FHWA HSIS, IHSDM defaults, SWOV. Research cited:
+    <a href="https://arxiv.org/abs/2502.03349">Gigaflow</a> ·
+    <a href="https://arxiv.org/abs/2408.01584">GPUDrive</a> ·
+    <a href="https://waymo.com/research/scaling-laws-of-motion-forecasting-and-planning">Waymo scaling laws</a> ·
+    <a href="https://arxiv.org/abs/2503.20523">GAIA-2</a> ·
+    <a href="https://arxiv.org/abs/2310.08710">Waymax</a> ·
+    <a href="https://arxiv.org/abs/2010.03934">Prioritised level replay</a>.
+    <br><a href="https://github.com/haggler3/av_world">github.com/haggler3/av_world</a>
+  </div>
+</footer>
+</body>
+</html>
