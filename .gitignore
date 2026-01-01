@@ -22,3 +22,4 @@ results/bev/*_params.npz
 results/bev/*_ckpt.pkl
 results/bev/snaps/
 results/notebooks/
+results/easy/
