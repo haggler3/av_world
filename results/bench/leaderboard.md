@@ -1,3 +1,39 @@
+## Absolute tier: fixed bars, 11 scenarios (11 core + 0 long-tail) x 8 checks
+
+| policy | checks passed (of 88) | core | long-tail | scenarios cleared | most failed |
+|---|---|---|---|---|---|
+| PPO + barrier teacher, then no filter (phase 2) | 77 | 77 | 0 | 3 | safer unaided (7), right of way (2), safer than people (1), inside the barrier (1) |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 75 | 75 | 0 | 4 | safer unaided (7), right of way (4), safer than people (2) |
+| PPO + barrier teacher (phase 1) | 73 | 73 | 0 | 2 | safer unaided (7), right of way (5), safer than people (2), inside the barrier (1) |
+| rule-based AV | 69 | 69 | 0 | 0 | comfortable (11), right of way (3), safer than people (2), safer unaided (2), inside the b |
+| PPO, full world, 10x envelope penalty | 66 | 66 | 0 | 0 | keeps up (11), safer unaided (5), right of way (5), safer than people (1) |
+| PPO, 234k steps (xnet3) | 48 | 48 | 0 | 0 | safer unaided (11), inside the barrier (11), light touch (9), safer than people (6), right |
+| PPO, 130k steps (xnet) | 37 | 37 | 0 | 0 | safer unaided (11), inside the barrier (11), light touch (10), right of way (9), lawful (7 |
+| imitation (BC) | 32 | 32 | 0 | 0 | light touch (11), safer unaided (11), right of way (11), inside the barrier (11), lawful ( |
+| PPO, AVs-only world | 31 | 31 | 0 | 0 | light touch (11), safer unaided (11), lawful (11), right of way (11), inside the barrier ( |
+| PPO, full world | 31 | 31 | 0 | 0 | light touch (11), safer unaided (11), lawful (11), right of way (11), inside the barrier ( |
+| PPO, full world, no imitation | 29 | 29 | 0 | 0 | light touch (11), safer unaided (11), lawful (11), right of way (11), inside the barrier ( |
+| PPO, failure-focused replay | 29 | 29 | 0 | 0 | light touch (11), safer unaided (11), lawful (11), right of way (11), inside the barrier ( |
+
+## Scorecard: the numbers to optimise (means over scenarios; worst = the lowest long-tail scenario)
+
+| policy | av_world score: core | long-tail | worst | driving score | crashes /AV-h | unaided | crash UCB95 | harm unaided | comfort pass | jerk rms | progress | filter share | barrier exits | veto s /AV-h |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| rule-based AV | 77.2 | nan | nan | 99.6 | 0.006 | 0.006 | 0.094 | 0.029 | 0.908 | 2.71 | 1.116 | 0.0% | 0.12% | 15.2 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 56.8 | nan | nan | 99.8 | 0.005 | 0.026 | 0.091 | 0.159 | 0.986 | 1.86 | 1.060 | 0.9% | 0.11% | 15.4 |
+| PPO + barrier teacher, then no filter (phase 2) | 50.3 | nan | nan | 99.8 | 0.004 | 0.048 | 0.090 | 0.373 | 0.984 | 1.86 | 1.080 | 1.2% | 0.12% | 15.9 |
+| PPO, full world, 10x envelope penalty | 49.2 | nan | nan | 71.0 | 0.003 | 0.010 | 0.084 | 0.052 | 0.982 | 1.10 | 0.712 | 0.2% | 0.03% | 9.1 |
+| PPO + barrier teacher (phase 1) | 42.9 | nan | nan | 99.8 | 0.003 | 0.049 | 0.087 | 0.415 | 0.984 | 1.93 | 1.075 | 1.1% | 0.15% | 14.7 |
+| PPO, 234k steps (xnet3) | 6.1 | nan | nan | 99.3 | 0.018 | 0.642 | 0.114 | 2.002 | 0.979 | 1.87 | 1.123 | 2.4% | 1.14% | 15.3 |
+| PPO, 130k steps (xnet) | 0.5 | nan | nan | 99.6 | 0.009 | 2.680 | 0.098 | 13.997 | 0.987 | 1.48 | 1.084 | 2.6% | 1.49% | 15.4 |
+| imitation (BC) | 0.4 | nan | nan | 99.6 | 0.007 | 2.064 | 0.094 | 6.535 | 0.961 | 1.74 | 1.121 | 19.0% | 3.77% | 14.0 |
+| PPO, full world, no imitation | 0.0 | nan | nan | 99.4 | 0.015 | 62.243 | 0.108 | 163.352 | 0.971 | 1.66 | 1.121 | 15.6% | 5.67% | 15.3 |
+| PPO, failure-focused replay | 0.0 | nan | nan | 99.3 | 0.014 | 69.827 | 0.106 | 180.011 | 0.973 | 1.62 | 1.124 | 20.4% | 6.58% | 13.2 |
+| PPO, AVs-only world | 0.0 | nan | nan | 99.6 | 0.008 | 72.842 | 0.097 | 189.323 | 0.976 | 1.63 | 1.137 | 19.0% | 6.34% | 14.0 |
+| PPO, full world | 0.0 | nan | nan | 99.6 | 0.009 | 79.802 | 0.098 | 207.093 | 0.972 | 1.63 | 1.123 | 19.1% | 6.93% | 14.0 |
+
+## Relative tier: against the rule-based AV on the same traffic, 11 core scenarios x 8 checks
+
 | policy | checks passed (of 88) | scenarios overcome (of 11) | nominal | rush_hour | red_runners | inattentive | jaywalkers | blockages | av_majority | cyclists | wet_road | squirrel_hill | downtown |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | rule-based AV | 88 | 11 | 8/8 | 8/8 | 8/8 | 8/8 | 8/8 | 8/8 | 8/8 | 8/8 | 8/8 | 8/8 | 8/8 |
@@ -12,6 +48,7 @@
 | PPO, AVs-only world | 38 | 0 | 4/8 | 4/8 | 4/8 | 2/8 | 2/8 | 4/8 | 3/8 | 4/8 | 4/8 | 4/8 | 3/8 |
 | PPO, full world, no imitation | 38 | 0 | 4/8 | 3/8 | 3/8 | 3/8 | 2/8 | 4/8 | 4/8 | 4/8 | 4/8 | 4/8 | 3/8 |
 | PPO, failure-focused replay | 38 | 0 | 4/8 | 2/8 | 4/8 | 3/8 | 2/8 | 4/8 | 4/8 | 4/8 | 4/8 | 4/8 | 3/8 |
+
 
 | scenario | policy | crashes /AV-h | raw crashes /AV-h | raw near misses /AV-h | hard brakes /AV-h | AV km/h | human km/h | envelope cuts |
 |---|---|---|---|---|---|---|---|---|

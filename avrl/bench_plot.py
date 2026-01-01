@@ -30,7 +30,7 @@ def pooled_all(names):
 def main(out="docs/img/avbench.png"):
     lb = json.load(open(f"{B.OUT}/leaderboard.json"))
     names, checks, board = lb["scenarios"], lb["checks"], lb["board"]
-    learned = [p for p in B.POLICIES if B.POLICIES[p]]
+    learned = [p for p in B.POLICIES if B.POLICIES[p] and p in board]
     fig, axs = plt.subplots(1, 3, figsize=(17, 5.6), facecolor=SURFACE, gridspec_kw={"width_ratios": [1.45, 1, 1]})
 
     # ---- A: checks x policies, scenarios passed

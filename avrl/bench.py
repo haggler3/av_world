@@ -1,7 +1,7 @@
 """AVBench: the bar a learned driving policy has to clear, scenario by scenario.
 
 The training reward says how well a policy optimises its own objective. AVBench asks the questions a deployment
-review would ask, in nine scenarios, against the rule-based AV driving the *same* traffic (same warm state, same
+review would ask, in eleven scenarios, against the rule-based AV driving the *same* traffic (same warm state, same
 random numbers, so every difference is the policy's):
 
   nominal        Oakland, calibrated human drivers, 25 % AVs
@@ -31,10 +31,15 @@ policy, which is what RL actually learned). Eight checks per scenario, each agai
     courteous       near misses (entering a junction just ahead of a car with priority) per AV-hour <= the rule-based AV's
     self-reliant    the envelope would cut the policy's command in < 5 % of AV time
 
-A scenario counts as *overcome* when all seven pass. Jobs are split by scenario (~1-2 min each):
+A scenario counts as *overcome* when all eight pass. These relative checks have a flaw: the rule-based AV passes all 88 by
+construction. So there is also an absolute tier (avrl.scorecard.ABSOLUTE: fixed bars from outside the simulator, e.g. half the
+humans' crash rate, nuPlan's comfort bound) that the rule-based AV fails too, over the 11 core scenarios plus 7 long-tail ones
+(TAIL: the famous-incident archetypes), and a scorecard of continuous metrics with one number to optimise (the av_world score). Jobs are split by scenario (~1-2 min each):
 
     python -m avrl.bench train                          # the self-reliant policy (~4 min)
     python -m avrl.bench run nominal rush_hour ...     # -> results/bench/<scenario>.json (only the missing policies)
+    python -m avrl.bench run glare dartout ...         # the long-tail scenarios
+    python -m avrl.bench run-wm                         # the latent world-model planner (3 scenarios x 2 modes, ~10 min each)
     python -m avrl.bench report                         # -> results/bench/leaderboard.json, leaderboard.md
     python -m avrl.bench plot                           # -> docs/img/avbench.png
 """
@@ -69,6 +74,18 @@ SCENARIOS = {
     "squirrel_hill": ("squirrel_hill", {}),
     "downtown": ("downtown", {}),
 }
+# the long tail: the famous-incident archetypes (avlab.famous) at intensity 1, on top of nominal traffic. The perception faults
+# (glare, misclassification, a missed stalled car) hit the AV's own sensing, which is where the rule-based AV is fragile.
+TAIL = {"glare": "sun_glare_blackout", "phantom": "phantom_braking", "stalled_blind": "stalled_vehicle_missed",
+        "jaywalker_blind": "jaywalker_misclassified", "dartout": "bus_dartout", "cut_in": "aggressive_cut_in", "black_ice": "black_ice"}
+
+
+def _tail(name):
+    from avlab import famous as FM
+    return ("oakland", FM.SCENARIOS[TAIL[name]][2](1.0))
+
+
+SCENARIOS.update({k: _tail(k) for k in TAIL})
 
 POLICIES = {  # name -> checkpoint (None = the rule-based AV, the bar to clear)
     "rule-based AV": None,
@@ -83,7 +100,11 @@ POLICIES = {  # name -> checkpoint (None = the rule-based AV, the bar to clear)
     "PPO + barrier teacher (phase 1)": "results/unaided/phase1/policy.npz",
     "PPO + barrier teacher, then no filter (phase 2)": "results/unaided/phase2/policy.npz",
     "PPO + barrier teacher, speed + jaywalkers (phase 3)": "results/unaided/phase3/policy.npz",
+    "latent world-model planner (wm-mpc)": "wmplan",
 }
+# the latent planner replans every AV every step (~10 min per run here), so it runs on the junction-heavy scenarios it was built
+# for, unaided and with the envelope, in two halves per run
+WM, WM_SCENARIOS, WM_MODES, WM_K = "latent world-model planner (wm-mpc)", ("nominal", "red_runners", "inattentive"), ("raw", "shielded"), 112
 STEPS = {"imitation (BC)": 0, "PPO, full world": 62_400, "PPO, 130k steps (xnet)": 130_000, "PPO, 234k steps (xnet3)": 234_000}
 RENAME = {"PPO, long run (xnet3)": "PPO, 234k steps (xnet3)"}
 
@@ -115,8 +136,9 @@ def rates(m):
             "human_crash_per_h": (crashes - d["av_crash"]) / (hum_s / 3600), "teleports": d["teleports"]}
 
 
-def runner(area, beh):
-    """Jitted rollouts from one fixed warm state: rule-based, and a policy with / without the envelope."""
+def runner(area, beh, chunks=1, planner=None):
+    """Jitted rollouts from one fixed warm state: rule-based, and a policy with / without the envelope (or under the CBF).
+    planner: a policy function for xnet.sim.step(rl=(f, key, True)) instead of PPO parameters (the latent planner)."""
     net, geo, info = NW.build(area)
     J, nh = X.to_jnp(net), jnp.asarray(net["nh"])
     sim = X.Sim(net, n_envs=N_ENVS, beh=beh, seed=123, reroute_s=0)
@@ -124,26 +146,67 @@ def runner(area, beh):
     st0 = sim.st
     n = int(SECONDS / X.DT)
     keys = jax.random.split(jax.random.PRNGKey(7), n)
+    parts = np.array_split(np.arange(n), chunks)  # the same steps and keys, in pieces (identical results, shorter jobs)
 
     def make(shield):
         @jax.jit
-        def go(params, st):
+        def go(params, st, kk):
             def body(st, k):
                 ks = jax.random.split(k, N_ENVS)
+                if planner is not None:
+                    return jax.vmap(lambda s, k2: X.step(s, J, beh, nh, rl=(planner, k2, True))[0])(st, ks), None
                 if params is None:
-                    return jax.vmap(lambda s, kk: X.step(s, J, beh, nh))(st, ks), None
-                return jax.vmap(lambda s, kk: X.step(s, J, beh, nh, rl=(P.deterministic(params), kk))[0])(st, ks), None
-            m0 = st.m
-            st, _ = jax.lax.scan(body, st, keys)
-            return st.m - m0
+                    return jax.vmap(lambda s, k2: X.step(s, J, beh, nh))(st, ks), None
+                return jax.vmap(lambda s, k2: X.step(s, J, beh, nh, rl=(P.deterministic(params), k2))[0])(st, ks), None
+            return jax.lax.scan(body, st, kk)[0]
+
         def out(params):
             X.SHIELD = shield  # read when go is traced (its first call)
             try:
-                return np.asarray(go(params, st0))
+                st = st0
+                for i, idx in enumerate(parts):
+                    st = go(params, st, keys[idx])
+                    if chunks > 1:
+                        print(f"  part {i + 1}/{chunks}", flush=True)
+                return np.asarray(st.m - st0.m)
             finally:
                 X.SHIELD = "idm"
         return out
-    return make("idm"), make("off"), make("cbf")
+    return {"shielded": make("idm"), "raw": make("off"), "cbf": make("cbf")}
+
+
+def evaluate(policy, scenarios=("nominal",)):
+    """The scorecard of one policy (a checkpoint path, PPO parameters, or None for the rule-based AV) on bench scenarios, from the
+    same warm states and random numbers as the leaderboard: {"av_score": mean, "scenarios": {name: scorecard}}. An objective for
+    model selection or a hyperparameter search (~1 min per scenario)."""
+    from . import scorecard as SC
+    params = P.load(policy) if isinstance(policy, str) else policy
+    out = {}
+    for n in scenarios:
+        area, over = SCENARIOS[n]
+        r = runner(area, behaviour(over))
+        raw = r["raw"](params)
+        out[n] = SC.scorecard(raw, r["shielded"](params) if params is not None else raw)
+    return {"av_score": float(np.mean([v["av_score"] for v in out.values()])), "scenarios": out}
+
+
+def run_wm(name, mode):
+    """One mode of the latent planner in one scenario (~10 min)."""
+    from wmplan import model as M
+    from wmplan import planner as PL
+    path_out = f"{OUT}/{name}.json"
+    d = json.load(open(path_out))
+    row = d["runs"].setdefault(WM, {})
+    if mode in row:
+        return
+    area, over = SCENARIOS[name]
+    PL.K_PLAN = WM_K  # every AV in a copy (~75-105 here), not the 48 the planner was tuned with
+    t0 = time.time()
+    go = runner(area, behaviour(over), chunks=2, planner=PL.make(M.load(), P.load("results/xnet3/policy.npz")))[mode]
+    row[mode] = go(None).tolist()
+    with open(path_out, "w") as f:
+        json.dump(d, f)
+    print(f"{name} {WM} {mode}: {time.time() - t0:.0f} s", flush=True)
 
 
 def run(name):
@@ -152,10 +215,11 @@ def run(name):
     path_out = f"{OUT}/{name}.json"
     rows = json.load(open(path_out))["runs"] if os.path.exists(path_out) else {}
     rows = {RENAME.get(k, k): v for k, v in rows.items()}
-    todo = [p for p in POLICIES if p not in rows]
+    todo = [p for p in POLICIES if p not in rows and p != WM]
     if not todo:
         return
-    on, off, cbf = runner(area, behaviour(over))
+    r_ = runner(area, behaviour(over))
+    on, off, cbf = r_["shielded"], r_["raw"], r_["cbf"]
     for pol in todo:
         path = POLICIES[pol]
         if path is None:
@@ -203,14 +267,42 @@ def checks(pol, base):
     }
 
 
+def _align(m, names):
+    """Counters saved under an older metric list -> the current X.METRICS order (missing counters are 0)."""
+    m = np.asarray(m, float)
+    out = np.zeros(m.shape[:-1] + (len(X.METRICS),))
+    for i, k in enumerate(names):
+        if k in X.METRICS:
+            out[..., X.METRICS.index(k)] = m[..., i]
+    return out
+
+
+def _runs(n):
+    d = json.load(open(f"{OUT}/{n}.json"))
+    names = d.get("metrics", X.METRICS)
+    return X.METRICS, {RENAME.get(p, p): {k: _align(v, names) for k, v in r.items()} for p, r in d["runs"].items()}
+
+
+def _score(names_m, r):
+    from . import scorecard as SC
+    return SC.scorecard(r["raw"], r.get("shielded"), r.get("cbf"), names=names_m)
+
+
 def report():
-    board = {p: {"passed": 0, "overcome": [], "scenarios": {}} for p in POLICIES}
-    names = [n for n in SCENARIOS if os.path.exists(f"{OUT}/{n}.json")]
-    for n in names:
-        d = json.load(open(f"{OUT}/{n}.json"))
-        runs = {RENAME.get(p, p): {k: np.array(v) for k, v in r.items()} for p, r in d["runs"].items()}
+    """results/bench/leaderboard.{json,md}: the relative tier (vs the rule-based AV, the 11 core scenarios), the absolute tier (fixed
+    bars, every scenario) and the scorecard (continuous metrics and the av_world score)."""
+    from . import scorecard as SC
+    core = [n for n in SCENARIOS if n not in TAIL and os.path.exists(f"{OUT}/{n}.json")]
+    tail = [n for n in TAIL if os.path.exists(f"{OUT}/{n}.json")]
+    names = core + tail
+    data = {n: _runs(n) for n in names}
+    rel_pols = [p for p in POLICIES if p != WM]
+    # ---- relative tier: the original eight checks against the rule-based AV, core scenarios
+    board = {p: {"passed": 0, "overcome": [], "scenarios": {}} for p in rel_pols}
+    for n in core:
+        _, runs = data[n]
         base = runs["rule-based AV"]
-        for p in POLICIES:
+        for p in rel_pols:
             c = checks(runs[p], base)
             ok = sum(v[0] for v in c.values())
             board[p]["passed"] += int(ok)
@@ -220,25 +312,72 @@ def report():
                                         "raw": pooled(runs[p]["raw"]), "shielded": pooled(runs[p]["shielded"]),
                                         "speed_diff_ci": ci(runs[p]["shielded"], base["shielded"], "av_speed_kmh"),
                                         "hard_diff_ci": ci(runs[p]["shielded"], base["shielded"], "av_hard_per_h")}
-    total = len(names) * len(CHECKS)
-    with open(f"{OUT}/leaderboard.json", "w") as f:
-        json.dump({"scenarios": names, "checks": CHECKS, "board": board}, f, indent=1)
-    lines = [f"| policy | checks passed (of {total}) | scenarios overcome (of {len(names)}) | " + " | ".join(names) + " |",
-             "|---|---|---|" + "---|" * len(names)]
-    for p in sorted(POLICIES, key=lambda p: -board[p]["passed"]):
-        b = board[p]
-        lines.append(f"| {p} | {b['passed']} | {len(b['overcome'])} | " +
-                     " | ".join(f"{b['scenarios'][n]['passed']}/{len(CHECKS)}" for n in names) + " |")
-    md = "\n".join(lines)
-    lines = ["", "", "| scenario | policy | crashes /AV-h | raw crashes /AV-h | raw near misses /AV-h | hard brakes /AV-h | AV km/h | human km/h | envelope cuts |",
-             "|---|---|---|---|---|---|---|---|---|"]
+    # ---- absolute tier and scorecard: every scenario a policy has complete runs for
+    absolute, scores = {}, {}
     for n in names:
-        for p in POLICIES:
-            s = board[p]["scenarios"][n]
-            r, sh = s["raw"], s["shielded"]
-            lines.append(f"| {n} | {p} | {sh['av_crash_per_h']:.3f} | {r['av_crash_per_h']:.3f} | {r['av_near_per_h']:.2f} | {sh['av_hard_per_h']:.1f} | "
-                         f"{sh['av_speed_kmh']:.1f} | {sh['human_speed_kmh']:.1f} | {sh['shield_share']:.1%} |")
-    md += "\n".join(lines) + "\n"
+        mnames, runs = data[n]
+        for p, r in runs.items():
+            if p not in POLICIES or "raw" not in r or "shielded" not in r:
+                continue
+            sc = _score(mnames, r)
+            ab = SC.absolute_checks(sc["metrics"])
+            absolute.setdefault(p, {})[n] = ab
+            scores.setdefault(p, {})[n] = sc
+    with open(f"{OUT}/leaderboard.json", "w") as f:
+        json.dump({"scenarios": core, "checks": CHECKS, "board": board, "tail_scenarios": tail, "absolute_checks": list(SC.ABSOLUTE),
+                   "absolute": absolute, "scores": scores, "wm_scenarios": list(WM_SCENARIOS)}, f, indent=1, default=float)
+
+    def mean(p, ns, key=None):
+        v = [scores[p][n]["av_score"] if key is None else scores[p][n]["metrics"][key] for n in ns if n in scores.get(p, {})]
+        return float(np.mean(v)) if v else float("nan")
+
+    full = [p for p in rel_pols if all(n in absolute.get(p, {}) for n in names)]
+    ncheck = len(SC.ABSOLUTE)
+    L = [f"## Absolute tier: fixed bars, {len(names)} scenarios ({len(core)} core + {len(tail)} long-tail) x {ncheck} checks", "",
+         f"| policy | checks passed (of {len(names) * ncheck}) | core | long-tail | scenarios cleared | most failed |", "|---|---|---|---|---|---|"]
+    for p in sorted(full, key=lambda p: -sum(sum(absolute[p][n].values()) for n in names)):
+        tot = sum(sum(absolute[p][n].values()) for n in names)
+        fails = {}
+        for n in names:
+            for k, v in absolute[p][n].items():
+                fails[k] = fails.get(k, 0) + (not v)
+        worst = ", ".join(f"{k} ({v})" for k, v in sorted(fails.items(), key=lambda x: -x[1]) if v)[:90]
+        L.append(f"| {p} | {tot} | {sum(sum(absolute[p][n].values()) for n in core)} | {sum(sum(absolute[p][n].values()) for n in tail)} | "
+                 f"{sum(all(absolute[p][n].values()) for n in names)} | {worst} |")
+    wm_ns = [n for n in WM_SCENARIOS if n in absolute.get(WM, {})]
+    if wm_ns:
+        L += ["", f"Latent world-model planner, on the scenarios it ran ({', '.join(wm_ns)}), against every policy on the same ones:", "",
+              f"| policy | absolute checks (of {len(wm_ns) * ncheck}) | av_world score | crashes /AV-h unaided | harm /AV-h unaided | comfort pass | progress |",
+              "|---|---|---|---|---|---|---|"]
+        for p in sorted([q for q in POLICIES if all(n in absolute.get(q, {}) for n in wm_ns)], key=lambda q: -mean(q, wm_ns)):
+            L.append(f"| {p} | {sum(sum(absolute[p][n].values()) for n in wm_ns)} | {mean(p, wm_ns):.1f} | {mean(p, wm_ns, 'crash_per_h_unaided'):.3f} | "
+                     f"{mean(p, wm_ns, 'harm_per_h_unaided'):.3f} | {mean(p, wm_ns, 'comfort_pass'):.3f} | {mean(p, wm_ns, 'progress'):.3f} |")
+    L += ["", "## Scorecard: the numbers to optimise (means over scenarios; worst = the lowest long-tail scenario)", "",
+          "| policy | av_world score: core | long-tail | worst | driving score | crashes /AV-h | unaided | crash UCB95 | harm unaided | "
+          "comfort pass | jerk rms | progress | filter share | barrier exits | veto s /AV-h |", "|" + "---|" * 15]
+    for p in sorted(full, key=lambda p: -mean(p, names)):
+        worst = min(scores[p][n]["av_score"] for n in tail) if tail else float("nan")
+        L.append(f"| {p} | {mean(p, core):.1f} | {mean(p, tail):.1f} | {worst:.1f} | {mean(p, names, 'driving_score'):.1f} | "
+                 f"{mean(p, names, 'crash_per_h'):.3f} | {mean(p, names, 'crash_per_h_unaided'):.3f} | {mean(p, names, 'crash_ucb95_per_h'):.3f} | "
+                 f"{mean(p, names, 'harm_per_h_unaided'):.3f} | {mean(p, names, 'comfort_pass'):.3f} | {mean(p, names, 'jerk_rms'):.2f} | "
+                 f"{mean(p, names, 'progress'):.3f} | {mean(p, names, 'filter_share'):.1%} | {mean(p, names, 'barrier_exit_share'):.2%} | "
+                 f"{mean(p, names, 'barrier_veto_s_per_h'):.1f} |")
+    # ---- the relative tier, as before
+    L += ["", f"## Relative tier: against the rule-based AV on the same traffic, {len(core)} core scenarios x {len(CHECKS)} checks", "",
+          f"| policy | checks passed (of {len(core) * len(CHECKS)}) | scenarios overcome (of {len(core)}) | " + " | ".join(core) + " |",
+          "|---|---|---|" + "---|" * len(core)]
+    for p in sorted(rel_pols, key=lambda p: -board[p]["passed"]):
+        b = board[p]
+        L.append(f"| {p} | {b['passed']} | {len(b['overcome'])} | " + " | ".join(f"{b['scenarios'][n]['passed']}/{len(CHECKS)}" for n in core) + " |")
+    L += ["", "", "| scenario | policy | crashes /AV-h | raw crashes /AV-h | raw near misses /AV-h | hard brakes /AV-h | AV km/h | human km/h | envelope cuts |",
+          "|---|---|---|---|---|---|---|---|---|"]
+    for n in core:
+        for p in rel_pols:
+            s_ = board[p]["scenarios"][n]
+            r, sh = s_["raw"], s_["shielded"]
+            L.append(f"| {n} | {p} | {sh['av_crash_per_h']:.3f} | {r['av_crash_per_h']:.3f} | {r['av_near_per_h']:.2f} | {sh['av_hard_per_h']:.1f} | "
+                     f"{sh['av_speed_kmh']:.1f} | {sh['human_speed_kmh']:.1f} | {sh['shield_share']:.1%} |")
+    md = "\n".join(L) + "\n"
     with open(f"{OUT}/leaderboard.md", "w") as f:
         f.write(md)
     print(md)
@@ -249,6 +388,10 @@ if __name__ == "__main__":
     if cmd == "run":
         for n in sys.argv[2:] or list(SCENARIOS):
             run(n)
+    elif cmd == "run-wm":  # run-wm [scenario [mode]]: the latent planner, one (scenario, mode) per call
+        for n in sys.argv[2:3] or WM_SCENARIOS:
+            for mode in sys.argv[3:4] or WM_MODES:
+                run_wm(n, mode)
     elif cmd == "train":
         train_self_reliant()
     elif cmd == "report":
