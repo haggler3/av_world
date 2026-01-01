@@ -7,6 +7,11 @@ honest account of what it can and cannot do.**
 
 ![learned AVs in Oakland](docs/img/xnet_learned_avs.gif)
 
+**Latest AVBench** (18 scenarios x 8 fixed-bar checks, [full results](docs/METRICS.md#results)):
+* The barrier-taught PPO policy passes **123 of 144** checks, the rule-based AV 104.
+* The rule-based AV still has the best core score (77.2 vs 56.8): unaided, the learned policies crash 1.3-1.6x as often.
+* Retraining one recipe moves scores by up to 10 points; the latent world-model planner is not competitive yet.
+
 ## What it is
 
 * **`xnet`**, an area simulator built from open map data (Pittsburgh's Oakland, Squirrel Hill and Downtown, Midtown Manhattan, the Chicago Loop, central Boston, any OpenStreetMap city, Argoverse 2 / Waymo maps):
@@ -31,8 +36,6 @@ honest account of what it can and cannot do.**
 pip install .                       # data and a trained starting policy are bundled
 av-world info && av-world bench     # simulated seconds per wall-clock second on this machine
 ```
-Contributing: `pip install pre-commit && pre-commit install` turns on the [gitleaks](https://github.com/gitleaks/gitleaks) hook, which
-blocks commits that contain API keys, tokens or private keys.
 ```python
 import av_world
 env = av_world.make("oakland", n_envs=8)           # or an OpenStreetMap file, or "city.npz"
