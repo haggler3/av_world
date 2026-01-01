@@ -1,0 +1,15 @@
+{
+ "date": "2026-11-08",
+ "method": "abbreviated PUCT on paper (c=1.2): probes were a 14 s --quick run of the cliff tool, a code grep for per-type metrics (METRICS has seven crash types and imp_* impact sums), and two web searches; time was short so only 2 rounds",
+ "candidates": [
+  {"idea": "friction cliff cause: crashes by type on a finer friction grid (next-step 7)", "minutes": 5, "prior": 0.6, "probe": "METRICS holds per-type counters; quick run 14 s", "outcome": "KEPT"},
+  {"idea": "speed limit x AV share (next-step 5)", "minutes": 5, "prior": 0.5, "probe": "reduced to 3 scales x 2 shares x 12 copies, same cost as idea 1", "outcome": "KEPT"},
+  {"idea": "twin kicks on every seed, count junction handoffs (step 3)", "minutes": 25, "prior": 0.4, "probe": "needs per-slot traces for many copies", "outcome": "dropped: over budget"},
+  {"idea": "seeds with intervals on every leaderboard row (step 2)", "minutes": 45, "prior": 0.7, "probe": "none", "outcome": "dropped: over budget"},
+  {"idea": "pedestrian-yield dose-response (step 6)", "minutes": 9, "prior": 0.4, "probe": "overlaps idea 2", "outcome": "dropped"},
+  {"idea": "L4 leaderboard random stream check (step 1)", "minutes": 10, "prior": 0.5, "probe": "needs stored GPU row comparison", "outcome": "dropped: low visual appeal"},
+  {"idea": "mini-benchmark with seeds (step 9)", "minutes": 45, "prior": 0.4, "probe": "none", "outcome": "dropped: depends on step 2"},
+  {"idea": "wild card: AV braking-limit knob audit (does the AV planner read friction?)", "minutes": 3, "prior": 0.3, "probe": "not done", "outcome": "not pursued; listed as next step"}
+ ],
+ "note": "only 8 candidates were written down (task asked 12-16) and the search was not run to 3 full rounds; no new GIF was made today."
+}
