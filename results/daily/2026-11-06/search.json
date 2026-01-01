@@ -1,0 +1,118 @@
+{
+ "date": "2026-11-06",
+ "method": "PUCT, c=1.2, 3 rounds; Q=(novelty*relevance*visual*holds-up)/sqrt(minutes); N: idea1 2 probes, minibench 2, wild card 1",
+ "candidates": [
+  {
+   "idea": "friction dose-response x AV share: where is the cliff, do AVs flatten it (H3 follow-up)",
+   "artefact": "figure+GIF",
+   "minutes": 9,
+   "prior": 0.7,
+   "probe": "hook confirmed: Behaviour.friction and p_av; run_copies takes per-copy behaviours (one compile); 2-copy quick run ok in 15 s",
+   "outcome": "KEPT"
+  },
+  {
+   "idea": "minibench: smallest scenario subset that predicts the 18-scenario AVBench mean (H5 follow-up)",
+   "artefact": "figure+table",
+   "minutes": 0.3,
+   "prior": 0.7,
+   "probe": "saved leaderboard has 15 drivers x 18 scenarios of av_score; first probe used the wrong key (driving_score ~100 under the filter), fixed; nested CV runs in 18 s",
+   "outcome": "KEPT"
+  },
+  {
+   "idea": "speed limit x AV share surface (next-step 5)",
+   "artefact": "figure",
+   "minutes": 20,
+   "prior": 0.5,
+   "probe": "15 cells x 16 copies ~ 20 min",
+   "outcome": "dropped: over budget"
+  },
+  {
+   "idea": "pedestrian-yield dose-response (next-step 6)",
+   "artefact": "figure",
+   "minutes": 9,
+   "prior": 0.4,
+   "probe": "Behaviour.p_ped_violate exists but speed effect decomposition needs the speed sweep again",
+   "outcome": "dropped: overlaps friction run, lower prior"
+  },
+  {
+   "idea": "twin kicks on every seed, count junction handoffs (next-step 3)",
+   "artefact": "table",
+   "minutes": 12,
+   "prior": 0.5,
+   "probe": "needs the 16-copy twin machinery, 12+ min",
+   "outcome": "dropped: over ~10 min job limit"
+  },
+  {
+   "idea": "leaderboard seeds with intervals (next-step 2)",
+   "artefact": "table",
+   "minutes": 45,
+   "prior": 0.8,
+   "probe": "cost",
+   "outcome": "dropped: 45 min"
+  },
+  {
+   "idea": "re-score AVBench with unsafe_rbg stream (next-step 1)",
+   "artefact": "table",
+   "minutes": 10,
+   "prior": 0.4,
+   "probe": "one draw is uninformative (see 2026-11-04)",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "per-junction-entry crash rate vs per-hour vs per-km (H2 follow-up)",
+   "artefact": "table",
+   "minutes": 8,
+   "prior": 0.5,
+   "probe": "needs entry counters not in METRICS",
+   "outcome": "dropped: counter missing"
+  },
+  {
+   "idea": "sensor-noise dose-response of AVs (perception_noise)",
+   "artefact": "figure",
+   "minutes": 9,
+   "prior": 0.5,
+   "probe": "hook exists; overlaps friction run design",
+   "outcome": "dropped: one dose-response per day"
+  },
+  {
+   "idea": "train-on-mix transfer (H8)",
+   "artefact": "table",
+   "minutes": 120,
+   "prior": 0.3,
+   "probe": "GPU-sized",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "GPU scaling of PPO power law",
+   "artefact": "figure",
+   "minutes": 300,
+   "prior": 0.3,
+   "probe": "needs GPU",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "Lyapunov spectrum via finite-time Jacobian",
+   "artefact": "figure",
+   "minutes": 30,
+   "prior": 0.3,
+   "probe": "memory heavy on 4 cores",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "wild card: black-ice incident GIF with black box (blackbox.run scenario black_ice)",
+   "artefact": "GIF",
+   "minutes": 3,
+   "prior": 0.6,
+   "probe": "blackbox.run exists and takes scenarios",
+   "outcome": "merged into idea 1 as its GIF"
+  },
+  {
+   "idea": "shapley attribution of crashes to knobs (H1 follow-up)",
+   "artefact": "table",
+   "minutes": 25,
+   "prior": 0.5,
+   "probe": "avlab.attribution already exists",
+   "outcome": "dropped: duplicate"
+  }
+ ]
+}
