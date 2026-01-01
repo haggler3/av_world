@@ -11,7 +11,8 @@
 # Results come back into this checkout (results/, docs/img/); review them, then commit and push.
 set -euo pipefail
 PROJECT="${PROJECT:-$(gcloud config get-value project 2>/dev/null)}"
-ZONES="${ZONES:-us-central1-a us-central1-b us-east4-a us-west1-a europe-west4-a}"
+# L4s are often out of stock across whole regions, so the list spans continents (on 2026-10-22 only asia-northeast1-a had one)
+ZONES="${ZONES:-us-central1-a us-central1-b us-central1-c us-east4-a us-east4-c us-east1-b us-east1-c us-east1-d us-west1-a us-west1-b us-west1-c us-west4-a us-west4-c europe-west4-a europe-west4-b europe-west4-c europe-west1-b europe-west1-c europe-west2-a europe-west2-b europe-west3-a europe-west3-b asia-northeast1-a asia-northeast1-b asia-northeast1-c asia-southeast1-a asia-southeast1-b asia-southeast1-c asia-east1-a asia-east1-b asia-east1-c}"
 NAME="${NAME:-avworld-gpu-$(date +%H%M%S)}"
 MAX_MIN="${MAX_MIN:-150}"
 STAGES="${STAGES:-eval}"
@@ -38,12 +39,15 @@ git ls-files -z | tar --null -T - -czf /tmp/avworld_src.tgz  # the tracked tree,
 gcloud compute scp /tmp/avworld_src.tgz "$NAME:~/src.tgz" --zone "$ZONE" --project "$PROJECT" --quiet
 
 "${SSH[@]}" "set -e; mkdir -p av_world && tar -xzf src.tgz -C av_world && cd av_world
+sudo DEBIAN_FRONTEND=noninteractive apt-get -qq update >/dev/null && sudo DEBIAN_FRONTEND=noninteractive apt-get -qq install -y python3.10-venv >/dev/null  # not on the image
 python3 -m venv ~/venv && . ~/venv/bin/activate && pip -q install --upgrade pip && pip -q install -e '.[gpu,dev]'
 python -c 'import jax; print(jax.devices())'
 export PYTHONPATH=.
 if echo '$STAGES' | grep -q train; then
   for k in 1 2 3; do python -m avrl.unaided \$k; done                      # PPO with the barrier teacher, phases 1-3
-  python -m dwm.train --budget 540 --out results/dwm/final                  # the diffusion world model
+  # the diffusion world model: results/dwm/final trains on small_av_world logs (data/dwm, not in this repo), so retrain the
+  # self-contained variant, on logs from the av_world area simulator, instead
+  python -m dwm.xnet_data results/xnet2/policy.npz && DWM_SOURCE=xnet python -m dwm.train --data data/dwm_xnet --budget 240 --out results/dwm/xnet
   python -m wmplan.data && python -m wmplan.model                           # the latent world model
   python -m avrl.bench forget 'PPO + barrier teacher (phase 1)' 'PPO + barrier teacher, then no filter (phase 2)' \
     'PPO + barrier teacher, speed + jaywalkers (phase 3)' 'latent world-model planner (wm-mpc)'
