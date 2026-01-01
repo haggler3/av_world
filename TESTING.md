@@ -31,11 +31,19 @@ by cause where one is known (stalled car, pile-up, distracted driver, masked ped
 
 ### Ready-made test suites
 
-* **AVBench** (`avrl/bench.py`): 11 scenarios (nominal, rush hour, red runners, inattentive drivers, jaywalkers, blockages, AV majority,
-  cyclists, wet road, Squirrel Hill, Downtown) x 8 checks = 88 pass/fail checks. Each check compares the policy with the rule-based AV on
-  the same traffic and random numbers: safe, efficient (at least 97 % of its speed), smooth, a good neighbour, all with the filter on; and
-  safe, lawful, courteous and self-reliant (the filter intervenes in under 5 % of the time) with the filter off.
-  `python -m avrl.bench run`, then `report`.
+* **AVBench** (`avrl/bench.py`): 18 scenarios: 11 core (nominal, rush hour, red runners, inattentive drivers, jaywalkers, blockages,
+  AV majority, cyclists, wet road, Squirrel Hill, Downtown) and 7 long-tail incidents (sun glare, phantom braking, a missed stalled car,
+  a misclassified jaywalker, a bus dart-out, cut-ins, black ice). Two tiers:
+  - **Absolute:** 8 checks with fixed bars from outside the simulator (half the humans' crash rate, nuPlan's comfort bound, no red-light
+    runs...), 144 in all, plus an av_world score to optimise ([METRICS.md](METRICS.md)).
+  - **Relative:** the original 8 checks against the rule-based AV on the same traffic and random numbers, 88 on the core scenarios.
+    Safe, efficient (at least 97 % of its speed), smooth and a good neighbour with the filter on; safe, lawful, courteous and
+    self-reliant (the filter intervenes in under 5 % of the time) with it off.
+
+  `python -m avrl.bench run`, then `report`. A policy is scored on every scenario with and without the envelope and under the barrier
+  function.
+* **Crash aversion** (`wmplan/converge.py`): fork the simulator 2-4 s before each of a policy's crashes and replay the same seconds,
+  with the same random numbers, under a fix; the share averted.
 * **Famous incidents** (`avlab/famous.py`): ten archetypes of publicised AV incidents, each a knob setting with an intensity dial:
   misclassified jaywalker, pedestrian from behind a bus, missed stalled vehicle, phantom braking, sun-glare blackout, aggressive cut-in,
   red-light runner, unprotected left, cyclist close pass, black ice. `python -m avlab.famous evaluate`. See [FAMOUS_EVENTS.md](FAMOUS_EVENTS.md).

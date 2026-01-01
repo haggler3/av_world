@@ -106,6 +106,10 @@ AVBench (`avrl/bench.py`) asks the questions a deployment review would ask. Ever
 IDM envelope it was trained with (as deployed), under the control barrier function, and with no filter at all (what RL
 actually learned).
 
+> This section is AVBench's original relative tier: 11 scenarios x 8 checks against the rule-based AV, which passes all 88 by
+> construction. The current benchmark adds an absolute tier with fixed bars on 18 scenarios, including 7 long-tail incidents,
+> and an av_world score; results are in [METRICS.md](METRICS.md).
+
 **Eleven scenarios:**
 
 - nominal Oakland traffic;
@@ -295,8 +299,9 @@ Measured on the 4-thread CPU (4 forced host devices): a PPO update went from 1.9
 whole trainer from ~210 to ~1,100 area-steps/s. Trained 100 updates (3 min, 32 copies) from the 234k-step policy with no
 safety filter, it reached 0.011 crashes per AV-hour in Oakland (3 replicates, 95 % CI -0.001 to 0.022; one seed) against
 0.026-0.031 for the 8-copy trainer after the same 100 updates, at the same speed (15.7 vs 16.1 km/h). That is a hint that more
-copies per update help, not a measured effect. **No GPU was available: the GPU rows are projections**; run
-`python -m avrl.gpu_train --preset gpu --bench` on a card to measure.
+copies per update help, not a measured effect. The GPU rows were projections when this was written. Measured numbers
+from one NVIDIA L4 are now in [SPEED.md](SPEED.md): a barrier-teacher PPO phase takes 95 s against 195 s on CPU. The trainer's
+own GPU preset (`python -m avrl.gpu_train --preset gpu --bench`) has still not been run on a card.
 
 ## Crashes at junctions, in merges and with cyclists
 
@@ -348,7 +353,9 @@ An AV that plans merges and junctions by unrolling a learned latent representati
 The model predicts the AV's speed 3 s ahead with 64 % less error than holding the scene still. It ranks crashes with
 AUROC 0.954 and red-light runs with 0.9999. **Without any safety filter, planning halves the crash rate of the policy
 it starts from** (0.26 vs 0.57 per AV-hour, about 23 AV-hours each, in a hard Oakland world). With the barrier
-function, every driver has 0 crashes. Details: [wmplan/README.md](../wmplan/README.md).
+function, every driver has 0 crashes. On AVBench's calibrated scenarios this did not hold up: v1 scored 0.8 of 100 because
+it ran red lights its prior never runs. v2 fixed that (46.0) but still trails the barrier-taught policy (63.8). v3, which
+trained the policy inside the model, did not beat it either. Details: [wmplan/README.md](../wmplan/README.md).
 
 ## How the AV performs under hundreds of conditions (`avlab/`)
 
