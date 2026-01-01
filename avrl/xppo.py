@@ -112,7 +112,10 @@ def behaviours(n, seed=0, knobs=None):
     return jax.tree.map(lambda *x: jnp.asarray(x, jnp.float32), *rows)
 
 
-def make_fns(cfg: Config, net, beh, opt):
+def make_fns(cfg: Config, net, beh, opt, shape=None):
+    """`beh` (here and in warm / update) is a Behaviour [E], or a dict {"beh": Behaviour [E], "net": {key: [E, ...]},
+    "nh": [E, L, D]} that gives every copy of the area its own city (xnet.mutate). `shape(obs [T+1, E, N, 28]) -> phi
+    [T+1, E, N]` adds potential-based shaping gamma * phi(s') - phi(s) to the reward (the optimal policy is unchanged)."""
     nh = jnp.asarray(net["nh"])
     J = X.to_jnp(net)
     E = cfg.n_envs
@@ -121,6 +124,9 @@ def make_fns(cfg: Config, net, beh, opt):
 
     def env_step(params, st, key, pol, beh):
         keys = jax.random.split(key, E)
+        if isinstance(beh, dict):  # one city per copy
+            return jax.vmap(lambda s, b, k, n, h: X.step(s, {**J, **n}, b, h, rl=(pol(params), k)))(
+                st, beh["beh"], keys, beh["net"], beh["nh"])
         return jax.vmap(lambda s, b, k: X.step(s, J, b, nh, rl=(pol(params), k)))(st, beh, keys)
 
     def rollout(params, st, key, pol, beh):
@@ -192,6 +198,12 @@ def make_fns(cfg: Config, net, beh, opt):
         k_roll, k_perm = jax.random.split(key)
         m0 = st.m
         st, tr = rollout(params, st, k_roll, stochastic, beh)
+        r_raw = tr["reward"]
+        if shape is not None:  # phi is 0 once the AV's trip ends (or the slot is reused), so the shaping telescopes
+            phi = shape(tr["obs"])
+            ok, dn = tr["valid"].astype(jnp.float32), tr["done"].astype(jnp.float32)
+            nxt = jnp.concatenate([phi[1:] * ok[1:], jnp.zeros_like(phi[:1])], 0)
+            tr = {**tr, "reward": tr["reward"] + (cfg.gamma * nxt * (1.0 - dn) - phi) * ok}
         adv, ret, w = gae(tr)
         T = cfg.n_steps
         flat = lambda x: x[:T].reshape((T * E * cfg.n_slots,) + x.shape[3:])
@@ -215,7 +227,7 @@ def make_fns(cfg: Config, net, beh, opt):
         (params, opt_state), aux = jax.lax.scan(epoch, (params, opt_state), jax.random.split(k_perm, cfg.epochs))
         nv = jnp.maximum(w.sum(), 1.0)
         dm = (st.m - m0).sum(0)
-        stats = {"reward_per_step": (tr["reward"][:T] * tr["valid"][:T]).sum() / nv, "transitions": w.sum(),
+        stats = {"reward_per_step": (r_raw[:T] * tr["valid"][:T]).sum() / nv, "transitions": w.sum(),
                  "pg": aux[0].mean(), "vl": aux[1].mean(), "kl": aux[2].mean(), "m": dm,
                  # per copy of the area: mean |advantage| per AV decision = how much there is still to learn there
                  "signal": (jnp.abs(adv) * w).sum((0, 2)) / jnp.maximum(w.sum((0, 2)), 1.0), "valid": w.sum((0, 2)), "m_env": st.m - m0}

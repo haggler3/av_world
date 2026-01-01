@@ -285,6 +285,86 @@ python -m avrl.unaided 1 && python -m avrl.unaided 2      # ~4 min each
 python -m avrl.bench run && python -m avrl.bench report   # score the new policies
 ```
 
+## Making the simulator teach harder
+
+![dynamic simulator](docs/img/dynamic_sim.png)
+
+Four additions to the simulator itself, each aimed at how fast or how well a policy learns. Every policy starts from the
+234k-step PPO driver (0.56 crashes per AV-hour with no filter), trains for 100 updates (52k simulator steps) with no
+safety filter and the barrier function as the teacher, 2 seeds per variant. Each is scored with no filter in the
+ladder's test world (humans 5× riskier, 25 % AVs): ~900 AV-hours per policy and world, from the same warm states and the
+same random numbers (3 replicates × 16 copies × 5 simulated minutes; 95 % intervals about ±0.01 per AV-hour).
+
+| | idea | what it adds to the simulator | result |
+|---|---|---|---|
+| 6 | **Mutating cities** | every copy of the area is a different city: speed limits, signal plans, demand and pedestrian hot spots, closed streets with rerouting (`xnet/mutate.py`) | **the clearest win**: fewer crashes in all four worlds and in 8 of 8 (seed, world) pairs |
+| 1 | **Fork at the moment of danger** | the pre-update state of copies that met trouble is saved; half the batch is replayed from saved states with new random numbers (`avrl/fork.py`) | reaches the plateau slightly sooner in one seed of two; the same plateau |
+| 3 | **Crash-risk shaping** | the latent world model's crash head as a reward-shaping potential (`wmplan/risk.py`) | within noise of the baseline |
+| 10 | **Rare-event estimation** | splitting on danger, to measure crash rates with fewer AV-hours (`avlab/split.py`) | unbiased, but a larger spread than plain Monte Carlo |
+
+**Mutating cities (6).** Every ten updates each copy gets a different city from a pool of 48, built by `mutate(net, geo,
+seed)`: district-wide speed-limit factors and 12 % of links slowed to 45-70 %, signal cycles of 50-110 s with uneven green
+splits and random offsets, lognormal hot spots in where trips start, where they go and where pedestrians cross, and 4 % of
+the streets closed, with the routing recomputed around them. The geometry stays fixed, so every array keeps its shape and the
+copies still run in one `vmap`. Scored at 100 updates (mean of 2 seeds), with the rule-based AV and the starting policy for
+reference:
+
+| world | start policy | trained on Oakland | **trained on mutating cities** | change | rule-based AV |
+|---|---|---|---|---|---|
+| Oakland (the training map) | 0.559 | 0.028 | **0.017** | -39 % | 0.0045 |
+| held-out mutated Oakland cities | 0.540 | 0.027 | **0.023** | -17 % | 0.0089 |
+| Squirrel Hill (never trained in) | 0.294 | 0.028 | **0.010** | -63 % | 0.0105 |
+| Downtown (never trained in) | 0.417 | 0.064 | **0.045** | -30 % | 0.082 |
+
+It costs a little speed (15.4 against 16.1 km/h in Oakland, 4-8 % in every world) and the middle of training is rougher:
+0.12 crashes per AV-hour after 5 updates, and one seed spiked to 0.24 at update 25 right after a change of cities.
+At 100 updates it is the best policy in every world, and in Squirrel Hill it matches the rule-based AV.
+
+**Fork at the moment of danger (1).** The whole simulator state is one pytree, so a fork is a copy. The figure below takes
+one saved state from 6 s before a real crash and replays it as 128 branches with different random numbers: 68 % end in the
+crash, 32 % do not.
+
+![fork](docs/img/fork_branches.png)
+
+In training, half the copies (2 saved states × 2 branches) are overwritten every update with saved states, ranked by how much
+trouble they met. Crashes per AV-hour with no filter, by number of PPO updates (mean of 2 seeds, and their range):
+
+| variant | 5 | 10 | 15 | 25 | 50 | 100 |
+|---|---|---|---|---|---|---|
+| barrier teacher only | 0.051 (0.035-0.066) | 0.043 (0.033-0.053) | 0.038 (0.026-0.050) | 0.026 | 0.026 | 0.028 |
+| + fork at danger | 0.051 (0.048-0.053) | 0.027 (0.026-0.028) | 0.027 (0.024-0.031) | 0.034 | 0.022 | 0.026 |
+| + crash-risk shaping | 0.054 (0.046-0.062) | 0.039 (0.022-0.057) | 0.032 (0.030-0.033) | 0.032 | 0.022 | 0.024 |
+| + both | 0.045 (0.044-0.046) | 0.021 (0.018-0.024) | 0.029 (0.024-0.035) | 0.027 | 0.023 | 0.038 |
+| + mutating cities | 0.123 (0.109-0.138) | 0.033 (0.030-0.035) | 0.032 (0.028-0.037) | 0.137 | 0.028 | **0.017** |
+
+Forking looks faster between 10 and 15 updates (0.027 against 0.040), mostly through one seed (0.053 down to 0.028 at 10
+updates; the other seed 0.033 down to 0.026), and every variant sits on the same ~0.025 plateau from 25 updates on. The barrier teacher already makes crashes very learnable in this
+world: the first five updates remove 90 % of them.
+
+**Crash-risk shaping (3).** The latent model's crash head separates the steps before a crash from the rest by 40×
+(potential -0.24 against -0.006 per step), and the shaping r' = r + γφ(s') - φ(s) leaves the optimal policy unchanged
+(`tests/test_dynamics.py` checks that it telescopes). It did not change what the policy learned beyond the seed-to-seed spread.
+
+**Rare-event estimation (10).** The first idea was to raise the human risk rates in each copy and reweight by the likelihood
+ratio. That cannot work in a whole city: one 5-minute run draws thousands of independent decisions (is this driver a red
+runner, does that one look), and the likelihood ratio is their product. Doubling `p_red` gives log-weights with a standard
+deviation of 3.7, an effective sample of 10⁻⁶ of the copies. So `avlab/split.py` uses importance splitting: every 3 s the 16
+copies are resampled by how dangerous they look (a Poisson regression on the world model's crash risk, how many AVs are close
+to their barrier, near misses), and a copy cloned *k* times carries 1/*k* of the weight. It is unbiased for any importance
+function (`tests/test_dynamics.py`), and in the simulator it agrees with plain Monte Carlo (0.0205 against 0.0193 per
+AV-hour over 16 replicates; 0.63 against 0.57 over 8 on the crashy starting policy). But it has a *larger* spread: standard
+deviation 0.0207 against 0.0122 and 0.145 against 0.068, and the sharper the importance, the worse (0.25, 0.27 and 0.35 against
+0.11 for plain). Crashes here cascade (a wreck blocks a lane and causes more) and come from many small independent
+hazards, so a copy's danger predicts the next 3 s only weakly. What did pay: compiling each world once and starting every
+policy from the same warm states, which makes an estimate cost ~50 s and the comparisons paired.
+
+```bash
+python -m avrl.fork train mutate 0 && python -m avrl.fork train fork+shape 0     # ~5 min each; results/dyn/<variant>_s<seed>/
+python -m avrl.dyn_eval base fork shape fork+shape mutate -- oakland             # score with the estimator; results/dyn/eval.json
+python -m avlab.split validate results/unaided/phase2/policy.npz oakland 16      # splitting vs plain Monte Carlo
+python -m avrl.dyn_plot && python -m avrl.fork_viz                               # the charts
+```
+
 ## Crashes at junctions, in merges and with cyclists
 
 The area simulator now has cyclists and a richer crash model:
@@ -358,16 +438,19 @@ Details: [avlab/README.md](avlab/README.md).
 
 ## What's next
 
-1. **Finish passing AVBench unaided.** The barrier-taught policy is 2 % short on speed and has one or two unaided
+1. **Take mutating cities further.** It was the one addition that clearly helped, so push it: stronger mutations on a
+   curriculum, hidden per-driver styles and hidden road friction that the policy must infer, and junction microworlds for
+   more junction decisions per second. Fork and shaping stay available for longer runs where the plateau is lower.
+2. **Finish passing AVBench unaided.** The barrier-taught policy is 2 % short on speed and has one or two unaided
    crashes where the rule-based AV has none. Next: distil the latent planner's junction timing into it, and train on
    the scenarios it still fails. Target: all 88 checks.
-2. **Amortise the planner.** Train the policy on the planner's choices in imagined rollouts (Dreamer / TD-MPC style),
+3. **Amortise the planner.** Train the policy on the planner's choices in imagined rollouts (Dreamer / TD-MPC style),
    so the deployed driver keeps the planner's foresight at the policy's speed.
-3. **Close the operating-domain gaps the lab found:** low friction (make the barrier's braking assumption adapt to
+4. **Close the operating-domain gaps the lab found:** low friction (make the barrier's braking assumption adapt to
    the road), sensor noise (train with it), and Downtown's grid (train across neighbourhoods).
-4. **Scale the simulation.** The power laws are fitted up to 62 k simulator steps (RL) and 18 k (world-model data).
+5. **Scale the simulation.** The power laws are fitted up to 62 k simulator steps (RL) and 18 k (world-model data).
    Next: 4-16× longer runs on a GPU, where JAX should push `xnet` well past 380× real time.
-5. **Close the loop with Rust.** Port the 28-feature observation to `small_av_world`, so the city-area policy runs in
+6. **Close the loop with Rust.** Port the 28-feature observation to `small_av_world`, so the city-area policy runs in
    the Rust AV stack the way the corridor driver does.
 
 ## The simulators
@@ -659,6 +742,10 @@ xnet/experiment.py   clean / risky drivers / pedestrians in one area
 xnet/render.py       overview and street-view GIFs
 avrl/xppo.py         multi-agent PPO in xnet (one shared policy drives every AV); xeval.py, xviz.py
 avrl/ladder.py       the dynamics ladder (training worlds of increasing dynamics, scored in one test world); ladder_plot.py
+avrl/fork.py         PPO with options: fork at danger, world-model crash shaping, mutating cities; dyn_eval.py, dyn_plot.py, fork_viz.py
+xnet/mutate.py       mutating cities: per-copy speed limits, signal plans, demand and pedestrian hot spots, closures + rerouting
+wmplan/risk.py       the world model's crash head as a reward-shaping potential
+avlab/split.py       importance splitting for rare crash rates (and why risk tilting collapses)
 avrl/bench.py        AVBench: 11 scenarios x 8 checks vs the rule-based AV, envelope / barrier function / no filter; bench_plot.py
 wmplan/              latent world model (data.py, model.py), CEM planner (planner.py), evaluate.py, viz.py, plot.py
 avlab/               condition sweeps (sweep.py), statistics (analyze.py), charts (plot.py)
