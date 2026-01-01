@@ -1,0 +1,199 @@
+{
+ "date": "2026-11-12",
+ "c": 1.2,
+ "formula": "Q=(novelty*relevance*visual*holds)/sqrt(minutes); score=Q+c*P*sqrt(N_total)/(1+N)",
+ "candidates": [
+  {
+   "idea": "brakedemand: log requested/applied braking per friction; is the 0.7 knee where braking hits the cap 9*mu? (next step 14)",
+   "kind": "a",
+   "artefact": "tool+fig+GIF",
+   "minutes": 9,
+   "prior": 0.6,
+   "P": 0.098,
+   "Q_final": 0.192,
+   "N": 1,
+   "kept": true,
+   "why_dropped": null
+  },
+  {
+   "idea": "results index: every results/ file, the docs that cite it, orphans, broken links (next step 15)",
+   "kind": "c",
+   "artefact": "tool+doc",
+   "minutes": 2,
+   "prior": 0.8,
+   "P": 0.13,
+   "Q_final": 0.047,
+   "N": 1,
+   "kept": true,
+   "why_dropped": null
+  },
+  {
+   "idea": "third random stream at mu 0.8/0.75/0.65 to place the knee finely (next step 12)",
+   "kind": "a",
+   "artefact": "table",
+   "minutes": 12,
+   "prior": 0.5,
+   "P": 0.081,
+   "Q_final": 0.022,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "needs ~12 min of simulation and a third stream; brakedemand explains the knee more cheaply"
+  },
+  {
+   "idea": "twintrace on all kicks: is junction-box handoff the general cause of divergence (next step 3)",
+   "kind": "a",
+   "artefact": "table+GIF",
+   "minutes": 15,
+   "prior": 0.4,
+   "P": 0.065,
+   "Q_final": 0.033,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "15 min, over budget"
+  },
+  {
+   "idea": "speed limit x AV share x demand grid (next step 5)",
+   "kind": "a",
+   "artefact": "fig",
+   "minutes": 20,
+   "prior": 0.4,
+   "P": 0.065,
+   "Q_final": 0.02,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "20 min, over budget"
+  },
+  {
+   "idea": "pedestrian crossings: vary yield behaviour at x1.3 limit (next step 6)",
+   "kind": "a",
+   "artefact": "fig",
+   "minutes": 12,
+   "prior": 0.4,
+   "P": 0.065,
+   "Q_final": 0.026,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "needs xnet change to yield behaviour"
+  },
+  {
+   "idea": "strike ratio split crossing vs mid-block, 96 copies at mu 1.0 (next step 11)",
+   "kind": "a",
+   "artefact": "table",
+   "minutes": 15,
+   "prior": 0.35,
+   "P": 0.057,
+   "Q_final": 0.018,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "15 min; few events"
+  },
+  {
+   "idea": "DRAC vs MADR surrogate-safety map: conflicts where needed decel exceeds road friction, per junction",
+   "kind": "b",
+   "artefact": "map fig",
+   "minutes": 10,
+   "prior": 0.4,
+   "P": 0.065,
+   "Q_final": 0.048,
+   "N": 1,
+   "kept": false,
+   "why_dropped": "merged into brakedemand (DRAC vs MADR is the same idea as braking at the friction cap)"
+  },
+  {
+   "idea": "conformal prediction intervals for AVBench scores from twin restreams",
+   "kind": "b",
+   "artefact": "table",
+   "minutes": 10,
+   "prior": 0.3,
+   "P": 0.049,
+   "Q_final": 0.017,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "needs restream runs not on disk"
+  },
+  {
+   "idea": "Bayesian optimisation of signal offsets for crash rate (not just delay)",
+   "kind": "b",
+   "artefact": "fig",
+   "minutes": 15,
+   "prior": 0.3,
+   "P": 0.049,
+   "Q_final": 0.026,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "15 min, objective weakly identified"
+  },
+  {
+   "idea": "check which random stream the L4 leaderboard used (next step 1)",
+   "kind": "a",
+   "artefact": "table",
+   "minutes": 10,
+   "prior": 0.5,
+   "P": 0.081,
+   "Q_final": 0.004,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "needs the GPU row reproduction"
+  },
+  {
+   "idea": "README quick-start trimmed + docs map",
+   "kind": "c",
+   "artefact": "doc",
+   "minutes": 3,
+   "prior": 0.6,
+   "P": 0.098,
+   "Q_final": 0.006,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "folded into step 4 cleanup"
+  },
+  {
+   "idea": "wild card: sonify crash rate vs friction (an audio file)",
+   "kind": "d",
+   "artefact": "wav",
+   "minutes": 3,
+   "prior": 0.3,
+   "P": 0.049,
+   "Q_final": 0.025,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "low relevance"
+  },
+  {
+   "idea": "wild card: 'friction tomography' - infer road friction from observed braking alone (inverse problem)",
+   "kind": "d",
+   "artefact": "fig",
+   "minutes": 10,
+   "prior": 0.3,
+   "P": 0.049,
+   "Q_final": 0.041,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "interesting, but needs brakedemand's histogram first; listed as next step"
+  }
+ ],
+ "probes": [
+  {
+   "round": 1,
+   "picked": "brakedemand: log requested/applied braking per friction; is the 0.7 knee where braking hits the cap 9*mu? (next step 14)",
+   "score": 0.277,
+   "probe": "grep: friction enters only via a_min=-9*mu (xnet/sim.py:231), clips acc (lines 463/470) and 'stoppable' (528); state.acc holds the applied value -> loggable without touching xnet. Quick run (2 copies x 3 mu, 60 s, 14 s wall): saturated share 0.09% / 0.15% / 0.97% at mu 1.0/0.7/0.4; dry braking has a heavy tail with a spike at the 9 m/s^2 cap. Something happens -> keep; child: crash-involved enrichment for braking at the cap (merged into the same run)."
+  },
+  {
+   "round": 2,
+   "picked": "results index: every results/ file, the docs that cite it, orphans, broken links (next step 15)",
+   "score": 0.268,
+   "probe": "probe: built in 1 s; 479 tracked files, 0 broken links once git-ignored outputs are excluded (6 notebook/tool outputs). Keep."
+  },
+  {
+   "round": 3,
+   "picked": "DRAC vs MADR surrogate-safety map: conflicts where needed decel exceeds road friction, per junction",
+   "score": 0.215,
+   "probe": "WebSearch: DRAC > MADR is the standard surrogate (Castelo Branco et al.; arXiv 2502.09561). Overlaps idea 0's saturation measure; merged into idea 0 as prior art rather than a separate map."
+  }
+ ],
+ "kept": [
+  "brakedemand: log requested/applied braking per friction; is the 0.7 knee where braking hits the cap 9*mu? (next step 14)",
+  "results index: every results/ file, the docs that cite it, orphans, broken links (next step 15)"
+ ]
+}
