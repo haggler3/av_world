@@ -34,6 +34,7 @@
           <button data-color="type" class="on">By type</button>
           <button data-color="speed">By speed</button>
         </div>
+        <div class="seg" role="group" aria-label="Barrier function"><button id="bar" class="on">AV barriers: on</button></div>
         <ul id="legend-items"></ul>
       </div>
       <div id="loading">Loading simulation…</div>
@@ -52,6 +53,11 @@
         right of way at every conflict point inside a junction, signals and stop signs, pedestrians on crosswalks, buses at
         stops, double-parked delivery vans and breakdowns. Human drivers carry the risky behaviour calibrated to published
         crash data. Blue cars are AVs.</p>
+        <p>Each AV carries a <b>control barrier function</b>. The band ahead of it is the zone it must keep clear: its
+        stopping distance plus a margin, growing with speed. The colour is the barrier value h, the room left between that
+        zone and the nearest obstacle: green, more than 5 m of slack; amber, tight; red, inside the barrier. When the filter
+        steps in, the AV gets an orange outline (braking), a red bar (held at a junction entry it could not clear in time)
+        or purple side bars (a merge blocked).</p>
         <p id="mapstats"></p>
         <p class="muted">Map: Overture Maps / © OpenStreetMap contributors (ODbL). Lanes, signals, stop signs and demand are inferred from road class.</p>
       </section>

@@ -74,6 +74,11 @@ class Reward(NamedTuple):
     crash: float = -30.0
     red: float = -20.0
     near: float = -3.0  # entering a junction less than 2 s ahead of a car with priority
+    # the barrier function as a teacher (0 by default): what it would have done, charged whether or not it is filtering
+    barrier: float = 0.0  # per m/s^2 the barrier bound would take off the commanded acceleration
+    inside: float = 0.0  # per metre inside the barrier (h < 0)
+    veto: float = 0.0  # per junction entry or merge the barrier would have vetoed
+    cruise: float = 0.0  # per m/s below the desired speed on open road (nothing within twice the stopping distance)
 
 
 R = Reward()
@@ -697,6 +702,10 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     new["acc"] = new["acc"].at[slots].set(jnp.where(ok_sp, 0.0, new["acc"][slots]))
     new["gsc"] = new["gsc"].at[slots].set(jnp.where(ok_sp, 1.25, new["gsc"][slots]))
     out = State(key=key, t=st.t + DT, ped_t=ped_t, link_vs=link_vs, link_n=link_n, m=m, **new)
+    # each AV's barrier, for display and analysis: the value (m; >= 0 safe), the keep-clear zone ahead (stopping
+    # distance + margin), and what the filter did this step
+    bar = dict(bar_h=jnp.minimum(jnp.minimum(h_stop, h_lead), 99.0), bar_reach=CBF["d0"] + CBF["tau"] * st.v + st.v ** 2 / (2 * CBF["b"]),
+               bar_cut=jnp.where(av0, shield_cut, 0.0), bar_veto_j=veto_j & alive, bar_veto_m=veto_m & alive)
     if rl is not None:
         thw = gap_lead_c / jnp.maximum(st.v, 1.0)
         idle = (st.v < 0.5) & (g_stop > 10.0) & (gap_lead_c > 8.0) & ~halted
@@ -705,15 +714,22 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
                   - R.jerk * jerk ** 2 - R.headway * jnp.maximum(0.8 - thw, 0.0) * (st.v > 1.0)
                   - R.speed * jnp.maximum(st.v - vlim, 0.0) - R.shield * shield_cut
                   + R.crash * crash_av + R.red * red_av + R.near * near)
+        bad_entry = to_box & st.av & ((tmin_hi < t_clear + CBF["margin"]) | (valid & occ).any(1))
+        bad_merge = do_lc & st.av & ((h_b < 0) | (h_f < 0))
+        moving = st.v > 2.0  # the barrier only charges a moving AV (moving off in a queue, it is conservative by design)
+        inside = jnp.maximum(jnp.maximum(-h_stop, 0.0) * moving, jnp.maximum(-h_lead, 0.0) * moving * (st.v > v_lead + 0.5))
+        reward = reward - R.barrier * jnp.maximum(a_cmd - barrier, 0.0) * moving - R.inside * inside - R.veto * (bad_entry | bad_merge)
+        open_road = jnp.minimum(g_stop, gap_lead_c) > 2.0 * (CBF["d0"] + CBF["tau"] * st.v + st.v ** 2 / (2 * CBF["b"])) + 20.0
+        reward = reward - R.cruise * jnp.maximum(v0 - st.v, 0.0) * open_road
         ended = av0 & (done | crashed | teleport | ~alive)
         # safety margins (the barrier values, clipped): stop target, leader, junction time-to-conflict, merge gaps
         lc_ctx = on_link & (nlanes == 2)
         margins = jnp.stack([jnp.clip(h_stop, -20, 60) / 20, jnp.clip(h_lead, -20, 60) / 20, jnp.clip(h_junc, -5, 5) / 5,
                              jnp.where(lc_ctx, jnp.clip(h_b, -20, 40), 40.0) / 20, jnp.where(lc_ctx, jnp.clip(h_f, -20, 40), 40.0) / 20], 1)
         return out, dict(obs=obs, u=u_pol, aux=aux, reward=jnp.where(av0, reward, 0.0), valid=av0, done=ended, a_rule=a_rule,
-                         margins=margins, crash=crash_av, near=near, red=red_av)
+                         margins=margins, crash=crash_av, near=near, red=red_av) | bar
     if diag:
-        return out, dict(mv=mv, enter=enter, sig_ok=sig_ok, gap_ok=gap_ok, room_ok=room_ok, room=room, cw_busy=cw_busy, dist=dist,
+        return out, bar | dict(mv=mv, enter=enter, sig_ok=sig_ok, gap_ok=gap_ok, room_ok=room_ok, room=room, cw_busy=cw_busy, dist=dist,
                          lead=lead_any, gap_lead=gap_lead, s_state=s_state, must_lc=must_lc, crashed=crashed, rear=rear,
                          ped_hit=ped_hit, in_hit=in_hit, ss=ss_crash, occ=(valid & occ).any(1), arriving=(valid & arriving).any(1),
                          first_other=(valid & first_other).any(1), teleport=teleport, line_stop=line_stop, halted=halted,
@@ -751,7 +767,16 @@ class Sim:
         def one(st, nh):
             return jax.vmap(stp)(st, nh)
 
+        def stp_info(s, h):
+            keys = ("bar_h", "bar_reach", "bar_cut", "bar_veto_j", "bar_veto_m")
+            if policy is None:
+                o, d = step(s, net, beh_, h, diag=True)
+            else:
+                o, d = step(s, net, beh_, h, rl=(policy, s.key, masked))
+            return o, {k: d[k] for k in keys}
+
         self.run_chunk, self.one = run_chunk, one
+        self.one_info = jax.jit(lambda st, nh: jax.vmap(stp_info)(st, nh))  # one step, plus each vehicle's barrier
         self.since = 0.0
 
     def reroute(self):

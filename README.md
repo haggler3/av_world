@@ -3,12 +3,11 @@
 **A city-scale, crash-calibrated driving world in pure JAX, and the research stack built on it: multi-agent RL,
 generative world models, scaling laws and controlled experiments on what makes a simulator a good teacher.**
 
-# [▶ Open the av_world website](https://claude.ai/artifact/TxVxceTs8JuX2qgwmBartX)
+# [▶ Open the av_world website](https://haggler3.github.io/av_world/)
 
-The site, with the browser replay viewer, is hosted at the link above. It is also built from `docs/` for GitHub Pages:
-[haggler3.github.io/av_world](https://haggler3.github.io/av_world/) (live once Pages is enabled: Settings → Pages →
-Deploy from a branch → `main`, `/docs`) · [Methods](docs/METHODS.md) · [RL](docs/RL.md) ·
-[World models](docs/WORLD_MODELS.md)
+[**Explore the Pittsburgh simulations in your browser**](https://haggler3.github.io/av_world/viewer/index.html) ·
+[Methods](docs/METHODS.md) · [RL](docs/RL.md) · [World models](docs/WORLD_MODELS.md) · The site is `docs/`, published to
+GitHub Pages by `.github/workflows/pages.yml`, which also checks that the live pages and files load.
 
 ![learned AVs in Oakland](docs/img/xnet_learned_avs.gif)
 
@@ -216,7 +215,9 @@ is the policy's. Eight checks per scenario, 88 in all; a scenario is *overcome* 
 | policy | checks passed (of 88) | crashes /AV-h: envelope | barrier function | no filter | AV km/h | hard brakes /AV-h |
 |---|---|---|---|---|---|---|
 | **rule-based AV (the bar)** | 88 | 0.006 | 0.008 | 0.006 | 16.4 | 17.3 |
-| PPO, 234k steps (xnet3) | **67** | 0.018 | 0.012 | 0.64 | 16.4 | 3.5 |
+| **PPO + barrier teacher (phase 2)** | **67, 2 scenarios overcome** | **0.004** | | **0.044** | 15.7 | 2.7 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 61 | 0.004 | | **0.028** | 15.3 | 2.5 |
+| PPO, 234k steps (xnet3), the starting point | 67 | 0.018 | 0.012 | 0.64 | 16.4 | 3.5 |
 | PPO, full world, 10× envelope penalty | 59 | 0.002 | 0.000 | 0.009 | 9.0 | 2.9 |
 | imitation (BC) | 45 | 0.006 | 0.006 | 2.1 | 16.4 | 6.7 |
 | PPO, 130k steps (xnet) | 44 | 0.008 | 0.008 | 2.8 | 15.7 | 2.3 |
@@ -224,7 +225,9 @@ is the policy's. Eight checks per scenario, 88 in all; a scenario is *overcome* 
 
 **How to read it:**
 
-- **No policy overcomes a scenario yet, and the bar is real.** The best policy, at 234k steps, passes 67 of 88 checks.
+- **Training with the barrier function as a teacher cut unaided crashes 15×** (next section). It overcame the first
+  two scenarios (red runners, blockages), and as deployed it is safer than the rule-based AV (0.004 vs 0.006).
+- **Before that, no policy overcame a scenario.** The 234k-step policy passes 67 of 88 checks.
   It is smooth (5× fewer hard brakes), lawful and self-reliant everywhere, and as fast as the rule-based AV. It fails
   *safe unaided* in every scenario (0.64 crashes/h with no filter) and *safe* as deployed in 6 of 11: 9 crashes in
   500 AV-hours against the rule-based AV's 3. The IDM envelope only caps acceleration, so it can't stop a bad junction
@@ -244,6 +247,43 @@ python -m avrl.bench plot           # -> docs/img/avbench.png
 ```
 
 To score a new policy, add its checkpoint to `POLICIES` in `avrl/bench.py` and run the three commands again.
+
+## Training the driver to need no filter (`avrl/unaided.py`)
+
+The barrier function as a teacher. The reward charges what the barrier *would* have done, whether or not it is
+filtering:
+
+- every m/s² it would take off the commanded acceleration;
+- every metre the AV is inside the barrier;
+- every junction entry or merge it would have vetoed.
+
+Starting from the 234k-step policy, 100 PPO updates per phase (about 4 minutes each):
+
+| phase | training | AVBench checks (of 88) | scenarios overcome | crashes /AV-h, no filter | as deployed | AV km/h |
+|---|---|---|---|---|---|---|
+| start | the 234k-step policy | 67 | 0 | 0.64 | 0.018 | 16.4 |
+| 1 | barrier filtering, its interventions charged | 66 | 1 | 0.044 | 0.004 | 15.7 |
+| **2** | **no filter, the same charges** | **67** | **2** | **0.044** | **0.004** | 15.7 |
+| 3 | + progress weight 0.05, half the copies full of jaywalkers | 61 | 0 | 0.028 | 0.004 | 15.3 |
+| rule-based AV | the bar | 88 | 11 | 0.006 | 0.006 | 16.4 |
+
+- **Unaided crashes fell 15-23×** (0.64 → 0.044 → 0.028 per AV-hour, about 500 AV-hours each), with less hard
+  braking than the starting policy (2.7 vs 3.5 per AV-hour) and a sixth of the rule-based AV's (17.3).
+- **The first two scenarios fully overcome**: red runners and blockages, all eight checks.
+- **What still fails is mostly speed.** The policy drives at 95-96 % of the rule-based AV's speed, and *efficient*
+  wants 97 %. Unaided safety fails where the rule-based AV had zero crashes in a scenario's ~45 AV-hours and the
+  policy had one or two. Jaywalkers stay the hardest (0.09-0.27 per AV-hour).
+- **Three things that did not work**, each one step on the way:
+  - *Charging every moment inside the barrier, and every acceleration above its bound.* A car stopped 2 m behind
+    another is technically inside the barrier, so the policy learned to hang back in queues and moved off slowly. AVs
+    drove at 9 km/h and slowed the humans behind them. Charging only a moving AV fixed it.
+  - *A cruise term* (per m/s below the limit on open road) made the policy slower, not faster.
+  - *Phase 3's extra speed weight* didn't raise speed; the jaywalker copies made it safer but more hesitant.
+
+```bash
+python -m avrl.unaided 1 && python -m avrl.unaided 2      # ~4 min each
+python -m avrl.bench run && python -m avrl.bench report   # score the new policies
+```
 
 ## Crashes at junctions, in merges and with cyclists
 
@@ -318,8 +358,9 @@ Details: [avlab/README.md](avlab/README.md).
 
 ## What's next
 
-1. **Pass AVBench unaided.** Start from the 234k-step policy and train with the barrier function's vetoes and
-   corrections as a penalty, annealed toward zero, or distil the latent planner into it. Target: all 88 checks.
+1. **Finish passing AVBench unaided.** The barrier-taught policy is 2 % short on speed and has one or two unaided
+   crashes where the rule-based AV has none. Next: distil the latent planner's junction timing into it, and train on
+   the scenarios it still fails. Target: all 88 checks.
 2. **Amortise the planner.** Train the policy on the planner's choices in imagined rollouts (Dreamer / TD-MPC style),
    so the deployed driver keeps the planner's foresight at the policy's speed.
 3. **Close the operating-domain gaps the lab found:** low friction (make the barrier's braking assumption adapt to
