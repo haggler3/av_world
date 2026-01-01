@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>av_world · Pittsburgh simulation viewer</title>
+<meta name="description" content="Explore whole-area traffic simulations of Pittsburgh: learned AVs, human drivers, pedestrians, buses, crashes and red-light runs, replayed in the browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <a class="brand" href="../index.html"><span class="dot"></span>av_world</a>
+    <div class="scenario">
+      <label for="run" class="sr">Simulation</label>
+      <select id="run"></select>
+      <p id="blurb"></p>
+    </div>
+    <nav class="views" aria-label="Camera">
+      <button data-view="area" class="on">Area</button>
+      <button data-view="street">Street</button>
+      <button data-view="follow">Follow an AV</button>
+    </nav>
+  </header>
+
+  <main>
+    <div id="stage">
+      <canvas id="map"></canvas>
+      <div id="hud" aria-live="polite"></div>
+      <div id="legend">
+        <div class="seg" role="group" aria-label="Colour vehicles by">
+          <button data-color="type" class="on">By type</button>
+          <button data-color="speed">By speed</button>
+        </div>
+        <ul id="legend-items"></ul>
+      </div>
+      <div id="loading">Loading simulation…</div>
+      <div id="tip">Drag to pan · scroll or pinch to zoom · click a vehicle to follow it</div>
+    </div>
+
+    <aside id="side">
+      <section>
+        <h2>Key moments</h2>
+        <div id="filters" class="chips"></div>
+        <ol id="events"></ol>
+      </section>
+      <section id="about">
+        <h2>What you are looking at</h2>
+        <p>Every vehicle in the area is simulated together at 0.2&nbsp;s steps: car following, lane changes and zipper merges,
+        right of way at every conflict point inside a junction, signals and stop signs, pedestrians on crosswalks, buses at
+        stops, double-parked delivery vans and breakdowns. Human drivers carry the risky behaviour calibrated to published
+        crash data. Blue cars are AVs.</p>
+        <p id="mapstats"></p>
+        <p class="muted">Map: Overture Maps / © OpenStreetMap contributors (ODbL). Lanes, signals, stop signs and demand are inferred from road class.</p>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="timeline">
+    <button id="play" aria-label="Play">▶</button>
+    <div id="track">
+      <div id="ticks"></div>
+      <input id="scrub" type="range" min="0" max="0" value="0" step="1" aria-label="Time">
+    </div>
+    <span id="clock">0:00</span>
+    <select id="speed" aria-label="Playback speed">
+      <option value="1">1×</option><option value="4" selected>4×</option><option value="16">16×</option>
+    </select>
+  </footer>
+</div>
+<script src="viewer.js"></script>
+</body>
+</html>

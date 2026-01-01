@@ -1,0 +1,4 @@
+active update 15: 36 s, reward/step 0.0365
+active update 30: 66 s, reward/step 0.0285
+active update 60: 128 s, reward/step 0.0219
+active update 120: 250 s, reward/step 0.0151
