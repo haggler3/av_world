@@ -1,5 +1,8 @@
 # Metrics: bars the rule-based AV can fail, and numbers to optimise
 
+> **Reproducibility caveat** (see [FIXES.md](FIXES.md#14-the-leaderboard-does-not-reproduce-across-hardware)): the leaderboard was computed on an L4 GPU. Re-scored on a CPU, single-scenario scores move by up to ±75 points (a rare event happens or not) and 11-scenario means by up to ~8. Compare means, not single scenarios, and re-check with `python examples/leaderboard_drift.py`.
+
+
 AVBench used to ask one kind of question: is the learned policy at least as good as the rule-based AV on the same traffic? That makes
 the rule-based AV pass all 88 checks by construction, so the benchmark could never say where *it* falls short, and a policy that
 matched it had nowhere further to go. This page adds two things (`avrl/scorecard.py`, `avrl/bench.py`):
