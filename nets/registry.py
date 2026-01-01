@@ -86,7 +86,7 @@ FEATURES = [
             (3, 25), ("results/autotag/eval.json", "results/autotag/tags_av2.parquet"), "docs/AUTOTAG.md#the-ten-methods",
             ("city", "av2"), "nets.registry:_run_autotag", 'easy.tag.query("cut_in & hidden_ahead", source="av2")'),
     Feature("realism", "system", "Sim-to-real gap", "Where does simulated traffic differ from real logs, and what patch closes it?",
-            "RESULT", (8, 60), ("results/realism/scoreboard.json", "results/realism/preset.json"), "docs/SIM2REAL.md#the-ten-methods",
+            "gap 2.25 -> 0.85; tight following x0.04 -> x1.2 of real; the tracker explains much of the hard-braking gap; see docs/SIM2REAL.md", (10, 45), ("results/realism/scoreboard.json", "results/realism/preset.json"), "docs/SIM2REAL.md#the-ten-methods",
             ("city", "av2"), "nets.registry:_run_realism", "beh = easy.realism.preset()   # patched human drivers for xnet"),
 ]
 BY_NAME = {f.name: f for f in FEATURES}

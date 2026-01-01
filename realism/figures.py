@@ -174,7 +174,7 @@ def fig_discriminator(res):
     ax.bar(range(len(ws)), a, color=[C[w] for w in ws], yerr=[np.array(a) - ci[:, 0], ci[:, 1] - np.array(a)], capsize=3)
     ax.axhline(0.5, color="k", ls=":", lw=0.8)
     ax.set_ylim(0.4, 1.0)
-    ax.set_xticks(range(len(ws)), [LBL[w].replace("sim: ", "") for w in ws], fontsize=8)
+    ax.set_xticks(range(len(ws)), [LBL[w].replace("sim: ", "").replace(", ", ",\n") for w in ws], fontsize=8, rotation=20, ha="right")
     ax.set(ylabel="AUROC real vs sim (held-out scenes)", title="Can a network tell them apart?")
     _style(ax)
     ax = axs[1]
@@ -211,7 +211,7 @@ def gif_following(real, proc, path, frames=50):
     from autotag.rules import leaders, relative
     picks = [("real AV2 (cleaned)", _pick(real["clean"])), ("sim: stored drivers", _pick(proc["default"]["clean"])),
              ("sim: patched", _pick(proc["patched"]["clean"]))]
-    fig, axs = plt.subplots(1, 3, figsize=(13.5, 4.8))
+    fig, axs = plt.subplots(1, 3, figsize=(13.5, 3.6))
     cmap = plt.get_cmap("RdYlGn")
     data = []
     for (title, s), ax in zip(picks, axs):
@@ -230,7 +230,7 @@ def gif_following(real, proc, path, frames=50):
             ax.set_xticks([]), ax.set_yticks([])
             e = s["ego"]
             cx, cy = np.nanmean(s["x"][:, t]) if not np.isfinite(s["x"][e, t]) else s["x"][e, t], s["y"][e, t] if np.isfinite(s["y"][e, t]) else np.nanmean(s["y"][:, t])
-            ax.set_xlim(cx - 60, cx + 60), ax.set_ylim(cy - 40, cy + 40)
+            ax.set_xlim(cx - 45, cx + 45), ax.set_ylim(cy - 25, cy + 25)
             for i in range(len(s["x"])):
                 if not np.isfinite(s["x"][i, t]):
                     continue
@@ -244,6 +244,7 @@ def gif_following(real, proc, path, frames=50):
             tight = np.nansum((hw[:, t] < 0.8) & (s["v"][:, t] > 3))
             ax.text(0.02, 0.02, f"t = {t * 0.2:4.1f} s   headway < 0.8 s: {int(tight)}", transform=ax.transAxes, fontsize=8)
         return []
+    fig.subplots_adjust(left=0.01, right=0.99, top=0.84, bottom=0.02, wspace=0.04)
     anim = FuncAnimation(fig, draw, frames=T, interval=200)
     fig.suptitle("Following, coloured by time headway (red 0.4 s, green 3 s, grey: no leader; black outline: the AV)", fontsize=10)
     anim.save(path, writer=PillowWriter(fps=5))

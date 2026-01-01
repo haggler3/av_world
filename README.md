@@ -62,6 +62,18 @@ automatically and which go to review. A `sim_gap` tag flags real scenes the simu
 
 <img src="docs/img/autotag/av2_scene.gif" width="440" alt="A real Argoverse 2 scene with its tags drawn on a live timeline">
 
+**Closing the sim-to-real gap** ([what is different, where, and the patch](docs/SIM2REAL.md), `av-world realism`). The gap between
+simulated and real Argoverse 2 traffic splits into three sources:
+- **The sensor.** Real tracks carry a fitted, correlated speed error, and 18 % of them contain impossible jumps.
+- **The scene.** Field of view and traffic density.
+- **The drivers.** These are the only part worth patching.
+
+The patch (IDM+, a headway table deconvolved through the simulator, harder launches and a smooth acceleration residual) takes the gap
+from 2.25 to 0.85. Tight following goes from 0.04× real to 1.2×, and hard braking from 0.4× to 0.9×. A classifier still tells real from
+simulated vehicles by their jerk.
+
+<img src="docs/img/realism/distributions.png" width="760" alt="Headway, closest following and TTC distributions: real, stored drivers and patched drivers">
+
 ## Install
 
 ```bash
@@ -185,6 +197,7 @@ impact over the effort of a follow-up.
 | [docs/NEURAL_NETS.md](docs/NEURAL_NETS.md) | six networks only this simulator can train (risk critic from exact forks, social response, occlusion belief, mind reader, but-for blame, real-traffic posterior): method, math, results |
 | [docs/TRAINING_NETS.md](docs/TRAINING_NETS.md) | the easy guide: train and use each of them in one command (`av-world nets`, `easy.nets`), quick mode, data, speed, troubleshooting |
 | [docs/AUTOTAG.md](docs/AUTOTAG.md) | the scene auto-tagger: first principles, the engineering DAG, ten methods with pseudocode, pros and cons, and results |
+| [docs/SIM2REAL.md](docs/SIM2REAL.md) | the sim-to-real gap: sensor, scene and drivers separated; ten methods with pseudocode, the DAG, pros and cons; the patched preset |
 | [docs/WORLD_MODEL_UPGRADES.md](docs/WORLD_MODEL_UPGRADES.md) | ten world-model ideas from the literature, seven built and measured: CRN, conservative imagination, agent tokens, learned humans, multi-step loss, SIGReg, terminal value |
 | [docs/EASY.md](docs/EASY.md) | easy mode for beginners (`av_world.easy`) and compatibility with Gymnasium, PettingZoo, SB3, PyTorch, ONNX, pandas, CARLA, OpenUSD |
 | [docs/FIXES.md](docs/FIXES.md) | the fix round: every open question and weak result from the last rounds, what was changed, and what happened (two fixes failed) |
