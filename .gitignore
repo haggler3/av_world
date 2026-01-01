@@ -39,3 +39,4 @@ results/autotag/quick/
 # realism: stage caches and quick runs
 results/realism/cache*/
 results/realism/quick/
+results/realism_full.log

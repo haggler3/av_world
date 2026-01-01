@@ -104,6 +104,7 @@ class Behaviour(NamedTuple):
     # IDM+ (Schakel et al. 2010) for human drivers: a = amax min(1 - (v / v0)^4, 1 - (s* / s)^2) instead of the sum, so the equilibrium gap
     # is s* = s0 + v T at every speed; plain IDM inflates it by 1 / sqrt(1 - (v / v0)^4) as v nears v0 (urban followers then hang back).
     idm_plus: float = 0.0
+    v0_scale: float = 1.0  # multiplies human drivers' desired-speed factor (urban drivers who want to go faster close up on leaders)
 
 
 class Reward(NamedTuple):
@@ -836,7 +837,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     vals = dict(
         alive=jnp.ones(S, bool), trk=strk, s=s_sp, v=v_sp, dest=dst,
         nxt=jnp.where(src == net["dest_link"][dst], -1, nh[src, dst]), kind=jnp.where(is_bus, BUS, jnp.where(is_van, VAN, jnp.where(is_bike, BIKE, CAR))),
-        v0f=jnp.where(is_bus, 0.85, jnp.where(is_av, 1.0, 0.9 + 0.3 * u_sp[7])), T=jnp.where(is_av, 1.3, jnp.where(is_bus, 1.6, jnp.where(beh.T_med > 0.0, jnp.clip(beh.T_med * jnp.exp(beh.T_sigma * jax.random.normal(jax.random.fold_in(st.key, 9), (u_sp.shape[1],))), 0.25, 3.0), jnp.where(jnp.mod(u_sp[2] * 97.0, 1.0) < beh.p_tailgate, 0.35 + 0.35 * u_sp[5], 1.0 + 0.8 * u_sp[5])))),
+        v0f=jnp.where(is_bus, 0.85, jnp.where(is_av, 1.0, (0.9 + 0.3 * u_sp[7]) * beh.v0_scale)), T=jnp.where(is_av, 1.3, jnp.where(is_bus, 1.6, jnp.where(beh.T_med > 0.0, jnp.clip(beh.T_med * jnp.exp(beh.T_sigma * jax.random.normal(jax.random.fold_in(st.key, 9), (u_sp.shape[1],))), 0.25, 3.0), jnp.where(jnp.mod(u_sp[2] * 97.0, 1.0) < beh.p_tailgate, 0.35 + 0.35 * u_sp[5], 1.0 + 0.8 * u_sp[5])))),
         amax=jnp.where(is_bus | is_van | is_bike, 1.0, jnp.where(is_av, 1.6, 1.2 + 0.8 * u_sp[2])), b=jnp.where(is_av, 2.0, 1.5 + 1.0 * u_sp[4]),
         s0=(1.5 + 1.0 * u_sp[8]) * beh.s0_scale, length=length,
         runner=human & (u_sp[9] < beh.p_red), nolook=human & (u_sp[10] < beh.p_nolook),
@@ -858,7 +859,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
         from_bank = human & (vals["kind"] == CAR) & (jnp.mod(u_sp[8] * 613.0, 1.0) < beh.bank)
         row = jnp.minimum((jnp.mod(u_sp[13] * 7919.0, 1.0) * BANK.shape[0]).astype(jnp.int32), BANK.shape[0] - 1)
         for f, c in (("T", 0), ("s0", 1), ("amax", 2), ("b", 3)):
-            vals[f] = jnp.where(from_bank, BANK[row, c], vals[f])
+            vals[f] = jnp.where(from_bank, BANK[row, c] * (beh.s0_scale if f == "s0" else 1.0), vals[f])
     new = {k: cur[k].at[slots].set(jnp.where(ok_sp, vals[k], cur[k][slots])) for k in cur}
 
     lk = jnp.where(st.alive & on_link, link, L)
