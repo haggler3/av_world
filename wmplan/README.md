@@ -133,6 +133,47 @@ python -m wmplan.v2 gifs           # docs/img/wm2_planner_*.gif
 Sources: TD-MPC2 (Hansen et al., 2023: LayerNorm + Mish, SimNorm, policy prior, terminal value), DreamerV3 (Hafner et al.,
 2023: robust targets), PETS (Chua et al., 2018) and MOPO (Yu et al., 2020: ensembles against model exploitation).
 
+## v3: let the world model train the policy instead (`v3.py`, 2026-10-23)
+
+v2 could not beat the policy it planned around. v3 tried the fast fixes from the literature, each screened in the real
+simulator (32 copies x 60 s, paired seeds, red runners / inattentive / dartout) before any full benchmark:
+
+1. **Counterfactual data (fork at danger).** The simulator was forked at risky moments and replayed for 6 s under the same
+   random numbers, with the risky AVs' first 2 s of action changed: brake harder or less, demand a bigger or smaller gap.
+   This gave 9.5 M decisions over 8 scenarios. Fine-tuning v2 on them, with a discrete control-barrier condition on the decoded
+   margins, raised crash AUROC to 0.955, counterfactual crash AUROC to 0.999 (only 3 held-out crashes), and red-run AUROC to
+   0.9999.
+2. **A safe actor-critic in imagination** (Think2Drive / Dreamer, with SafeDreamer's Lagrangian cost and MOPO's ensemble
+   penalty), starting from the phase 3 policy. **It exploited the model.** Its imagined cost fell while in the real simulator it
+   crashed 30-40 times per AV-hour and ran hundreds of reds.
+3. **One-step improvement on measured actions only.** For 2 M real states the model scored just the five actions the
+   counterfactual branches tested, picked the best where it beat the prior by a margin, and that choice was distilled into
+   the policy.
+
+| policy (screen) | red runners: crashes, km/h | inattentive | dartout |
+|---|---|---|---|
+| phase 3 (the prior) | 4, 17.4 | 2, 17.4 | 4, 14.9 |
+| v3 one-step, gate 2.0 (changes 8 % of actions) | 4, 16.2 | 1, 16.3 | 4, 13.9 |
+| v3 one-step, gate 0.5 (changes 46 %) | 19, 10.0 | 21, 10.2 | 7, 8.9 |
+| v3 actor-critic | 1294, 18.8 | 1233, 18.7 | 1078, 15.8 |
+
+**No v3 variant beats the prior.** The counterfactual branches show why. With the policy's 28 features, the only action that
+changes outcomes is braking. Braking *less* clearly causes crashes: 2-8x the prior's in every scenario. Braking *more* does not
+prevent them, and braking a lot adds rear-end crashes from the humans behind. Changing gap acceptance changed nothing measurable.
+The barrier-taught prior already sits at the best point of that trade-off. The best v3 matches its crashes at 6 % lower speed,
+with about 3x the hard braking (its distilled actions are less smooth). The remaining lever is information the policy does not
+have: the other road users as individual objects (agent tokens). That needs a new simulator output and a set encoder.
+
+```bash
+python -m wmplan.v3 collect          # 9.5 M counterfactual decisions, ~16 min on an L4
+python -m wmplan.v3 finetune         # ~7 min
+python -m wmplan.v3 improve d 2.0    # ~1 min to score 2 M states, then distil
+python -m wmplan.v3 screen d         # ~4 min
+```
+
+Sources: Think2Drive (Li et al., ECCV 2024), SafeDreamer (Huang et al., ICLR 2024), MOPO (Yu et al., 2020), one-step offline
+improvement (Brandfonbrener et al., 2021), and the repo's own fork-at-danger (`avrl/fork.py`).
+
 ## Next
 
 - **Amortise the planner into the policy** (Dreamer / TD-MPC style). Train the PPO actor on imagined rollouts with

@@ -16,3 +16,4 @@ build/
 dist/
 *.egg-info/
 results/wmplan/v2/data*.npz
+results/wmplan/v3/data*.npz

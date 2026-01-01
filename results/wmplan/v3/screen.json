@@ -1,0 +1,98 @@
+{
+ "red_runners": {
+  "phase 3 (prior)": {
+   "av_score": 13.528775242121812,
+   "crash_per_h_unaided": 0.07963760197162628,
+   "av_crash": 4.0,
+   "red": 0.0,
+   "near_per_h": 0.0,
+   "speed_kmh": 17.398508071899414,
+   "hard_per_h": 2.508584499359131,
+   "av_hours": 50.2275276184082
+  },
+  "v3 c": {
+   "av_score": 5.925509241925711,
+   "crash_per_h_unaided": 0.37399953603744507,
+   "av_crash": 19.0,
+   "red": 0.0,
+   "near_per_h": 0.0,
+   "speed_kmh": 9.985797882080078,
+   "hard_per_h": 6.397360801696777,
+   "av_hours": 50.80220031738281
+  },
+  "v3 d": {
+   "av_score": 9.83842782813371,
+   "crash_per_h_unaided": 0.07943197339773178,
+   "av_crash": 4.0,
+   "red": 0.0,
+   "near_per_h": 0.0,
+   "speed_kmh": 16.24443244934082,
+   "hard_per_h": 7.903481483459473,
+   "av_hours": 50.3575553894043
+  }
+ },
+ "inattentive": {
+  "phase 3 (prior)": {
+   "av_score": 30.506335115355053,
+   "crash_per_h_unaided": 0.03998199477791786,
+   "av_crash": 2.0,
+   "red": 0.0,
+   "near_per_h": 0.0,
+   "speed_kmh": 17.3958683013916,
+   "hard_per_h": 2.558847665786743,
+   "av_hours": 50.02251434326172
+  },
+  "v3 c": {
+   "av_score": 4.8274325138041,
+   "crash_per_h_unaided": 0.41479629278182983,
+   "av_crash": 21.0,
+   "red": 0.0,
+   "near_per_h": 0.0,
+   "speed_kmh": 10.195046424865723,
+   "hard_per_h": 6.142935276031494,
+   "av_hours": 50.627262115478516
+  },
+  "v3 d": {
+   "av_score": 29.769948122872865,
+   "crash_per_h_unaided": 0.019934024661779404,
+   "av_crash": 1.0,
+   "red": 0.0,
+   "near_per_h": 0.0,
+   "speed_kmh": 16.279741287231445,
+   "hard_per_h": 7.694533348083496,
+   "av_hours": 50.16548538208008
+  }
+ },
+ "dartout": {
+  "phase 3 (prior)": {
+   "av_score": 8.313779681142146,
+   "crash_per_h_unaided": 0.10760406404733658,
+   "av_crash": 4.0,
+   "red": 0.0,
+   "near_per_h": 0.0,
+   "speed_kmh": 14.920183181762695,
+   "hard_per_h": 2.0982792377471924,
+   "av_hours": 37.173316955566406
+  },
+  "v3 c": {
+   "av_score": 9.131366967660739,
+   "crash_per_h_unaided": 0.18610411882400513,
+   "av_crash": 7.0,
+   "red": 0.0,
+   "near_per_h": 0.0,
+   "speed_kmh": 8.938667297363281,
+   "hard_per_h": 5.928745269775391,
+   "av_hours": 37.61335372924805
+  },
+  "v3 d": {
+   "av_score": 6.344126090136301,
+   "crash_per_h_unaided": 0.10738789290189743,
+   "av_crash": 4.0,
+   "red": 0.0,
+   "near_per_h": 0.026846973225474358,
+   "speed_kmh": 13.860016822814941,
+   "hard_per_h": 6.980213165283203,
+   "av_hours": 37.248146057128906
+  }
+ }
+}

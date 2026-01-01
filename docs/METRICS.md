@@ -118,6 +118,10 @@ tables are in `results/bench/leaderboard.md` and the chart in `docs/img/avbench.
   phase-3 policy as prior, overriding it only towards caution ([wmplan/README.md](../wmplan/README.md)). On the same 3
   scenarios it passes 17 of 24 checks with an av_world score of 46.0 (v1: 8 and 0.8), with no red runs and 0.039 unaided crashes
   per AV-hour. Its prior passes 22 with a score of 63.8; on nominal it is 93.0 against 98.0.
+* **World model v3 (counterfactual data, policy learning in the model) does not beat it either.** In paired 60 s screens the
+  best variant matched the phase 3 policy's crashes at 6 % lower speed. The actor-critic trained in imagination exploited the
+  model and crashed 30-40 times per AV-hour. With these 28 features, braking less causes crashes but braking more does not
+  prevent them ([wmplan/README.md](../wmplan/README.md)).
 
 ## Limits
 
