@@ -75,7 +75,95 @@ def _strip(poly, width):
     return pts, faces
 
 
-def to_usda(net, geo, scene, path, name="av_world_scene", meta=None):
+def _mesh_lines(w, name, V, F, material, indent="        "):
+    w(f'{indent}def Mesh "{name}" (')
+    w(f'{indent}    prepend apiSchemas = ["MaterialBindingAPI"]')
+    w(f"{indent})")
+    w(f"{indent}{{")
+    w(f"{indent}    point3f[] points = [" + ", ".join(_tuple(q) for q in V) + "]")
+    w(f"{indent}    int[] faceVertexCounts = [" + ", ".join(["3"] * len(F)) + "]")
+    w(f"{indent}    int[] faceVertexIndices = [" + ", ".join(str(int(i)) for i in np.asarray(F).ravel()) + "]")
+    w(f'{indent}    uniform token subdivisionScheme = "none"')
+    w(f"{indent}    uniform bool doubleSided = 1")
+    w(f"{indent}    rel material:binding = </World/Looks/{material}>")
+    w(f"{indent}}}")
+
+
+class _Looks:
+    """UsdPreviewSurface materials, created on demand: named ones from scene3d.MATERIALS and one per extra colour."""
+
+    def __init__(self):
+        from .scene3d import MATERIALS
+        self.mats = {k: v for k, v in MATERIALS.items()}
+        self.used = set()
+
+    def name(self, m):
+        if isinstance(m, str):
+            self.used.add(m)
+            return m
+        n = "c_" + "_".join(str(int(round(255 * c))) for c in m)
+        self.mats.setdefault(n, (tuple(m), 0.6, 0.0))
+        self.used.add(n)
+        return n
+
+    def write(self, w):
+        w('    def Scope "Looks"')
+        w("    {")
+        for n in sorted(self.used):
+            col, rough, metal = self.mats[n]
+            w(f'        def Material "{n}"')
+            w("        {")
+            w(f"            token outputs:surface.connect = </World/Looks/{n}/surface.outputs:surface>")
+            w('            def Shader "surface"')
+            w("            {")
+            w('                uniform token info:id = "UsdPreviewSurface"')
+            w(f"                color3f inputs:diffuseColor = {_tuple(col)}")
+            w(f"                float inputs:roughness = {rough}")
+            w(f"                float inputs:metallic = {metal}")
+            if n == "water" or n == "glass":
+                w("                float inputs:opacity = 0.85")
+            w("                token outputs:surface")
+            w("            }")
+            w("        }")
+        w("    }")
+
+
+PROTOTYPES = {  # furniture: [(shape, centre z, size)], material
+    "tree": [("Cylinder", 1.5, (0.18, 3.0), "bark"), ("Sphere", 4.3, (2.3,), "foliage")],
+    "street_lamp": [("Cylinder", 3.5, (0.08, 7.0), "metal"), ("Sphere", 7.0, (0.25,), (0.95, 0.92, 0.75))],
+    "traffic_signal": [("Cylinder", 2.75, (0.09, 5.5), "metal"), ("Cube", 4.9, (0.4, 0.4, 1.2), (0.08, 0.08, 0.08)), ("Sphere", 5.2, (0.12,), "signal_red")],
+    "stop_sign": [("Cylinder", 1.15, (0.05, 2.3), "metal"), ("Cube", 2.3, (0.05, 0.75, 0.75), "sign_red")],
+    "bench": [("Cube", 0.4, (1.8, 0.5, 0.1), "wood")],
+    "bollard": [("Cylinder", 0.45, (0.1, 0.9), "metal")],
+    "fire_hydrant": [("Cylinder", 0.4, (0.15, 0.8), "sign_red")],
+    "waste_basket": [("Cylinder", 0.45, (0.25, 0.9), "metal")],
+    "bicycle_parking": [("Cube", 0.4, (1.5, 0.05, 0.8), "metal")],
+    "post_box": [("Cube", 0.6, (0.5, 0.5, 1.2), (0.15, 0.25, 0.6))],
+}
+
+
+def _shape_lines(w, name, shape, z, size, mat, looks, indent, xy=(0.0, 0.0), axis="Z"):
+    w(f'{indent}def {shape} "{name}" (')
+    w(f'{indent}    prepend apiSchemas = ["MaterialBindingAPI"]')
+    w(f"{indent})")
+    w(f"{indent}{{")
+    if shape == "Cube":
+        w(f"{indent}    double size = 1")
+        w(f"{indent}    float3 xformOp:scale = {_tuple(size)}")
+        w(f"{indent}    double3 xformOp:translate = {_tuple((xy[0], xy[1], z))}")
+        w(f'{indent}    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]')
+    else:
+        w(f"{indent}    double radius = {_f(size[0])}")
+        if shape in ("Cylinder", "Capsule"):
+            w(f"{indent}    double height = {_f(size[1])}")
+            w(f'{indent}    uniform token axis = "{axis}"')
+        w(f"{indent}    double3 xformOp:translate = {_tuple((xy[0], xy[1], z))}")
+        w(f'{indent}    uniform token[] xformOpOrder = ["xformOp:translate"]')
+    w(f"{indent}    rel material:binding = </World/Looks/{looks.name(mat)}>")
+    w(f"{indent}}}")
+
+
+def to_usda(net, geo, scene, path, name="av_world_scene", meta=None, world=None):
     dt = scene["dt"]
     T = scene["frames"]
     L = []
@@ -98,55 +186,90 @@ def to_usda(net, geo, scene, path, name="av_world_scene", meta=None):
     w("    }")
     w(")")
     w("{")
-    # roads
-    pts_all, counts, idx, off = [], [], [], 0
-    for poly, width in lane_polys(net, geo):
-        if len(poly) < 2:
-            continue
-        p, faces = _strip(poly, width)
-        pts_all.append(p)
-        for f in faces:
-            counts.append(4)
-            idx.extend(v + off for v in f)
-        off += len(p)
-    P = np.concatenate(pts_all) if pts_all else np.zeros((0, 3))
-    w('    def Scope "Roads"')
-    w("    {")
-    w('        def Mesh "lanes"')
-    w("        {")
-    w("            point3f[] points = [" + ", ".join(_tuple(q) for q in P) + "]")
-    w("            int[] faceVertexCounts = [" + ", ".join(map(str, counts)) + "]")
-    w("            int[] faceVertexIndices = [" + ", ".join(map(str, idx)) + "]")
-    w("            color3f[] primvars:displayColor = [(0.18, 0.18, 0.2)]")
-    w('            uniform token subdivisionScheme = "none"')
-    w("        }")
-    edges = [e for e in lane_edges(net, geo) if len(e) >= 2]
-    ep = np.concatenate([np.c_[e, np.full(len(e), 0.02)] for e in edges]) if edges else np.zeros((0, 3))
-    w('        def BasisCurves "lane_boundaries"')
-    w("        {")
-    w('            uniform token type = "linear"')
-    w("            int[] curveVertexCounts = [" + ", ".join(str(len(e)) for e in edges) + "]")
-    w("            point3f[] points = [" + ", ".join(_tuple(q) for q in ep) + "]")
-    w("            float[] widths = [0.15]")
-    w("            color3f[] primvars:displayColor = [(0.9, 0.9, 0.9)]")
-    w("        }")
-    cw = [np.asarray(c) for c in getattr(geo, "leg_xy", []) if np.any(c)]
-    w('        def Mesh "crosswalks"')
-    w("        {")
-    cp, cc, ci = [], [], []
-    for c in cw:
-        p, faces = _strip(c, 3.0)
-        base = len(cp)
-        cp.extend(p.tolist())
-        for f in faces:
-            cc.append(4)
-            ci.extend(v + base for v in f)
-    w("            point3f[] points = [" + ", ".join(_tuple(np.asarray(q) + [0, 0, 0.01]) for q in cp) + "]")
-    w("            int[] faceVertexCounts = [" + ", ".join(map(str, cc)) + "]")
-    w("            int[] faceVertexIndices = [" + ", ".join(map(str, ci)) + "]")
-    w("            color3f[] primvars:displayColor = [(0.85, 0.85, 0.85)]")
-    w("        }")
-    w("    }")
+    looks = _Looks()
+    if world is not None:  # the fused city: road surface, sidewalks, markings, ground, buildings, furniture
+        from . import scene3d as S3
+        w('    def Scope "Environment"')
+        w("    {")
+        for mname, m in world.meshes.items():
+            V, F = m.arrays()
+            if len(F):
+                _mesh_lines(w, _ident(mname), V, F, looks.name(m.color if m.color is not None else m.material))
+        w("    }")
+        w('    def Scope "Furniture"')
+        w("    {")
+        for kind, items in world.instances.items():
+            proto = PROTOTYPES.get(kind)
+            if not proto or not items:
+                continue
+            q = np.asarray(items, float)
+            w(f'        def PointInstancer "{_ident(kind)}"')
+            w("        {")
+            w(f"            rel prototypes = [</World/Furniture/{_ident(kind)}/Prototypes/{_ident(kind)}>]")
+            w("            int[] protoIndices = [" + ", ".join(["0"] * len(q)) + "]")
+            w("            point3f[] positions = [" + ", ".join(_tuple((x, y, 0.0)) for x, y, _, _ in q) + "]")
+            w("            float3[] scales = [" + ", ".join(_tuple((sc, sc, sc)) for _, _, sc, _ in q) + "]")
+            w("            quath[] orientations = [" + ", ".join(_tuple((math.cos(yw / 2), 0.0, 0.0, math.sin(yw / 2))) for _, _, _, yw in q) + "]")
+            w('            def Scope "Prototypes"')
+            w("            {")
+            w(f'                def Xform "{_ident(kind)}"')
+            w("                {")
+            for i, (shape, z, size, mat) in enumerate(proto):
+                _shape_lines(w, f"part{i}", shape, z, size, mat, looks, "                    ")
+            w("                }")
+            w("            }")
+            w("        }")
+        w("    }")
+    if world is None:
+        # roads
+        pts_all, counts, idx, off = [], [], [], 0
+        for poly, width in lane_polys(net, geo):
+            if len(poly) < 2:
+                continue
+            p, faces = _strip(poly, width)
+            pts_all.append(p)
+            for f in faces:
+                counts.append(4)
+                idx.extend(v + off for v in f)
+            off += len(p)
+        P = np.concatenate(pts_all) if pts_all else np.zeros((0, 3))
+        w('    def Scope "Roads"')
+        w("    {")
+        w('        def Mesh "lanes"')
+        w("        {")
+        w("            point3f[] points = [" + ", ".join(_tuple(q) for q in P) + "]")
+        w("            int[] faceVertexCounts = [" + ", ".join(map(str, counts)) + "]")
+        w("            int[] faceVertexIndices = [" + ", ".join(map(str, idx)) + "]")
+        w("            color3f[] primvars:displayColor = [(0.18, 0.18, 0.2)]")
+        w('            uniform token subdivisionScheme = "none"')
+        w("        }")
+        edges = [e for e in lane_edges(net, geo) if len(e) >= 2]
+        ep = np.concatenate([np.c_[e, np.full(len(e), 0.02)] for e in edges]) if edges else np.zeros((0, 3))
+        w('        def BasisCurves "lane_boundaries"')
+        w("        {")
+        w('            uniform token type = "linear"')
+        w("            int[] curveVertexCounts = [" + ", ".join(str(len(e)) for e in edges) + "]")
+        w("            point3f[] points = [" + ", ".join(_tuple(q) for q in ep) + "]")
+        w("            float[] widths = [0.15]")
+        w("            color3f[] primvars:displayColor = [(0.9, 0.9, 0.9)]")
+        w("        }")
+        cw = [np.asarray(c) for c in getattr(geo, "leg_xy", []) if np.any(c)]
+        w('        def Mesh "crosswalks"')
+        w("        {")
+        cp, cc, ci = [], [], []
+        for c in cw:
+            p, faces = _strip(c, 3.0)
+            base = len(cp)
+            cp.extend(p.tolist())
+            for f in faces:
+                cc.append(4)
+                ci.extend(v + base for v in f)
+        w("            point3f[] points = [" + ", ".join(_tuple(np.asarray(q) + [0, 0, 0.01]) for q in cp) + "]")
+        w("            int[] faceVertexCounts = [" + ", ".join(map(str, cc)) + "]")
+        w("            int[] faceVertexIndices = [" + ", ".join(map(str, ci)) + "]")
+        w("            color3f[] primvars:displayColor = [(0.85, 0.85, 0.85)]")
+        w("        }")
+        w("    }")
     # agents
     w('    def Scope "Agents"')
     w("    {")
@@ -178,7 +301,8 @@ def to_usda(net, geo, scene, path, name="av_world_scene", meta=None):
         w("            }")
         w("        )")
         w("        {")
-        tr = ", ".join(f"{a + k}: {_tuple((v['x'][k], v['y'][k], hgt / 2))}" for k in range(b - a))
+        z_c = 0.0 if world is not None else hgt / 2
+        tr = ", ".join(f"{a + k}: {_tuple((v['x'][k], v['y'][k], z_c))}" for k in range(b - a))
         rz = ", ".join(f"{a + k}: {_f(math.degrees(yaw[k]))}" for k in range(b - a))
         vis = {0: "invisible"} if a > 0 else {}
         vis[a] = "inherited"
@@ -188,15 +312,23 @@ def to_usda(net, geo, scene, path, name="av_world_scene", meta=None):
         w(f"            float xformOp:rotateZ.timeSamples = {{ {rz} }}")
         w('            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]')
         w("            token visibility.timeSamples = { " + ", ".join(f'{k}: "{s}"' for k, s in sorted(vis.items())) + " }")
-        w('            def Cube "box"')
-        w("            {")
-        w("                double size = 1")
-        w(f"                float3 xformOp:scale = {_tuple((v.get('length', 4.5), WIDTH.get(kind, 1.9), hgt))}")
-        w('                uniform token[] xformOpOrder = ["xformOp:scale"]')
-        w(f"                color3f[] primvars:displayColor = [{_tuple(COLOR.get(kind, (0.5, 0.5, 0.5)))}]")
-        w("            }")
+        if world is not None:  # body, cabin, wheels
+            from .scene3d import vehicle_parts
+            for pname, shape, (cx, cy, cz), size, mat in vehicle_parts(kind, v.get("length", 4.5), hash(str(v["id"])) % 97):
+                sh = {"cube": "Cube", "capsule": "Capsule", "wheel": "Cylinder", "wheel_z": "Cylinder"}[shape]
+                _shape_lines(w, pname, sh, cz, size, mat[0], looks, "            ", xy=(cx, cy), axis="Y" if shape == "wheel" else "Z")
+        else:
+            w('            def Cube "box"')
+            w("            {")
+            w("                double size = 1")
+            w(f"                float3 xformOp:scale = {_tuple((v.get('length', 4.5), WIDTH.get(kind, 1.9), hgt))}")
+            w('                uniform token[] xformOpOrder = ["xformOp:scale"]')
+            w(f"                color3f[] primvars:displayColor = [{_tuple(COLOR.get(kind, (0.5, 0.5, 0.5)))}]")
+            w("            }")
         w("        }")
     w("    }")
+    if looks.used:
+        looks.write(w)
     w("}")
     with open(path, "w") as f:
         f.write("\n".join(L) + "\n")
@@ -331,10 +463,11 @@ def control_video(net, geo, scene, ego_id, out_dir, camera=None, max_range=80.0,
     return {"frames": n, "camera": meta}
 
 
-def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm=120.0, av2=None, seed=0, every=1):
+def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm=120.0, av2=None, seed=0, every=1, world3d=True, fetch=False, previews=True):
     """A long-tail scene, ready for NVIDIA tools: out/scene.usda, out/scene.json, out/control/ (frames, camera.json, control.mp4), out/meta.json.
     From the simulator (`area`, optionally a famous-event `scenario` of avlab.famous at `intensity`) or from a real log (`av2`: an Argoverse 2
-    scenario directory)."""
+    scenario directory). With `world3d`, the city around the roads is fused in from Overture (xnet.scene3d; `fetch` downloads it first if it is
+    not in data/scene3d); with `previews`, two offscreen renders are written if pyvista can render here."""
     import jax
 
     from . import carla_export as CE
@@ -371,7 +504,26 @@ def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm
     ego = max(avs, key=lambda v: (v["crashed"], len(v["x"])))  # the AV that crashed, else the one seen longest
     meta.update(ego=ego["id"], ego_crashed=ego["crashed"], frames=scene["frames"], dt=scene["dt"], vehicles=len(scene["vehicles"]))
     json.dump(scene, open(os.path.join(out, "scene.json"), "w"), separators=(",", ":"))
-    to_usda(net, geo, scene, os.path.join(out, "scene.usda"), meta={k: v for k, v in meta.items() if k not in ("knobs", "events")})
+    world = None
+    if world3d and not av2:
+        from . import scene3d as S3
+        if fetch and not os.path.exists(f"{S3.DIR}/{area}_buildings.parquet"):
+            S3.fetch(area)
+        if os.path.exists(f"{S3.DIR}/{area}_buildings.parquet"):
+            world = S3.build_world(area, net, geo, info)
+            meta["world3d"] = world.stats
+        else:
+            meta["world3d"] = f"no 3-D data for {area}: run `python -m xnet.scene3d fetch {area}` or pass fetch=True"
+    to_usda(net, geo, scene, os.path.join(out, "scene.usda"), meta={k: v for k, v in meta.items() if k not in ("knobs", "events", "world3d")}, world=world)
+    if world is not None and previews:
+        try:
+            from . import scene3d as S3
+            k = max(range(len(ego["v"])), key=lambda j: ego["v"][j]) + ego["start"]  # the moment the ego is fastest
+            for view in ("street", "aerial"):
+                S3.preview(world, scene, os.path.join(out, f"preview_{view}.png"), frame=k, ego=ego["id"], view=view)
+            meta["previews"] = True
+        except Exception as e:  # pyvista or an offscreen OpenGL is missing: the USD is still complete
+            meta["previews"] = f"skipped ({type(e).__name__})"
     r = control_video(net, geo, scene, ego["id"], os.path.join(out, "control"))
     meta["control_frames"] = r["frames"]
     json.dump(meta, open(os.path.join(out, "meta.json"), "w"), indent=1, default=float)

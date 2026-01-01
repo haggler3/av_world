@@ -18,7 +18,8 @@ honest account of what it can and cannot do.**
 * **Software and hardware in the loop**: drive any AV from your own controller over TCP, in lockstep (60x real time) or at wall-clock pace with
   deadlines and fallbacks ([SIL_HIL.md](docs/SIL_HIL.md)).
 * **NVIDIA-ready export**: any simulated long-tail scene or real Argoverse 2 log as an OpenUSD stage (Omniverse) and a camera-view
-  map-and-box control video of the kind driving world models such as Cosmos are conditioned on ([NVIDIA.md](docs/NVIDIA.md)).
+  map-and-box control video of the kind driving world models such as Cosmos are conditioned on, set in the real city: buildings at their
+  mapped heights, trees, lamps and signals fused from open map data (Overture / OpenStreetMap) ([NVIDIA.md](docs/NVIDIA.md)).
 * **Long-tail tooling**: sensor faults, aimed human mistakes, dart-outs, famous-incident scenarios, a real-log importer, CARLA export, and
   five methods for teasing novel long-tail data out of the simulator ([report](docs/LONG_TAIL_METHODS.md)).
 

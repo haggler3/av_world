@@ -38,9 +38,9 @@ def test_sensor_blackouts_and_ghosts_are_counted_and_hurt():
 
 def test_adversary_budget_keeps_the_number_of_mistakes():
     beh = dict(BASE, breakdown_rate=4e-3)
-    base, _ = run(X.Behaviour(**beh), seconds=300)
-    neutral, _ = run(X.Behaviour(**beh, adv_brk=40.0, adv_budget=1.0), seconds=300)
-    extra, _ = run(X.Behaviour(**beh, adv_brk=40.0, adv_budget=0.0), seconds=300)
+    base, _ = run(X.Behaviour(**beh), seconds=600)  # a breakdown parks the AV behind it for minutes: shorter runs saturate
+    neutral, _ = run(X.Behaviour(**beh, adv_brk=40.0, adv_budget=1.0), seconds=600)
+    extra, _ = run(X.Behaviour(**beh, adv_brk=40.0, adv_budget=0.0), seconds=600)
     assert base["breakdowns"] > 20
     assert 0.6 * base["breakdowns"] < neutral["breakdowns"] < 1.5 * base["breakdowns"]  # same mistakes, aimed
     assert extra["breakdowns"] > 1.5 * base["breakdowns"]  # more mistakes
@@ -68,7 +68,7 @@ def test_dart_outs_create_the_masked_pedestrian_crash():
 def test_tailgaters_keep_a_short_headway():
     _, sim = run(X.Behaviour(**BASE, p_tailgate=1.0), seconds=120)
     st = sim.st
-    human = np.asarray(st.alive & ~st.av)
+    human = np.asarray(st.alive & ~st.av & (st.kind != X.BUS))  # buses keep their own 1.6 s
     assert human.sum() > 5 and float(np.asarray(st.T)[human].max()) < 0.71
     _, base = run(X.Behaviour(**BASE), seconds=120)
     hb = np.asarray(base.st.alive & ~base.st.av)
