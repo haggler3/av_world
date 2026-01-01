@@ -1,0 +1,54 @@
+{
+ "t_s": 195.8,
+ "frame": 28,
+ "types": [
+  "left-turn"
+ ],
+ "vehicles": [
+  {
+   "slot": 88,
+   "kind": "car",
+   "where": "inside junction 245, turning straight",
+   "xy": [
+    3615.6,
+    785.4
+   ],
+   "light_on_approach": "green",
+   "came_through": null,
+   "node": 245,
+   "speed_at_impact_kmh": 18.7,
+   "speed_3s_before_kmh": 28.6,
+   "peak_braking_mps2": -3.6,
+   "braked_hard_s_before_impact": 4.8,
+   "contributing": [
+    "slippery road (friction 0.40)"
+   ]
+  },
+  {
+   "slot": 212,
+   "kind": "AV",
+   "where": "inside junction 245, turning left",
+   "xy": [
+    3622.4,
+    787.9
+   ],
+   "light_on_approach": "green",
+   "came_through": null,
+   "node": 245,
+   "speed_at_impact_kmh": 59.2,
+   "speed_3s_before_kmh": 55.9,
+   "peak_braking_mps2": -0.0,
+   "braked_hard_s_before_impact": null,
+   "contributing": [
+    "slippery road (friction 0.40)"
+   ]
+  }
+ ],
+ "closing_speed_kmh": 40.5,
+ "pedestrians_crossing_nearby_city_wide": 55,
+ "centre_xy": [
+  3619.0,
+  786.6
+ ],
+ "summary": "Left-turn crash: a car (19 km/h) and a AV (59 km/h), closing at 40 km/h. Contributing: slippery road (friction 0.40)."
+}
