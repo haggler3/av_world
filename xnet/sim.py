@@ -70,6 +70,7 @@ class Reward(NamedTuple):
 
 
 R = Reward()
+SHIELD = True  # learned AVs drive under the safety envelope; False = the raw policy (read at trace time, like R)
 
 
 class State(NamedTuple):
@@ -401,8 +402,8 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
         u_pol, aux = policy_fn(obs, pkey)
         u0 = jnp.clip(u_pol[:, 0], -1.0, 1.0)
         a_pol = jnp.where(u0 >= 0.0, 3.0 * u0, 8.0 * u0)
-        a_av = jnp.maximum(jnp.minimum(a_pol, shield), -9.0)
-        shield_cut = jnp.where(av_ctl, a_pol - a_av, 0.0)
+        shield_cut = jnp.where(av_ctl, a_pol - jnp.maximum(jnp.minimum(a_pol, shield), -9.0), 0.0)  # what the envelope takes off
+        a_av = jnp.maximum(jnp.minimum(a_pol, shield) if SHIELD else a_pol, -9.0)
         acc = jnp.where(av_ctl & ~halted, a_av, acc)
         gsc = jnp.where(st.av, 1.15 + 0.35 * jnp.tanh(u_pol[:, 1]), st.gsc)
     acc = jnp.where(halted, -9.0, acc)
