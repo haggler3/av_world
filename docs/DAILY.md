@@ -69,8 +69,44 @@ the windows of a trip share a world, so they are somewhat too narrow.
 Prior art: Maresca et al., [Are you a robot? Detecting autonomous vehicles from behavior analysis (ICRA 2024)](https://arxiv.org/abs/2403.09571), report that
 performance depends on history length, with real driving data.
 
+### 3. Added on request: exposure bias in a world model (`python -m wmplan.exposure`, ~12 min after `python -m wmplan.data`)
+
+Inspired by the Waymo "World Modeling, Simulation" role (autoregressive exposure-bias mitigation such as Self-Forcing, stable long-horizon,
+action-conditioned rollouts). The smallest honest version in this repo: a one-AV scene model on the 28-feature observation and the 2-d action
+from `wmplan/data.py` (320 k training windows, 42 k windows from a held-out city copy), compared on open-loop 15-step (3 s) rollouts.
+
+```
+model (same in all variants): x_{t+1} = x_t + g(x_t, u_t), g a 2-hidden-layer MLP (192), standardised features
+TF        loss on one step from the true x_t at each of the 15 steps
+TF+noise  the same with N(0, 0.15^2) noise added to the input x_t
+SF-stop   unroll 15 steps on the model's own output, loss at every step, gradient stopped between steps
+SF        the same unroll, gradient through all 15 steps (backprop through time)
+1000 Adam steps (batch 512) x 3 seeds per variant; evaluate open-loop from the true x_0 with the logged actions, RMSE per step
+```
+
+Prediction (`results/daily/2026-11-02/prediction_exposure.md`, written after a 300-step quick run): TF has the lowest one-step error; SF's
+step-15 error is at least 10 % lower than TF's with non-overlapping seed ranges; TF+noise does not close the gap; SF-stop lands between or equal. **All held.**
+
+| variant | step 1 (0.2 s) | step 5 (1 s) | step 15 (3 s), mean [min, max over 3 seeds] |
+|---|---|---|---|
+| hold the scene (no model) | 0.327 | | 0.867 |
+| TF | **0.212** | 0.465 | 0.824 [0.784, 0.868] |
+| TF+noise | 0.231 | 0.471 | 0.792 [0.787, 0.798] |
+| SF-stop | 0.239 | 0.436 | 0.638 [0.632, 0.642] |
+| SF | 0.247 | **0.429** | **0.626** [0.624, 0.627] |
+
+Result in two sentences: the teacher-forced model wins one step (0.212 vs 0.247) but barely beats holding the scene after 3 s (0.824 vs 0.867), while
+training on its own rollouts cuts the 3 s error by 24 % (0.626 vs 0.824) at a 17 % cost in one-step error; the gradient through time adds only a
+little over stopping it (0.626 vs 0.638, ranges do not overlap). Limits: a feed-forward model on 28 hand-made features, three seeds, one held-out city copy, standardised RMSE
+rather than a task metric (planning or crash prediction was not re-tested), and the TF seed spread is wide at step 15 (0.78 to 0.87).
+
+![exposure](img/exposure.png)
+
+Prior art: Self-Forcing for autoregressive video diffusion trains on the model's own rollouts (Huang et al. 2025, [arXiv 2506.08009](https://arxiv.org/abs/2506.08009)); input-noise augmentation and scheduled sampling are the older fixes.
+Files: `wmplan/exposure.py`, a test in `tests/test_daily.py`, `results/wmplan/exposure.json`.
+
 ### What changed in the repo
-`avlab/butterfly.py`, `avlab/watchtime.py`, `tests/test_daily.py` (3 tests); `results/butterfly/`, `results/watchtime/`, `results/daily/2026-11-02/`;
+`avlab/butterfly.py`, `avlab/watchtime.py`, `wmplan/exposure.py`, `tests/test_daily.py` (4 tests); `results/butterfly/`, `results/watchtime/`, `results/daily/2026-11-02/`;
 `docs/img/butterfly.{png,gif}`, `docs/img/watchtime.png`. Nothing in `xnet/` changed.
 
 ### What to try next (running list)
@@ -80,3 +116,4 @@ performance depends on history length, with real driving data.
 3. Watch time with richer features (stop-and-go counts, headway to the leader) and a sequence model; does the rule-based AV stay invisible?
 4. Trip-level discriminator for the human-like reward ([FIXES.md #9](FIXES.md#9-driving-like-people-the-av-turing-test-attempted-twice)).
 5. Seeds per AVBench scenario with intervals (a GPU job).
+6. Does the self-forced scene model plan better? Swap it into the v2 planner and re-run the crash-aversion test; try a sequence model and a longer horizon, where the TF model should fall behind "hold the scene".

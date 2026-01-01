@@ -48,3 +48,22 @@ def test_window_features_and_curve():
         segs.append((10 + rng.normal(0, 1, nn), rng.normal(0, 1.0 if is_av else 0.7, nn), is_av, k % 4, k))
     r = W.curve(segs, windows=(3, 60), n_boot=50)
     assert r[60]["auc"] >= r[3]["auc"] - 0.05 and r[3]["auc"] > 0.55
+
+
+def test_exposure_rollout_and_losses():
+    import jax
+    from wmplan import exposure as E
+    p = E.init(jax.random.PRNGKey(0), 5 + 2, 5)
+    x0, us = jnp.zeros((3, 5)), jnp.ones((3, 4, 2))
+    xs = E.rollout(p, x0, us)
+    assert xs.shape == (3, 4, 5)
+    x1 = x0 + E.g(p, x0, us[:, 0])  # the first rollout step is one residual step
+    assert np.allclose(np.asarray(xs[:, 0]), np.asarray(x1), atol=1e-5)
+    b = {"x": jnp.zeros((3, 5, 5)), "u": jnp.ones((3, 4, 2)), "valid": jnp.ones((3, 5))}
+    key = jax.random.PRNGKey(1)
+    ls = {v: float(E.loss_fn(p, b, v, key)) for v in E.VARIANTS}
+    assert all(np.isfinite(list(ls.values())))
+    assert abs(ls["SF"] - ls["SF-stop"]) < 1e-5  # same forward pass; they differ only in the gradient
+    g_sf = jax.grad(E.loss_fn)(p, b, "SF", key)
+    g_stop = jax.grad(E.loss_fn)(p, b, "SF-stop", key)
+    assert float(jnp.abs(g_sf[0]["w"] - g_stop[0]["w"]).max()) > 0
