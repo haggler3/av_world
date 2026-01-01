@@ -72,9 +72,9 @@ def headway_bank(real_clean, tracker_noise, iters=2):
     return {"bank": B, "history": hist, "real_p10": real_p10}
 
 
-@stage("refit", deps=("real_clean", "tracker_noise", "headway_bank"), config={"iters": 3, "pop": 8, "version": 2})
-def refit(real_clean, tracker_noise, headway_bank, iters=3, pop=8, version=2):
-    """version 2: the scoreboard includes standstill gaps (version 1 bought tight following with s0 x 0.3)."""
+@stage("refit", deps=("real_clean", "tracker_noise", "headway_bank"), config={"iters": 4, "pop": 8, "version": 2})
+def refit(real_clean, tracker_noise, headway_bank, iters=4, pop=8, version=2):
+    """version 2: the scoreboard includes standstill gaps (version 1 bought tight following with s0 x 0.3) and amax_scale is a knob."""
     real_P = ST.pool([ST.measure(s) for s in real_clean])
     return RF.cem(real_P, tracker_noise, headway_bank["bank"], iters=cfg(iters, 2), pop=cfg(pop, 6), minutes=cfg(3, 2), log=log)
 

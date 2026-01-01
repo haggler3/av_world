@@ -105,6 +105,7 @@ class Behaviour(NamedTuple):
     # is s* = s0 + v T at every speed; plain IDM inflates it by 1 / sqrt(1 - (v / v0)^4) as v nears v0 (urban followers then hang back).
     idm_plus: float = 0.0
     v0_scale: float = 1.0  # multiplies human drivers' desired-speed factor (urban drivers who want to go faster close up on leaders)
+    amax_scale: float = 1.0  # multiplies human car drivers' maximum acceleration (real launches from a stop are harder than 1.2-2.0 m/s^2)
 
 
 class Reward(NamedTuple):
@@ -855,11 +856,12 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
                wait_t=wait_t, red_t=red_t, ydec=ydec, ran_red=ran_red, stuck_t=stuck_t, behind_t=behind_t, lc_t=lc_t, t0=st.t0,
                acc=jnp.where(alive, acc, 0.0), gsc=gsc, blind_t=jnp.where(alive, blind_t, 0.0), pulse_t=jnp.where(alive, pulse_t, 0.0),
                uid=st.uid)
+    vals["amax"] = jnp.where(human & (vals["kind"] == CAR), vals["amax"] * beh.amax_scale, vals["amax"])
     if BANK is not None:  # sim-to-real: a share `bank` of human car drivers take a row of the fitted trait table
         from_bank = human & (vals["kind"] == CAR) & (jnp.mod(u_sp[8] * 613.0, 1.0) < beh.bank)
         row = jnp.minimum((jnp.mod(u_sp[13] * 7919.0, 1.0) * BANK.shape[0]).astype(jnp.int32), BANK.shape[0] - 1)
         for f, c in (("T", 0), ("s0", 1), ("amax", 2), ("b", 3)):
-            vals[f] = jnp.where(from_bank, BANK[row, c] * (beh.s0_scale if f == "s0" else 1.0), vals[f])
+            vals[f] = jnp.where(from_bank, BANK[row, c] * (beh.s0_scale if f == "s0" else beh.amax_scale if f == "amax" else 1.0), vals[f])
     new = {k: cur[k].at[slots].set(jnp.where(ok_sp, vals[k], cur[k][slots])) for k in cur}
 
     lk = jnp.where(st.alive & on_link, link, L)
