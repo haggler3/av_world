@@ -1,0 +1,178 @@
+<title>Only-in-Simulation Nets</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column with full-width figures; a verdict table up top, then one section per idea (claim, math, figure, numbers, limits). */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #14171c; --muted: #565c66; --line: #dde0e6; --accent: #2a78d6; --accent-2: #eb6834;
+  --math-bg: #eef1f6; --ok: #0e7a55; --ok-bg: #dff3ea; --mixed: #8a5a00; --mixed-bg: #fbecc8; --skip: #565c66; --skip-bg: #e7e9ee; --shadow: 0 1px 2px rgba(20,23,28,.06);
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --serif: "IBM Plex Serif", Georgia, serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1216; --surface: #171b21; --fg: #e8ebf0; --muted: #a2a9b4; --line: #2a303a; --accent: #5a9cf0; --accent-2: #f08457;
+  --math-bg: #1d232c; --ok: #5fd6a4; --ok-bg: #123a2c; --mixed: #f0c35a; --mixed-bg: #3a2e10; --skip: #a2a9b4; --skip-bg: #242a33; --shadow: none; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #171b21; --fg: #e8ebf0; --muted: #a2a9b4; --line: #2a303a; --accent: #5a9cf0; --accent-2: #f08457;
+  --math-bg: #1d232c; --ok: #5fd6a4; --ok-bg: #123a2c; --mixed: #f0c35a; --mixed-bg: #3a2e10; --skip: #a2a9b4; --skip-bg: #242a33; --shadow: none; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-block: 40px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+header { display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(32px, 5vw, 48px); line-height: 1.1; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.lede { font-size: 18px; color: var(--muted); margin: 0; max-width: 62ch; }
+h2 { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.2; margin: 0; text-wrap: balance; }
+h3 { font-size: 13px; font-family: var(--mono); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+p { margin: 0; max-width: 68ch; }
+section { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px; }
+.idea { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.pill { font-family: var(--mono); font-size: 12px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
+.ok { background: var(--ok-bg); color: var(--ok); } .mixed { background: var(--mixed-bg); color: var(--mixed); } .skip { background: var(--skip-bg); color: var(--skip); }
+.claim { font-size: 17px; font-weight: 500; max-width: 68ch; }
+.math { font-family: var(--mono); font-size: 14px; background: var(--math-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; line-height: 1.9; white-space: pre; margin: 0; max-width: 100%; }
+.math b { font-weight: 500; color: var(--accent); }
+figure { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+figure .card { background: #fcfcfb; border: 1px solid var(--line); border-radius: 8px; padding: 8px; box-shadow: var(--shadow); }
+figure img { display: block; width: 100%; height: auto; border-radius: 4px; }
+figure.gif .card { background: #0d1117; border-color: #2a303a; padding: 0; overflow: hidden; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 80ch; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); max-width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 560px; }
+th, td { padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+tr.hi td { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.note { border-left: 3px solid var(--accent-2); padding: 2px 0 2px 14px; max-width: 68ch; color: var(--fg); }
+.note b { font-weight: 600; }
+code { font-family: var(--mono); font-size: .9em; background: var(--math-bg); padding: 1px 5px; border-radius: 4px; }
+pre.cmd { font-family: var(--mono); font-size: 13px; background: var(--math-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; margin: 0; line-height: 1.7; }
+footer { color: var(--muted); font-size: 14px; max-width: 68ch; }
+a { color: var(--accent); }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } main { gap: 44px; } .math { font-size: 12.5px; } }
+</style>
+
+<body>
+<main>
+<header>
+  <div class="eyebrow">av_world · six networks trained on hidden truth, exact interventions and many known worlds</div>
+  <h1>Only-in-Simulation Nets</h1>
+  <p class="lede">PPO and next-step world models can be trained in any simulator. These six networks need three things this one has: every driver's hidden traits in the state, forks of the whole city that differ in one chosen thing with every other die held fixed, and thousands of worlds with known settings next to 400 real Argoverse 2 scenes.</p>
+</header>
+
+<section aria-labelledby="summary">
+  <h2 id="summary">Results</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Net</th><th>Question</th><th>Verdict</th><th>The number</th></tr></thead>
+    <tbody>
+      <tr><td>N2</td><td>Which action makes this moment safe?</td><td><span class="pill ok">works</span></td><td>At a 10 % intervention budget, bad outcomes −71 % (0.186 % → 0.054 %). The same network trained on the log makes them worse (0.314 %)</td></tr>
+      <tr><td>N7</td><td>What will the human behind me do?</td><td><span class="pill ok">works</span></td><td>Effect error when braking 0.11 m/s², against 0.21 (assume nothing) and 0.37 (trained on the log)</td></tr>
+      <tr><td>N6</td><td>Where are the road users I cannot see?</td><td><span class="pill ok">works</span></td><td>AUROC 0.968 per cell vs 0.926 from shadow geometry. Someone hidden 25 m ahead: 0.978 vs 0.770</td></tr>
+      <tr><td>N1</td><td>What kind of driver is that?</td><td><span class="pill mixed">style yes, intent no</span></td><td>Headway R² 0.41, acceleration 0.44 (linear ≈ 0). Red-light runners and aggressive drivers: chance</td></tr>
+      <tr><td>N5</td><td>Who caused this crash?</td><td><span class="pill mixed">mixed</span></td><td>A mistake is a but-for cause in 1.6 % of 2,948 crashes; a careful driver in one seat avoids 46.6 %. Ranking AUROC 0.94, but “the faster of the two” names one driver better</td></tr>
+      <tr><td>N4</td><td>Which settings explain real traffic?</td><td><span class="pill mixed">diagnoses the gap</span></td><td>Posterior draws 2.24 SD from real statistics (point fit 2.60, prior 3.50). Three real statistics lie outside every simulated world</td></tr>
+    </tbody></table></div>
+</section>
+
+<section aria-labelledby="s2">
+  <div class="head"><span class="idea">N2</span><h2 id="s2">An interventional risk critic</h2><span class="pill ok">works</span></div>
+  <p class="claim">Fork the city at a moment, give the AVs five different actions for 2 s, replay 4 s with the same dice. A critic trained on those forks chooses well. The same network trained on the log is confounded, and does worse than not intervening at all.</p>
+  <figure class="gif"><div class="card"><img src="img/forks.gif" alt="Five copies of the same junction, one per action. In the accelerate branch the followed AV enters the junction too fast and its frame turns red." loading="lazy"></div>
+    <figcaption>One moment, five futures, the same dice. A red frame means a bad outcome for the AV we follow; here only accelerating produces one.</figcaption></figure>
+  <pre class="math">Q(o, a) = P( crash, near miss or more than 1 m inside the safety barrier, in 4 s | o, do(a) )
+
+interventional   every state × all 5 actions, from the forks         (560,124 AV-moments × 6 branches, 238 s to simulate)
+observational    every state × the one action the policy took (the log)
+Latin square     AV i in branch b takes action (b + hᵢ) mod 5, so neighbours do not all act alike</pre>
+  <figure><div class="card"><img src="img/n2_critic.png" alt="Left: bad-outcome rate against intervention budget on log axes; the interventional critic falls to 0.054 percent at 10 percent, the observational critic rises above the policy. Right: the true effect of accelerating is plus 3.5 points, which the interventional critic matches and the observational critic misses."></div>
+    <figcaption>Left: each critic may change the action at a share of moments, where it predicts the largest risk reduction. Right: what each action does, against the truth from the forks.</figcaption></figure>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Intervention budget</th><th class="n">0.1 %</th><th class="n">1 %</th><th class="n">10 %</th><th class="n">30 %</th></tr></thead>
+    <tbody>
+      <tr><td>the policy as is</td><td class="n" colspan="4">0.186 % bad outcomes</td></tr>
+      <tr class="hi"><td>interventional critic</td><td class="n">0.166 %</td><td class="n">0.107 %</td><td class="n">0.054 %</td><td class="n">0.053 %</td></tr>
+      <tr><td>observational critic</td><td class="n">0.181 %</td><td class="n">0.195 %</td><td class="n">0.314 %</td><td class="n">1.351 %</td></tr>
+      <tr><td>random moments, brake harder</td><td class="n">0.186 %</td><td class="n">0.184 %</td><td class="n">0.179 %</td><td class="n">0.145 %</td></tr>
+      <tr><td>oracle</td><td class="n">0.086 %</td><td class="n">0.019 %</td><td class="n">0.019 %</td><td class="n">0.019 %</td></tr>
+    </tbody></table></div>
+  <p class="note"><b>Confounding, measured.</b> In the log the policy accelerates only where it is safe to, so the observational critic thinks accelerating is harmless: its predicted effect is −0.02 points, the true effect +3.5. The interventional critic’s predicted risk changes correlate 0.74 with the true paired changes; the observational critic’s correlate −0.01.</p>
+</section>
+
+<section aria-labelledby="s7">
+  <div class="head"><span class="idea">N7</span><h2 id="s7">How the human behind answers</h2><span class="pill ok">works</span></div>
+  <p class="claim">With shared dice, the follower’s acceleration in a branch minus its acceleration in the unperturbed branch is the causal effect of the AV’s action. A network trained on those differences predicts it. A network trained on the log does worse than assuming the follower ignores us.</p>
+  <pre class="math">δₖ(t) = a_follower(t | do(aₖ)) − a_follower(t | nobody perturbed),     t = 0.2 … 3.8 s        168,342 AV-moments with a human behind</pre>
+  <figure><div class="card"><img src="img/n7_response.png" alt="Left: error of the predicted effect per action; the interventional model is lowest for braking and accelerating, predicting zero is lowest for gap changes. Right: predicted against true effect of braking harder on the follower's hardest braking."></div>
+    <figcaption>Where the action really moves the follower (braking, accelerating), the interventional model halves the error. Where it barely does (gap acceptance), predicting nothing is better and the model’s noise shows.</figcaption></figure>
+</section>
+
+<section aria-labelledby="s6">
+  <div class="head"><span class="idea">N6</span><h2 id="s6">Seeing through the bus</h2><span class="pill ok">works</span></div>
+  <p class="claim">Every vehicle’s true position is known, so for every AV the simulator can label exactly who is hidden behind whom. A network that sees only what the AV sees learns where the hidden road users are.</p>
+  <figure class="gif"><div class="card"><img src="img/occlusion.gif" alt="The AV's own frame. Orange visible cars, dashed hidden cars, and a blue belief map that lights up behind the visible cars where the hidden ones are." loading="lazy"></div>
+    <figcaption>The AV’s own frame. The blue belief, computed from the orange (visible) cars only, lights up behind them, where the dashed hidden cars really are.</figcaption></figure>
+  <pre class="math">hidden  ⇔  the sight line from the AV to its centre crosses another vehicle’s footprint (slab test on oriented boxes), within 40 m
+net     visible road users (position, heading, speed, length, kind) → deep set → 8 × 8 grid of P(hidden here) + P(hidden 25 m ahead)</pre>
+  <figure><div class="card"><img src="img/n6_occlusion.png" alt="AUROC bars: network 0.968, shadow geometry 0.926, marginal prior 0.874; hidden ahead: network 0.978, shadow 0.770; and three example grids of truth against prediction."></div>
+    <figcaption>219,468 AV views, split by copy. This covers vehicles and cyclists only: pedestrians here are crossing processes, not positioned agents.</figcaption></figure>
+</section>
+
+<section aria-labelledby="s1">
+  <div class="head"><span class="idea">N1</span><h2 id="s1">The mind reader</h2><span class="pill mixed">style yes, intent no</span></div>
+  <p class="claim">From 10 s of a car’s ordinary driving, a causal convolution reads its driving style: headway, acceleration, desired speed. It cannot tell a red-light runner or an aggressive driver from anyone else.</p>
+  <figure class="gif"><div class="card"><img src="img/mindreader.gif" alt="Two copies of a junction. Left, cars coloured by their true following headway; right, by the network's estimate from each car's last 10 seconds." loading="lazy"></div>
+    <figcaption>Red: tailgater (1.0 s). Blue: cautious (1.8 s). Left: what the simulator drew. Right: what the network infers from the car’s last 10 s. Its guesses lean to the middle, as an R² of 0.4 implies.</figcaption></figure>
+  <figure><div class="card"><img src="img/n1_mindreader.png" alt="AUROC near 0.5 for runner and aggressive; R-squared 0.41, 0.44, 0.03, 0.37, 0.34 for five style traits against near zero for the linear model; and a hexbin of predicted against true headway."></div>
+    <figcaption>625 k windows from 16 copies, split by copy. A red-light runner looks like everyone else until a light turns; braking style shows only when a driver must brake.</figcaption></figure>
+</section>
+
+<section aria-labelledby="s5">
+  <div class="head"><span class="idea">N5</span><h2 id="s5">But-for blame</h2><span class="pill mixed">mixed</span></div>
+  <p class="claim">Rewind every crash 6–8 s and replay it once per nearby driver, each time with that driver’s mistakes off, then with that driver driving carefully. Crashes almost never hinge on one mistake. Half hinge on someone’s ordinary driving style.</p>
+  <figure class="gif"><div class="card"><img src="img/blame.gif" alt="Left: the crash as it happened, two vehicles turning red. Right: the same city with the outlined driver's mistake switched off; no crash." loading="lazy"></div>
+    <figcaption>Left: what happened. Right: the same city and dice, with the outlined driver’s mistake switched off from 6–8 s before.</figcaption></figure>
+  <figure><div class="card"><img src="img/n5_blame.png" alt="Left: 1.6 percent of crashes have a mistake cause, 46.6 percent could be avoided by a careful driver. Middle and right: top-1 and AUROC for the network and three heuristics on both questions."></div>
+    <figcaption>2,948 crashes in the stress world, 17 branches each. The network sees only what an investigator could: speeds, accelerations, red crossings, lane changes, who collided.</figcaption></figure>
+  <p class="note"><b>Reading it.</b> For “who could have avoided it”, the faster of the two vehicles is a strong rule: it names one driver better than the network (top-1 0.95 vs 0.89), while the network ranks everyone better (AUROC 0.94 vs 0.91). Knowing who made a mistake is a poor guide to who could have prevented the crash (top-1 0.47). The mistake question has 12 test crashes, too few to conclude.</p>
+</section>
+
+<section aria-labelledby="s4">
+  <div class="head"><span class="idea">N4</span><h2 id="s4">Which settings explain real traffic?</h2><span class="pill mixed">diagnoses the gap</span></div>
+  <p class="claim">Simulate 1,024 worlds with random settings, summarise each the way real logs can be summarised, and train a network to map statistics to a posterior over settings. Pointed at real Argoverse 2, the posterior beats a point fit, and shows that the simulator cannot reach real traffic.</p>
+  <pre class="math">q(θ | s) = Σ_{c=1..4} π_c(s) · N( logit u ; μ_c(s), diag σ_c²(s) )        u = (θ − θ_min) / (θ_max − θ_min)
+θ (9)   p_red, distraction, p_aggressive, T_med, T_sigma, acceleration noise, brake pulses, pedestrian volume, p_ped_violate
+s (6)   hard brakes /h, headway &lt; 0.8 s, TTC &lt; 2 s, TTC &lt; 1 s, median speed, acceleration SD</pre>
+  <figure><div class="card"><img src="img/n4_sbi.png" alt="Left: posterior intervals for nine settings on real data; T_med and acceleration noise sit at the prior's edge. Middle: posterior over prior SD; car-following settings below 0.4, mistake rates above 0.8. Right: U-shaped calibration curves."></div>
+    <figcaption>Middle: on held-out simulated worlds, car-following settings are pinned down (posterior SD 0.26–0.34 of the prior’s); mistake rates are not (0.83–0.90). Right: U-shaped ranks mean the posterior is somewhat too confident.</figcaption></figure>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Posterior-predictive check, 32 fresh copies</th><th class="n">Distance to real statistics (SD)</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td>posterior draws</td><td class="n">2.24 [2.17, 2.33]</td></tr>
+      <tr><td>CEM point fit (tuned to four of the six statistics)</td><td class="n">2.60 [2.51, 2.68]</td></tr>
+      <tr><td>prior draws</td><td class="n">3.50 [3.34, 3.66]</td></tr>
+    </tbody></table></div>
+  <p class="note"><b>Misspecification, found.</b> Tight following, TTC under 1 s and acceleration SD in real traffic lie outside the range of every simulated world. The posterior therefore piles onto the edge of the box: shortest headway, most acceleration noise. Its tight intervals there are extrapolation, not knowledge. Within this prior, the simulator’s drivers cannot follow as closely, or brake as late, as real ones.</p>
+</section>
+
+<section aria-labelledby="speed">
+  <h2 id="speed">Making it fast on 4 CPU cores</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Change</th><th>Measured</th></tr></thead>
+    <tbody>
+      <tr><td>Record inside one jitted scan instead of copying the state to the host every step</td><td>×1.4 (the plan expected ×10–30)</td></tr>
+      <tr><td>The 4 cores as 4 XLA devices, copies under pmap</td><td>×2.07</td></tr>
+      <tr><td>Forks as one vmapped batch, one compile</td><td>560,124 AV-moments × 6 branches in 238 s</td></tr>
+      <tr><td>Causal convolution as shifted copies and one matmul</td><td>×60 per training step</td></tr>
+    </tbody></table></div>
+  <pre class="cmd">python -m nets.forks 150 &amp;&amp; python -m nets.counterfactual &amp;&amp; python -m nets.response     # N2, N7
+python -m nets.mindreader &amp;&amp; python -m nets.occlusion &amp;&amp; python -m nets.blame 20       # N1, N6, N5
+python -m nets.sbi 1024                                                                 # N4
+python scripts/make_nets_figures.py &amp;&amp; python scripts/make_nets_gifs.py
+pytest tests/test_nets.py</pre>
+  <footer>Written up in <code>docs/NEURAL_NETS.md</code>. Code in <code>nets/</code>; every dataset is cached under <code>results/nets/</code>.</footer>
+</section>
+</main>
+</body>

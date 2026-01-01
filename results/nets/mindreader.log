@@ -1,0 +1,22 @@
+minute 1: 12s
+minute 2: 19s
+minute 3: 20s
+minute 4: 21s
+minute 5: 22s
+minute 6: 23s
+minute 7: 24s
+minute 8: 25s
+624701 windows from 16 copies (41s)
+/home/user/av_world/nets/mindreader.py:127: RuntimeWarning: Mean of empty slice
+  f = [np.nanmean(ratio, 1), np.nanmax(ratio, 1), acc.min(1), acc.max(1), np.nanmean(np.where(fol, acc, np.nan), 1),
+/home/user/av_world/nets/mindreader.py:128: RuntimeWarning: All-NaN slice encountered
+  np.nanmedian(thw, 1), np.nanmin(thw, 1), (v < 0.5).mean(1), fol.mean(1), v[:, -1] / 15.0, np.clip(dist[:, -1], 0, 150) / 100.0,
+runner {'net_auroc': 0.516, 'linear_auroc': 0.503, 'base_rate': 0.259}
+aggr {'net_auroc': 0.503, 'linear_auroc': 0.494, 'base_rate': 0.202}
+red_soon {'net_auroc': 1.0, 'linear_auroc': 0.999, 'base_rate': 0.0}
+T {'net_r2': 0.409, 'linear_r2': 0.004}
+amax {'net_r2': 0.444, 'linear_r2': 0.044}
+b {'net_r2': 0.033, 'linear_r2': -0.003}
+v0f {'net_r2': 0.367, 'linear_r2': 0.009}
+s0 {'net_r2': 0.336, 'linear_r2': 0.002}
+done in 228s
