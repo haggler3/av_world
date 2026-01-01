@@ -489,6 +489,15 @@ rates: red-runner and left-turn crashes, cut-in rear-ends, an occasional pile-up
 dart-outs, sensor-blackout crashes. Phantom braking never gets an AV rear-ended here (2,300 ghosts, no crash): the following
 drivers keep their headway. Not representable: wrong-way drivers, emergency vehicles, debris, animals.
 
+**Real logs, intersections, and an honest audit.** [docs/DATA_IMPORT.md](docs/DATA_IMPORT.md): Argoverse 2 scenarios (tested on 150 real ones, public
+bucket) and Waymo Open Motion scenarios (adapter tested on the documented layout only) become scenes, road networks and simulator states
+(`av-world fetch-av2`, `import-av2`, `validate-av2`); the simulator's drivers predict the logged vehicles about twice as badly as constant
+velocity (17 m against 9 m at 5 s), so they are not calibrated to real traffic. [docs/JUNCTIONS.md](docs/JUNCTIONS.md): the intersection
+detector for imported maps (roundabouts, divided roads, overpasses, signal tags; 110,000 nodes in 2.3 s) with pseudocode and its limits.
+[docs/INCIDENT_AUDIT.md](docs/INCIDENT_AUDIT.md): whether the long tail that matters comes out of the simulator. It produces failure
+*mechanisms* on demand, not the famous incidents (fidelity 0.2-0.6 by feature count; pedestrian impacts 24 mph against Tempe's 43), and its
+everyday near-miss tail is 4-6x thinner than real Argoverse 2 traffic.
+
 **Famous events as scenarios** ([docs/FAMOUS_EVENTS.md](docs/FAMOUS_EVENTS.md)): ten mechanisms from public reports (a misclassified
 jaywalker, dart-out from behind a bus, a stalled vehicle the sensor misses, phantom braking, sun glare, tight cut-ins, red-light
 runners, unprotected lefts, close passes, black ice). They are where trained policies still fail (0.25-0.4 crashes per AV-hour in

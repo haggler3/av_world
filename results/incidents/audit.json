@@ -1,0 +1,301 @@
+{
+ "max_link_speed_mps": 17.88159942626953,
+ "max_lanes_per_direction": 2,
+ "incidents": [
+  {
+   "name": "Tempe, Arizona, 18 March 2018",
+   "features": [
+    {
+     "feature": "pedestrian crosses outside any crosswalk",
+     "level": "absent",
+     "note": "pedestrians only cross at the crosswalks of junctions"
+    },
+    {
+     "feature": "wide arterial at ~45 mph",
+     "level": "approx",
+     "note": "at most two lanes per direction; the speed limits come from the map"
+    },
+    {
+     "feature": "darkness",
+     "level": "absent",
+     "note": "no lighting model"
+    },
+    {
+     "feature": "object seen early but classified inconsistently, so no braking",
+     "level": "approx",
+     "note": "a blackout hides the pedestrian; there is no classification or prediction error"
+    },
+    {
+     "feature": "impact at about 43 mph",
+     "level": "approx",
+     "note": "measured below"
+    },
+    {
+     "feature": "emergency braking off, backup driver inattentive",
+     "level": "absent",
+     "note": "not modelled"
+    },
+    {
+     "feature": "an unusual object (a person pushing a loaded bicycle)",
+     "level": "absent",
+     "note": "pedestrians are one class"
+    }
+   ],
+   "fidelity": 0.21428571428571427,
+   "present": 0,
+   "approx": 3,
+   "absent": 4,
+   "scenario": "jaywalker_misclassified",
+   "counts": {
+    "tail_stalled": 1.0,
+    "tail_pileup": 2.0,
+    "tail_distracted": 0.0,
+    "tail_masked_ped": 0.0,
+    "tail_phantom": 0.0,
+    "tail_blind": 41.0,
+    "tail_cutin": 1.0,
+    "tail_squeeze": 150.0,
+    "blackouts": 371.0,
+    "ghosts": 0.0,
+    "imp_ped_n": 25.0,
+    "imp_ped_speed": 273.3748779296875,
+    "imp_rear_n": 59.0,
+    "imp_rear_closing": 136.64291381835938,
+    "imp_stalled_closing": 2.5666744709014893,
+    "pedestrian": 25.0,
+    "rear-end": 58.0,
+    "left-turn": 0.0,
+    "angle": 0.0,
+    "av_crash": 90.0,
+    "av_pedestrian": 13.0,
+    "av_rear-end": 58.0,
+    "av_left-turn": 0.0,
+    "av_angle": 0.0,
+    "av_hard": 2248.0
+   },
+   "area_hours": 2.6666666666666665,
+   "pedestrian_impact_speed_mph_mean": 24.461584077148437,
+   "stalled_closing_speed_mph_mean": 5.741650791406632,
+   "rear_end_after_phantom_braking": 0.0,
+   "phantom_events": 0.0
+  },
+  {
+   "name": "Driver-assist crashes into stopped emergency vehicles (NHTSA investigation opened August 2021)",
+   "features": [
+    {
+     "feature": "stationary vehicle in or beside the lane",
+     "level": "present",
+     "note": "breakdowns and delivery stops"
+    },
+    {
+     "feature": "flashing lights, cones, a scene around the vehicle",
+     "level": "absent",
+     "note": "a stopped car is just a stopped car"
+    },
+    {
+     "feature": "highway speeds",
+     "level": "absent",
+     "note": "an urban network: free-flow speeds are the limits (measured below)"
+    },
+    {
+     "feature": "stationary object filtered out or missed by the sensors",
+     "level": "approx",
+     "note": "blackouts hide it for 0.6-2 s"
+    },
+    {
+     "feature": "the car ahead changes lane and reveals the stopped one",
+     "level": "approx",
+     "note": "lane changes exist; not set up as a scenario"
+    }
+   ],
+   "fidelity": 0.4,
+   "present": 1,
+   "approx": 2,
+   "absent": 2,
+   "scenario": "stalled_vehicle_missed",
+   "counts": {
+    "tail_stalled": 4.0,
+    "tail_pileup": 1.0,
+    "tail_distracted": 0.0,
+    "tail_masked_ped": 0.0,
+    "tail_phantom": 0.0,
+    "tail_blind": 13.0,
+    "tail_cutin": 1.0,
+    "tail_squeeze": 229.0,
+    "blackouts": 232.0,
+    "ghosts": 0.0,
+    "imp_ped_n": 4.0,
+    "imp_ped_speed": 18.864370346069336,
+    "imp_rear_n": 23.0,
+    "imp_rear_closing": 58.71553421020508,
+    "imp_stalled_closing": 7.970810890197754,
+    "pedestrian": 4.0,
+    "rear-end": 21.0,
+    "left-turn": 1.0,
+    "angle": 0.0,
+    "av_crash": 30.0,
+    "av_pedestrian": 1.0,
+    "av_rear-end": 20.0,
+    "av_left-turn": 0.0,
+    "av_angle": 0.0,
+    "av_hard": 4377.0
+   },
+   "area_hours": 2.6666666666666665,
+   "pedestrian_impact_speed_mph_mean": 10.549899116039276,
+   "stalled_closing_speed_mph_mean": 4.457675990343094,
+   "rear_end_after_phantom_braking": 0.0,
+   "phantom_events": 0.0
+  },
+  {
+   "name": "San Francisco, 2 October 2023",
+   "features": [
+    {
+     "feature": "a pedestrian hit by another vehicle lands in the AV's lane",
+     "level": "absent",
+     "note": "no pedestrian dynamics after an impact"
+    },
+    {
+     "feature": "the AV brakes but cannot stop in time",
+     "level": "approx",
+     "note": "pile-ups into wrecks exist (tail_pileup), not with pedestrians"
+    },
+    {
+     "feature": "the AV moves on after the impact",
+     "level": "absent",
+     "note": "wrecks stay put"
+    },
+    {
+     "feature": "multi-lane urban street at night",
+     "level": "approx",
+     "note": "urban, two lanes at most, no night"
+    }
+   ],
+   "fidelity": 0.25,
+   "present": 0,
+   "approx": 2,
+   "absent": 2
+  },
+  {
+   "name": "Phantom braking (NHTSA preliminary evaluation PE22-002, February 2022)",
+   "features": [
+    {
+     "feature": "hard braking without an obstacle",
+     "level": "present",
+     "note": "p_ghost: a phantom obstacle 12 m ahead"
+    },
+    {
+     "feature": "a following vehicle collides",
+     "level": "present",
+     "note": "followers are real drivers with reaction times; measured below"
+    },
+    {
+     "feature": "highway speeds",
+     "level": "absent",
+     "note": "urban speeds"
+    },
+    {
+     "feature": "braking from a false detection of an overpass, shadow or sign",
+     "level": "approx",
+     "note": "ghosts appear at random, not at overpasses"
+    }
+   ],
+   "fidelity": 0.625,
+   "present": 2,
+   "approx": 1,
+   "absent": 1,
+   "scenario": "phantom_braking",
+   "counts": {
+    "tail_stalled": 0.0,
+    "tail_pileup": 0.0,
+    "tail_distracted": 0.0,
+    "tail_masked_ped": 0.0,
+    "tail_phantom": 0.0,
+    "tail_blind": 0.0,
+    "tail_cutin": 1.0,
+    "tail_squeeze": 240.0,
+    "blackouts": 0.0,
+    "ghosts": 2251.0,
+    "imp_ped_n": 3.0,
+    "imp_ped_speed": 10.116703033447266,
+    "imp_rear_n": 2.0,
+    "imp_rear_closing": 0.0,
+    "imp_stalled_closing": 0.0,
+    "pedestrian": 3.0,
+    "rear-end": 1.0,
+    "left-turn": 2.0,
+    "angle": 0.0,
+    "av_crash": 4.0,
+    "av_pedestrian": 0.0,
+    "av_rear-end": 1.0,
+    "av_left-turn": 1.0,
+    "av_angle": 0.0,
+    "av_hard": 5421.0
+   },
+   "area_hours": 2.6666666666666665,
+   "pedestrian_impact_speed_mph_mean": 7.543688228607178,
+   "rear_end_after_phantom_braking": 0.0,
+   "phantom_events": 2251.0
+  },
+  {
+   "name": "Williston, Florida, May 2016",
+   "features": [
+    {
+     "feature": "a large vehicle turns across the path of the car",
+     "level": "approx",
+     "note": "cars, vans and buses turn across traffic; no tractor-trailers"
+    },
+    {
+     "feature": "camera fails to separate the trailer from the sky",
+     "level": "approx",
+     "note": "blackouts hide any object"
+    },
+    {
+     "feature": "under-ride of a high trailer",
+     "level": "absent",
+     "note": "no vehicle heights"
+    },
+    {
+     "feature": "divided highway at high speed",
+     "level": "absent",
+     "note": "urban network"
+    }
+   ],
+   "fidelity": 0.25,
+   "present": 0,
+   "approx": 2,
+   "absent": 2,
+   "scenario": "unprotected_left",
+   "counts": {
+    "tail_stalled": 0.0,
+    "tail_pileup": 1.0,
+    "tail_distracted": 0.0,
+    "tail_masked_ped": 0.0,
+    "tail_phantom": 0.0,
+    "tail_blind": 0.0,
+    "tail_cutin": 1.0,
+    "tail_squeeze": 268.0,
+    "blackouts": 0.0,
+    "ghosts": 0.0,
+    "imp_ped_n": 13.0,
+    "imp_ped_speed": 118.77010345458984,
+    "imp_rear_n": 3.0,
+    "imp_rear_closing": 11.936251640319824,
+    "imp_stalled_closing": 0.0,
+    "pedestrian": 13.0,
+    "rear-end": 1.0,
+    "left-turn": 2.0,
+    "angle": 0.0,
+    "av_crash": 4.0,
+    "av_pedestrian": 1.0,
+    "av_rear-end": 0.0,
+    "av_left-turn": 0.0,
+    "av_angle": 0.0,
+    "av_hard": 4738.0
+   },
+   "area_hours": 2.6666666666666665,
+   "pedestrian_impact_speed_mph_mean": 20.437593955993652,
+   "rear_end_after_phantom_braking": 0.0,
+   "phantom_events": 0.0
+  }
+ ]
+}

@@ -4,6 +4,9 @@
   av-world bench [--area oakland]            simulated seconds per wall-clock second on this machine
   av-world import-osm map.osm city.npz       OpenStreetMap extract -> road network (then av_world.make("city.npz"))
   av-world export-carla OUT [--area oakland] [--seconds 60] [--osm map.osm]    OpenDRIVE map + trajectories + replay script for CARLA
+  av-world fetch-av2 DIR [--n 20]            download Argoverse 2 scenarios (public bucket, no account)
+  av-world import-av2 SCENARIO_DIR OUT       a logged scenario -> OUT.json (scene), OUT.xodr (OpenDRIVE map), OUT_net.npz (xnet road network)
+  av-world validate-av2 DIR [--limit 100]    how well the simulator's drivers predict the logs (xnet.avdata.validate)
   av-world train [gpu_train options]         PPO on every device (python -m avrl.gpu_train)
   av-world survey | adversary | rare ...     the long-tail tools (python -m avlab.tails / adversary / rare)
 """
@@ -63,6 +66,42 @@ def main(argv=None):
         sim.run(a.warm)
         scene = CE.export(sim, 0, a.seconds, a.out, net=net, geo=geo)
         print(f"{len(scene['vehicles'])} vehicles, {len(scene['pedestrians'])} crossings -> {a.out}.xodr, {a.out}.json, {a.out}_replay.py")
+        return 0
+    if cmd == "fetch-av2":
+        ap = argparse.ArgumentParser()
+        ap.add_argument("dir")
+        ap.add_argument("--n", type=int, default=20)
+        ap.add_argument("--split", default="val")
+        a = ap.parse_args(rest)
+        from xnet import avdata as AV
+        print(f"{len(AV.fetch_av2(a.dir, a.n, a.split))} scenarios -> {a.dir}")
+        return 0
+    if cmd == "import-av2":
+        ap = argparse.ArgumentParser()
+        ap.add_argument("scenario")
+        ap.add_argument("out")
+        ap.add_argument("--every", type=int, default=2)
+        a = ap.parse_args(rest)
+        import json
+
+        from xnet import avdata as AV
+        from xnet import carla_export as CE
+        from xnet import osm
+        sc = AV.read_av2(a.scenario)
+        scene = AV.av2_to_scene(sc, a.every)
+        net, geo, info = AV.av2_network(sc)
+        json.dump(scene, open(f"{a.out}.json", "w"), separators=(",", ":"))
+        open(f"{a.out}.xodr", "w").write(CE.to_opendrive(net, geo, sc["id"]))
+        osm.save(net, f"{a.out}_net.npz")
+        print(f"{sc['city']}: {len(scene['vehicles'])} vehicles, {info['junction_clusters']} junctions, {net['link_len'].shape[0]} links -> {a.out}.json/.xodr/_net.npz")
+        return 0
+    if cmd == "validate-av2":
+        ap = argparse.ArgumentParser()
+        ap.add_argument("dir")
+        ap.add_argument("--limit", type=int, default=100)
+        a = ap.parse_args(rest)
+        from xnet import avdata as AV
+        AV.validate(a.dir, a.limit)
         return 0
     mods = {"train": "avrl.gpu_train", "survey": "avlab.tails", "adversary": "avlab.adversary", "rare": "avlab.rare"}
     if cmd in mods:

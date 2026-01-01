@@ -1,0 +1,194 @@
+{
+ "nominal x1": {
+  "totals": {
+   "moving_veh_s": 70399.8,
+   "hard_brakes": 226,
+   "tight_s": 25.6,
+   "ttc2_s": 132.99999999999986,
+   "ttc1_s": 3.6000000000000005,
+   "ped_close_s": 6.800000000000001
+  },
+  "moving_veh_hours": 19.555500000000002,
+  "hard_brakes_per_h": 11.556851013781287,
+  "tight_follow_share": 0.0003636373966971497,
+  "ttc_under_2s_share": 0.0018892099125281585,
+  "ttc_under_1s_share": 5.1136508910536684e-05,
+  "ped_close_s_per_h": 0.3477282605916494
+ },
+ "nominal x5": {
+  "totals": {
+   "moving_veh_s": 70543.0,
+   "hard_brakes": 223,
+   "tight_s": 26.4,
+   "ttc2_s": 134.39999999999986,
+   "ttc1_s": 4.000000000000001,
+   "ped_close_s": 6.800000000000001
+  },
+  "moving_veh_hours": 19.595277777777778,
+  "hard_brakes_per_h": 11.380292871014841,
+  "tight_follow_share": 0.00037423982535474815,
+  "ttc_under_2s_share": 0.001905220929078716,
+  "ttc_under_1s_share": 5.670300384162852e-05,
+  "ped_close_s_per_h": 0.34702238351076653
+ },
+ "jaywalker_misclassified": {
+  "totals": {
+   "moving_veh_s": 53928.4,
+   "hard_brakes": 101,
+   "tight_s": 22.600000000000005,
+   "ttc2_s": 131.59999999999985,
+   "ttc1_s": 3.2,
+   "ped_close_s": 28.999999999999996
+  },
+  "moving_veh_hours": 14.980111111111112,
+  "hard_brakes_per_h": 6.742273088020411,
+  "tight_follow_share": 0.0004190741798384525,
+  "ttc_under_2s_share": 0.0024402726578203666,
+  "ttc_under_1s_share": 5.9337936968276456e-05,
+  "ped_close_s_per_h": 1.935900193590019
+ },
+ "bus_dartout": {
+  "totals": {
+   "moving_veh_s": 61494.20000000001,
+   "hard_brakes": 138,
+   "tight_s": 36.399999999999984,
+   "ttc2_s": 139.5999999999999,
+   "ttc1_s": 2.8000000000000003,
+   "ped_close_s": 19.200000000000006
+  },
+  "moving_veh_hours": 17.081722222222226,
+  "hard_brakes_per_h": 8.078810684584885,
+  "tight_follow_share": 0.0005919257425903578,
+  "ttc_under_2s_share": 0.0022701327930113716,
+  "ttc_under_1s_share": 4.553274943002754e-05,
+  "ped_close_s_per_h": 1.1240084430726802
+ },
+ "stalled_vehicle_missed": {
+  "totals": {
+   "moving_veh_s": 69518.4,
+   "hard_brakes": 234,
+   "tight_s": 23.599999999999998,
+   "ttc2_s": 131.19999999999987,
+   "ttc1_s": 3.6000000000000005,
+   "ped_close_s": 6.6000000000000005
+  },
+  "moving_veh_hours": 19.310666666666666,
+  "hard_brakes_per_h": 12.117655181937444,
+  "tight_follow_share": 0.0003394784690096435,
+  "ttc_under_2s_share": 0.0018872701327993723,
+  "ttc_under_1s_share": 5.178485120486088e-05,
+  "ped_close_s_per_h": 0.3417800179520818
+ },
+ "phantom_braking": {
+  "totals": {
+   "moving_veh_s": 70505.8,
+   "hard_brakes": 249,
+   "tight_s": 25.2,
+   "ttc2_s": 136.39999999999986,
+   "ttc1_s": 3.6000000000000005,
+   "ped_close_s": 7.4
+  },
+  "moving_veh_hours": 19.584944444444446,
+  "hard_brakes_per_h": 12.71384765508653,
+  "tight_follow_share": 0.0003574174039582559,
+  "ttc_under_2s_share": 0.001934592615075637,
+  "ttc_under_1s_share": 5.1059629136893705e-05,
+  "ped_close_s_per_h": 0.3778412556130134
+ },
+ "sun_glare_blackout": {
+  "totals": {
+   "moving_veh_s": 70403.2,
+   "hard_brakes": 227,
+   "tight_s": 27.0,
+   "ttc2_s": 134.39999999999992,
+   "ttc1_s": 3.6000000000000005,
+   "ped_close_s": 6.800000000000001
+  },
+  "moving_veh_hours": 19.556444444444445,
+  "hard_brakes_per_h": 11.607426935139312,
+  "tight_follow_share": 0.00038350529521385393,
+  "ttc_under_2s_share": 0.0019090041361756274,
+  "ttc_under_1s_share": 5.11340393618472e-05,
+  "ped_close_s_per_h": 0.34771146766056094
+ },
+ "aggressive_cut_in": {
+  "totals": {
+   "moving_veh_s": 70537.20000000001,
+   "hard_brakes": 221,
+   "tight_s": 29.199999999999996,
+   "ttc2_s": 133.19999999999985,
+   "ttc1_s": 4.000000000000001,
+   "ped_close_s": 6.0
+  },
+  "moving_veh_hours": 19.59366666666667,
+  "hard_brakes_per_h": 11.279154828941323,
+  "tight_follow_share": 0.00041396596405868095,
+  "ttc_under_2s_share": 0.0018883652881032961,
+  "ttc_under_1s_share": 5.6707666309408375e-05,
+  "ped_close_s_per_h": 0.3062213980708051
+ },
+ "red_light_runner": {
+  "totals": {
+   "moving_veh_s": 71043.00000000001,
+   "hard_brakes": 238,
+   "tight_s": 26.200000000000003,
+   "ttc2_s": 137.39999999999992,
+   "ttc1_s": 3.2,
+   "ped_close_s": 6.800000000000001
+  },
+  "moving_veh_hours": 19.73416666666667,
+  "hard_brakes_per_h": 12.060301507537686,
+  "tight_follow_share": 0.00036879073237335133,
+  "ttc_under_2s_share": 0.001934039947637345,
+  "ttc_under_1s_share": 4.504314288529481e-05,
+  "ped_close_s_per_h": 0.34458004307250534
+ },
+ "unprotected_left": {
+  "totals": {
+   "moving_veh_s": 76304.8,
+   "hard_brakes": 257,
+   "tight_s": 38.799999999999955,
+   "ttc2_s": 163.60000000000016,
+   "ttc1_s": 7.000000000000002,
+   "ped_close_s": 6.800000000000001
+  },
+  "moving_veh_hours": 21.195777777777778,
+  "hard_brakes_per_h": 12.12505635294241,
+  "tight_follow_share": 0.0005084870152336413,
+  "ttc_under_2s_share": 0.0021440328786655645,
+  "ttc_under_1s_share": 9.173734810916222e-05,
+  "ped_close_s_per_h": 0.32081861167318443
+ },
+ "cyclist_close_pass": {
+  "totals": {
+   "moving_veh_s": 73104.4,
+   "hard_brakes": 200,
+   "tight_s": 59.19999999999992,
+   "ttc2_s": 99.39999999999978,
+   "ttc1_s": 4.2,
+   "ped_close_s": 6.0
+  },
+  "moving_veh_hours": 20.306777777777775,
+  "hard_brakes_per_h": 9.848928381875785,
+  "tight_follow_share": 0.0008098007780653411,
+  "ttc_under_2s_share": 0.001359699279386737,
+  "ttc_under_1s_share": 5.745208222760874e-05,
+  "ped_close_s_per_h": 0.2954678514562735
+ },
+ "black_ice": {
+  "totals": {
+   "moving_veh_s": 57841.80000000001,
+   "hard_brakes": 47,
+   "tight_s": 21.199999999999996,
+   "ttc2_s": 98.59999999999977,
+   "ttc1_s": 3.8,
+   "ped_close_s": 8.2
+  },
+  "moving_veh_hours": 16.06716666666667,
+  "hard_brakes_per_h": 2.9252201694967996,
+  "tight_follow_share": 0.00036651694795113556,
+  "ttc_under_2s_share": 0.001704649578678391,
+  "ttc_under_1s_share": 6.569643406671298e-05,
+  "ped_close_s_per_h": 0.5103575614866757
+ }
+}

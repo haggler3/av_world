@@ -1,0 +1,17 @@
+{
+ "scenarios": 400,
+ "totals": {
+  "moving_veh_s": 33328.800000000025,
+  "hard_brakes": 400,
+  "tight_s": 617.0,
+  "ttc2_s": 348.4,
+  "ttc1_s": 116.80000000000003,
+  "ped_close_s": 15.999999999999996
+ },
+ "moving_veh_hours": 9.258000000000006,
+ "hard_brakes_per_h": 43.205875999135856,
+ "tight_follow_share": 0.018512517702407513,
+ "ttc_under_2s_share": 0.010453421665346479,
+ "ttc_under_1s_share": 0.0035044766088187973,
+ "ped_close_s_per_h": 1.7282350399654338
+}

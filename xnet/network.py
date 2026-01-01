@@ -164,9 +164,13 @@ def load_rows(bbox):
             and r["bbox"]["xmin"] <= e and r["bbox"]["ymax"] >= s and r["bbox"]["ymin"] <= n]
 
 
-def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0, rows=None):
+def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0, rows=None, hints=None, hub=False):
     """`area`: a name in AREAS or a (west, south, east, north) box; `rows`: road segments in the Overture schema (default: the
-    Pittsburgh file; xnet.osm.rows_from_osm makes them from any OpenStreetMap extract)."""
+    Pittsburgh file; xnet.osm.rows_from_osm makes them from any OpenStreetMap extract). `hints`: {"signals": [n, 2], "stops": [m, 2]} positions
+    (this area's metre grid) of tagged traffic signals and stop signs; a junction within 30 m of a signal is signalised, one near a stop sign
+    gets stop control on its minor approaches, and when signals are tagged anywhere the untagged junctions are not guessed to be signalised.
+    `hub`: for one-way snippets of a lane-level map, where trips leave at sinks and enter at sources, count a trip that leaves as one that
+    re-enters elsewhere when deciding which links form the connected network (the default keeps the two-way behaviour used for the built-in areas)."""
     bbox = AREAS[area] if isinstance(area, str) else area
     rng = np.random.default_rng(seed)
     rows = load_rows(bbox) if rows is None else rows
@@ -305,9 +309,23 @@ def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0, rows=None):
             if links[lj]["chain"] != l["chain"] or deg[l["b"]] == 1:
                 rows_.append(li)
                 cols_.append(lj)
-    g = csr_matrix((np.ones(len(rows_)), (rows_, cols_)), shape=(len(links), len(links)))
+    # one-way snippets (a map cut out of a lane-level map): a trip that leaves the map at a sink is replaced by a new one entering at a
+    # source, so route through a virtual hub when deciding which links belong to the connected network
+    has_in = {l["b"] for l in links}
+    hub_id = len(links)
+    for li, l in enumerate(links):
+        if not hub:
+            break
+        if deg[l["b"]] == 1 and not out_of[l["b"]]:
+            rows_.append(li)
+            cols_.append(hub_id)
+        if deg[l["a"]] == 1 and l["a"] not in has_in:
+            rows_.append(hub_id)
+            cols_.append(li)
+    g = csr_matrix((np.ones(len(rows_)), (rows_, cols_)), shape=(len(links) + 1, len(links) + 1))
     _, lab = connected_components(g, directed=True, connection="strong")
-    keep = lab == np.bincount(lab).argmax()
+    lab = lab[:-1]
+    keep = lab == np.bincount(lab[lab >= 0]).argmax() if len(lab) else lab == 0
     remap = -np.ones(len(links), int)
     remap[keep] = np.arange(keep.sum())
     links = [l for l, k in zip(links, keep) if k]
@@ -436,6 +454,7 @@ def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0, rows=None):
     for a_, b_, _sa, _sb, _k in confs:
         if moves[a_]["turn"] != TURN_L and moves[b_]["turn"] != TURN_L:
             cross_pairs.add((moves[a_]["i"], moves[b_]["i"]))
+    hint_sig = None if hints is None else np.asarray(hints.get("signals", np.zeros((0, 2))))
     node_signal = np.zeros(n_nodes, bool)
     link_axis = -np.ones(L, np.int32)
     link_stop = np.zeros(L, bool)
@@ -457,7 +476,9 @@ def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0, rows=None):
             bad = {colour[k] for k in colour if (j, k) in cross_pairs or (k, j) in cross_pairs}
             colour[j] = 0 if 0 not in bad else 1
         ax.update(colour)
-        if trank >= 3 and cross >= 2:
+        tagged_sig = hint_sig is not None and len(hint_sig) and np.min(np.hypot(*(hint_sig - node_xy[nd]).T)) < 30.0
+        guess_sig = trank >= 3 and cross >= 2 and not (hint_sig is not None and len(hint_sig) >= 3)  # tags present: trust them
+        if guess_sig or tagged_sig:
             node_signal[nd] = True
             for j in ins:
                 link_axis[j] = ax[j]
@@ -537,7 +558,7 @@ def build(area="oakland", seed=0, ped_scale=1.0, demand_scale=1.0, rows=None):
     main = lab_m == np.bincount(lab_m).argmax()  # interior destinations only where every car can get to and leave
     interior = [i for i in range(L) if i not in set(edge_out) and llen[i] > 20 and main[i]]
     lw = np.array([llen[i] for i in interior])
-    inner_pick = list(rng.choice(interior, size=min(DEST_MAX - n_edge, len(interior)), replace=False, p=lw / lw.sum()))
+    inner_pick = list(rng.choice(interior, size=min(DEST_MAX - n_edge, len(interior)), replace=False, p=lw / lw.sum())) if interior else []
     dest_link = np.array(edge_pick + inner_pick, np.int32)
     dw = np.array([per_class[links[i]["rank"]] for i in edge_pick] + [80.0] * len(inner_pick))
     dest_cdf = np.cumsum(dw) / dw.sum()
