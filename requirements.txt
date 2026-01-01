@@ -1,9 +1,17 @@
-jax>=0.4.30        # CPU: pip install jax ; GPU: pip install "jax[cuda12]"
-numpy
-scipy
-matplotlib
-pillow
-pytest
-shapely
-pyarrow
-optax
+# Core runtime (the same as pyproject.toml's dependencies). CPU: pip install jax ; GPU: pip install "jax[cuda12]"
+jax>=0.4.30
+numpy>=1.26
+scipy>=1.11
+matplotlib>=3.8
+pillow>=10
+shapely>=2.0
+pyarrow>=14
+optax>=0.2
+pytest>=8
+# Optional, by feature (or: pip install -e ".[all]"):
+#   easy        pandas gymnasium pettingzoo
+#   torch       torch onnx stable-baselines3
+#   perception  pyvista vtk
+#   notebooks   jupyterlab nbformat nbclient ipykernel
+#   usd         usd-core
+#   web         playwright

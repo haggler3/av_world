@@ -77,3 +77,21 @@ def test_gym_env_steps():
         if term or trunc:
             break
     assert trunc or term and np.isfinite(r)
+
+
+def test_doctor_reports_every_package_and_the_core_is_ready():
+    from av_world import doctor
+    rows = doctor.check()
+    assert {r["group"] for r in rows} >= {"core", "dev", "easy", "torch", "perception", "notebooks", "usd", "web"}
+    assert all(r["ok"] for r in rows if r["group"] == "core")
+    assert doctor._tuple("0.4.30") < doctor._tuple("0.11.2") and doctor._tuple("2.0") == (2, 0)
+
+
+def test_pyproject_extras_cover_every_optional_package():
+    import re
+    import tomllib
+    meta = tomllib.load(open("pyproject.toml", "rb"))["project"]
+    declared = {re.split(r"[<>=\[]", d)[0].lower().replace("_", "-") for g, ds in meta["optional-dependencies"].items() if g != "all" for d in ds}
+    from av_world import doctor
+    needed = {pip for _, pip, _, group, _ in doctor.PACKAGES if group not in ("core", "dev")}
+    assert needed <= declared | {"jupyterlab"}, needed - declared

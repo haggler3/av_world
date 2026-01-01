@@ -9,12 +9,20 @@ description = "Batched JAX city-scale traffic and AV simulator: reactive humans,
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-dependencies = ["jax", "numpy", "scipy", "matplotlib", "pillow", "shapely", "pyarrow", "optax"]
+# floors are conservative minimums (not each one tested; the tested set is requirements-lock.txt)
+dependencies = ["jax>=0.4.30", "numpy>=1.26", "scipy>=1.11", "matplotlib>=3.8", "pillow>=10", "shapely>=2.0", "pyarrow>=14", "optax>=0.2"]
 
 [project.optional-dependencies]
 gpu = ["jax[cuda12]"]
-dev = ["pytest"]
+dev = ["pytest>=8"]
+easy = ["pandas>=2.0", "gymnasium>=0.29", "pettingzoo>=1.24"]        # av_world.easy / compat: tables, Gymnasium, PettingZoo
+torch = ["torch>=2.2", "onnx>=1.15", "stable-baselines3>=2.3"]       # compat.to_torch / to_onnx / from_sb3
+perception = ["pyvista>=0.43", "vtk>=9.3"]                           # bev.export, 3-D previews (renders offscreen on a CPU)
+notebooks = ["jupyterlab", "nbformat>=5.9", "nbclient>=0.9", "ipykernel>=6"]
+usd = ["usd-core>=24"]                                               # OpenUSD export (xnet.nvidia)
+web = ["playwright>=1.40"]                                           # screenshots of the website (docs/)
 carla = ["carla"]
+all = ["av_world[dev,easy,torch,perception,notebooks,usd,web]"]
 
 [project.scripts]
 av-world = "av_world.cli:main"
