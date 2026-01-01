@@ -7,6 +7,7 @@
   av-world fetch-av2 DIR [--n 20]            download Argoverse 2 scenarios (public bucket, no account)
   av-world import-av2 SCENARIO_DIR OUT       a logged scenario -> OUT.json (scene), OUT.xodr (OpenDRIVE map), OUT_net.npz (xnet road network)
   av-world validate-av2 DIR [--limit 100]    how well the simulator's drivers predict the logs (xnet.avdata.validate)
+  av-world export-nvidia OUT [--area chicago] [--scenario bus_dartout] [--av2 DIR]   OpenUSD scene + Cosmos-style control video (docs/NVIDIA.md)
   av-world tail METHOD                       the five long-tail methods: calibrate | counterfactual DIR | qd | novelty | explore (docs/LONG_TAIL_METHODS.md)
   av-world sil [--area A] [--egos 1] [--mode lockstep|realtime] [--port 5555] [--seconds 60]   drive AVs from an external controller (docs/SIL_HIL.md)
   av-world sil-example [--port 5555] [--delay-ms 0]                                       the example controller
@@ -107,6 +108,22 @@ def main(argv=None):
         a = ap.parse_args(rest)
         from xnet import avdata as AV
         AV.validate(a.dir, a.limit)
+        return 0
+    if cmd == "export-nvidia":
+        ap = argparse.ArgumentParser()
+        ap.add_argument("out")
+        ap.add_argument("--area", default="chicago")
+        ap.add_argument("--scenario", help="a famous-event scenario of avlab.famous, e.g. bus_dartout")
+        ap.add_argument("--intensity", type=float, default=1.0)
+        ap.add_argument("--seconds", type=float, default=20.0)
+        ap.add_argument("--warm", type=float, default=120.0)
+        ap.add_argument("--av2", help="an Argoverse 2 scenario directory instead of a simulation")
+        ap.add_argument("--seed", type=int, default=0)
+        a = ap.parse_args(rest)
+        import json
+
+        from xnet import nvidia
+        print(json.dumps(nvidia.export(a.out, a.area, a.scenario, a.intensity, a.seconds, a.warm, a.av2, a.seed), indent=1, default=float))
         return 0
     if cmd == "sil":
         ap = argparse.ArgumentParser()
