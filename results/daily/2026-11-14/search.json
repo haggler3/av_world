@@ -1,0 +1,181 @@
+{
+ "date": "2026-11-14",
+ "method": "PUCT on paper, c = 1.2, Q = novelty x relevance x visual x holds-up / sqrt(compute minutes); 3 probe rounds",
+ "candidates": [
+  {
+   "id": 1,
+   "idea": "Friction-aware AV: an IDM policy whose headway (and speed) scale with the fleet's friction estimate, half-AV city at mu 1/0.6/0.4 (next step 16, ROADMAP item 1)",
+   "artefact": "tool avlab.frictionaware, figure, GIF",
+   "compute_min": 8,
+   "prior": 0.6
+  },
+  {
+   "id": 2,
+   "idea": "Pool the third random stream (stopline seed 3) into the knee test and test whether the knee differs by stream (next step 17)",
+   "artefact": "tool avlab.kneepool, figure",
+   "compute_min": 1,
+   "prior": 0.7
+  },
+  {
+   "id": 3,
+   "idea": "Impact speed of cap-braking episodes: does the share ending in contact bend at 0.7? (next step 14)",
+   "artefact": "figure",
+   "compute_min": 10,
+   "prior": 0.35
+  },
+  {
+   "id": 4,
+   "idea": "Finer knee grid 0.8/0.75/0.65 on a fourth stream (next step 12)",
+   "artefact": "table",
+   "compute_min": 10,
+   "prior": 0.35
+  },
+  {
+   "id": 5,
+   "idea": "Twin-divergence junction-handoff count over all kicks (next step 3)",
+   "artefact": "table, GIF",
+   "compute_min": 10,
+   "prior": 0.4
+  },
+  {
+   "id": 6,
+   "idea": "Seeds with intervals on leaderboard rows (next step 2)",
+   "artefact": "table",
+   "compute_min": 45,
+   "prior": 0.6
+  },
+  {
+   "id": 7,
+   "idea": "Re-score the rule-based AV with unsafe_rbg vs the stored GPU row (next step 1)",
+   "artefact": "table",
+   "compute_min": 10,
+   "prior": 0.3
+  },
+  {
+   "id": 8,
+   "idea": "Speed limit x AV share: impact-speed-weighted crashes vs Nilsson exponent (next step 5)",
+   "artefact": "figure",
+   "compute_min": 12,
+   "prior": 0.4
+  },
+  {
+   "id": 9,
+   "idea": "Friction varying by street: does tomography localise a patch of ice?",
+   "artefact": "map GIF",
+   "compute_min": 10,
+   "prior": 0.3
+  },
+  {
+   "id": 10,
+   "idea": "Pedestrian yield behaviour varied at crossings under speed x1.3 (next step 6)",
+   "artefact": "figure",
+   "compute_min": 10,
+   "prior": 0.35
+  },
+  {
+   "id": 11,
+   "idea": "Half-AV advantage on slick roads with 4x copies (next step 8)",
+   "artefact": "table",
+   "compute_min": 20,
+   "prior": 0.4
+  },
+  {
+   "id": 12,
+   "idea": "Conformal prediction intervals for per-scenario AVBench scores from existing twin runs",
+   "artefact": "table",
+   "compute_min": 2,
+   "prior": 0.3
+  },
+  {
+   "id": 13,
+   "idea": "A one-page 'friction story so far' doc linking the eight days of friction results",
+   "artefact": "doc",
+   "compute_min": 0,
+   "prior": 0.5
+  },
+  {
+   "id": 14,
+   "idea": "Wild card: invert the simulator - search the friction at which a learned AV's crash rate equals the human one",
+   "artefact": "figure",
+   "compute_min": 15,
+   "prior": 0.2
+  }
+ ],
+ "probes": [
+  {
+   "round": 1,
+   "pick": 2,
+   "probe": "grep: stopline.json keeps per_copy_crashes/per_copy_hours for all 6 mu; avlab.knee.fixed_hinge reusable; 1.6 s quick run gave stream-3 extra slope 1.9 (p 0.12) and pooled 2.9",
+   "update": "Q up: zero compute, real open question (stream 3 alone is weak)"
+  },
+  {
+   "round": 2,
+   "pick": 1,
+   "probe": "grep xnet/sim.py: the AV policy slot (rl=(policy, key)) runs under the idm envelope; obs has no friction, so a per-copy closure supplies mu; web: friction-scaled headway is patented (US 6208106) and studied in an MPC thesis (Chalmers 2025) but not evaluated city-wide; --quick 14 copies x 60 s ran in 17 s",
+   "update": "Q up; child variants 'headway' and 'slow' merged into one run"
+  },
+  {
+   "round": 3,
+   "pick": 3,
+   "probe": "grep: impact speed is not logged by diag; needs a new per-car episode tracker in a scan (more code than budget)",
+   "update": "Q down: kept for tomorrow"
+  }
+ ],
+ "final": [
+  {
+   "id": 2,
+   "N": 1,
+   "Q": 0.95,
+   "kept": true
+  },
+  {
+   "id": 1,
+   "N": 1,
+   "Q": 0.55,
+   "kept": true
+  },
+  {
+   "id": 3,
+   "N": 1,
+   "Q": 0.12,
+   "kept": false,
+   "why": "needs an episode tracker; over budget today"
+  },
+  {
+   "id": 6,
+   "N": 0,
+   "Q": 0.09,
+   "kept": false,
+   "why": "45 min of compute"
+  },
+  {
+   "id": 11,
+   "N": 0,
+   "Q": 0.1,
+   "kept": false,
+   "why": "20 min; partly answered by idea 1's blind cells"
+  },
+  {
+   "id": 13,
+   "N": 0,
+   "Q": 0.2,
+   "kept": false,
+   "why": "folded into the DAILY entry instead"
+  },
+  {
+   "others": [
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    12,
+    14
+   ],
+   "kept": false,
+   "why": "lower Q (compute 10-15 min, priors <= 0.4) or duplicate of a planned next step"
+  }
+ ],
+ "note_after_run": "Candidate 1 partly duplicates 2026-11-09 work (avlab.frictionav, rule-based AV, friction 0.45) that lives only on the unmerged branch claude/exciting-bohr-cmq43w; it was not visible in main's docs during the search. Headway results agree (0.67 vs 0.69); speed results disagree (0.12x vs 0.78x)."
+}

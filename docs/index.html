@@ -341,6 +341,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="672" height="304" src="img/frictionaware.gif" alt="Animation: cumulative AV-involved crash rate over 480 seconds at friction 0.6 and 0.4 for a friction-blind AV and two friction-aware AVs; the lines cross repeatedly and end close together" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>An AV that knows the road's friction</h3>
+          <p>A city's friction can be read from braking, so give it to the AVs: an IDM policy whose headway grows as 1/friction (and, in a second version, whose speed falls as &radic;friction), in a half-AV Oakland, 24 copies per cell.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/frictionaware.png">figure</a> &middot; <a href="img/kneepool.png">knee on three streams</a>.</p></div>
+        <ul>
+          <li>At friction 0.4, the longer headway cut AV crashes by 31&nbsp;% (rate ratio 0.69, 95&nbsp;% 0.33&ndash;1.41) for 9&nbsp;% less speed. That is not significant, and slowing down did no better: most AV crashes on ice were merges, which a longer headway does not touch. An earlier, unmerged run with the rule-based AV found slowing down did help (0.12x), so the answer depends on the policy.</li>
+          <li>The friction knee holds on all three random streams pooled (extra slope 2.9, 95&nbsp;% 1.7&ndash;4.1). The streams do not differ significantly (p 0.49), but the newest stream alone is weak (p 0.12).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="512" height="320" src="img/brakedemand.gif" alt="Animation: braking histograms of human drivers at six road frictions; as the cap moves left, braking piles up at it" loading="lazy"></figure>
       <div class="text">
         <div><h3>Why a friction knee at 0.7?</h3>
