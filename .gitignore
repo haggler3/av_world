@@ -21,3 +21,4 @@ results/wmplan/v3/converge_event*.pkl
 results/bev/*_params.npz
 results/bev/*_ckpt.pkl
 results/bev/snaps/
+results/notebooks/

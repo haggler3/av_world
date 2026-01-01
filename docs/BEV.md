@@ -10,7 +10,12 @@ python -m bev.data new_york 0          # render + label: data/bev/new_york_s0.np
 python -m bev.backbone fetch           # optional: BEVFormer-tiny's ResNet-50 stem from the released checkpoint (400 MB download, 6 MB kept)
 python -m bev.trace data/bev/new_york_s0.npz    # every stage of one sample: results/bev/trace.json, docs/img/bev_trace_*.png
 python -m bev.train --smoke            # overfit one batch: proves the gradients reach every stage (not training)
+av-world export-perception out --area chicago --scenario bus_dartout   # any scenario as a nuScenes-style folder (bev/export.py)
 ```
+
+`export-perception` writes PNGs per camera, `samples.json` (3-D boxes in the ego frame, and what `xnet.perception`'s sensor model
+reports: misses behind occluders, noise, ghosts), `calibration.json` (K, ego2cam, ego2img) and the same data as `data.npz` for
+`bev.train`. Walkthrough: [notebooks/04_perception_export.ipynb](../notebooks/04_perception_export.ipynb).
 
 ## 1. How good is BEVFormer already
 

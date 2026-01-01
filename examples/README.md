@@ -5,12 +5,12 @@ the script next to it.
 
 | example | question | time | output |
 |---|---|---|---|
-| [`tour.ipynb`](tour.ipynb) | a guided tour of the whole repository, executed with its outputs | ~1 min | the notebook |
 | [`av_share_sweep.py`](av_share_sweep.py) | how many AVs until a city's crashes halve? | ~7 min | [figure](../docs/img/example_av_share.png) |
 | [`gridlock.py`](gridlock.py) | the fundamental diagram of a whole city: flow against density up to the jam | ~6 min | [figure](../docs/img/example_gridlock.png) |
 | [`my_policy.py`](my_policy.py) | write your own AV driver in ~15 lines and see where it lands on AVBench | ~1.5 min | a scorecard table |
 | `av-world watch oakland` | the city driving live in your terminal (truecolor text), or `--follow` an AV | live | [GIF](../docs/img/watch_oakland.gif) |
 
+Guided notebooks (the tour, RL, PPO, perception export, AVBench) are in [notebooks/](../notebooks/README.md).
 Every script has `--quick` for a smoke run; `tests/test_examples.py` runs them all in tiny configurations.
 
 ## How many AVs until crashes halve?

@@ -106,3 +106,25 @@ def test_a_few_steps_lower_the_loss(tmp_path):
         p, st, loss, _ = step(p, st, b)
         losses.append(float(loss))
     assert losses[-1] < 0.6 * losses[0]
+
+
+def test_perception_export_writes_a_consistent_folder(tmp_path):
+    pytest.importorskip("pyvista")
+    import json
+    import os
+
+    from bev import export as E
+    try:
+        info = E.export(str(tmp_path / "p"), area="chicago", scenario="bus_dartout", seconds=10, egos=1, width=64, height=32, warm=30, stride=5)
+    except Exception as e:  # pyvista present but no offscreen OpenGL here
+        pytest.skip(f"cannot render: {e}")
+    out = info["out"]
+    samples, cal = json.load(open(f"{out}/samples.json")), json.load(open(f"{out}/calibration.json"))
+    assert len(samples) == info["samples"] > 0 and len(cal) == 6
+    s = samples[0]
+    assert all(os.path.exists(f"{out}/{f}") for f in s["images"].values())
+    assert all(len(b["center"]) == 3 and len(b["size"]) == 3 for b in s["boxes"])
+    assert np.array(cal["CAM_FRONT"]["ego2img"]).shape == (4, 4)
+    for name in ("data.npz", "scene.json", "meta.json"):
+        assert os.path.exists(f"{out}/{name}")
+    assert not os.path.exists(f"{out}/_tmp")
