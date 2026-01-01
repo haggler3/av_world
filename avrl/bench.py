@@ -392,6 +392,13 @@ if __name__ == "__main__":
         for n in sys.argv[2:3] or WM_SCENARIOS:
             for mode in sys.argv[3:4] or WM_MODES:
                 run_wm(n, mode)
+    elif cmd == "forget":  # forget POLICY ...: drop a retrained policy's rows so the next `run` / `run-wm` measures it again
+        for n in SCENARIOS:
+            if os.path.exists(f"{OUT}/{n}.json"):
+                d = json.load(open(f"{OUT}/{n}.json"))
+                d["runs"] = {p: r for p, r in d["runs"].items() if p not in sys.argv[2:]}
+                with open(f"{OUT}/{n}.json", "w") as f:
+                    json.dump(d, f)
     elif cmd == "train":
         train_self_reliant()
     elif cmd == "report":
