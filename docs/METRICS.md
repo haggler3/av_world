@@ -13,7 +13,8 @@ The relative tier stays as it was, since "better than the hand-written driver on
 
 ```bash
 python -m avrl.bench run glare dartout ...    # long-tail scenarios (~4 min each, every policy)
-python -m avrl.bench run-wm                   # the latent world-model planner (3 scenarios x 2 modes, ~10 min each)
+python -m avrl.bench run-wm                   # the latent world-model planner v1 (3 scenarios x 2 modes, ~10 min each on CPU)
+python -m avrl.bench run-wm2 nominal ...      # planner v2, both modes from one warm state (~3 min each on an L4)
 python -m avrl.bench report                   # -> results/bench/leaderboard.md: absolute tier, scorecard, relative tier
 ```
 ```python
@@ -109,22 +110,32 @@ tables are in `results/bench/leaderboard.md` and the chart in `docs/img/avbench.
   on the long tail for phases 1 and 2 (22.6 and 37.3 vs 22.1 and 30.5). A one-run comparison between policies within about 10
   points of av_world score, or about 10 absolute checks, is within the spread of one recipe; the originals stay the reference
   checkpoints.
-* **The latent world-model planner (wm-mpc) is not competitive yet.** On its 3 scenarios it passes 8 of 24 checks with an av_world
-  score of 0.8. With no filter it crashes 0.47 times per AV-hour, fewer than the PPO policy it uses as its proposal prior (0.64),
-  so planning in the latent space helps, but it is 15-60x the barrier-teacher policies' rate. The retrained model ranks crashes well
-  (held-out AUROC 0.958) but predicts the stop-line gap worse than holding it constant (2 s error 36 m vs 8.6 m) and the merge gaps
-  no better (`results/wmplan/model_eval.json`), and those are the margins the planner scores plans by.
-* **The latent planner v2 fixes that, but does not beat its prior.** v2 uses an ensemble model with 4 s plans and the
-  phase-3 policy as prior, overriding it only towards caution ([wmplan/README.md](../wmplan/README.md)). On the same 3
-  scenarios it passes 17 of 24 checks with an av_world score of 46.0 (v1: 8 and 0.8), with no red runs and 0.039 unaided crashes
-  per AV-hour. Its prior passes 22 with a score of 63.8; on nominal it is 93.0 against 98.0.
-* **World model v3 (counterfactual data, policy learning in the model) does not beat it either.** In paired 60 s screens the
-  best variant matched the phase 3 policy's crashes at 6 % lower speed. The actor-critic trained in imagination exploited the
-  model and crashed 30-40 times per AV-hour. With these 28 features, braking less causes crashes but braking more does not
-  prevent them ([wmplan/README.md](../wmplan/README.md)).
-* **Crash aversion**, a new metric: fork the simulator 2-4 s before each of the policy's crashes and replay it with a fix.
-  Over 91 crashes of the phase 3 policy, all reproduced exactly, naive harder braking averts 75 %. The v3 world model's plan
-  averts 18 %. Both are told when to act ([wmplan/README.md](../wmplan/README.md)).
+
+### Latent world-model planners
+
+They replan every AV every 0.2 s, so they were benchmarked on the 3 junction-heavy scenarios (nominal, red runners,
+inattentive), unaided and with the envelope:
+
+| driver | absolute checks (of 24) | av_world score | crashes /AV-h unaided | harm /AV-h unaided | red runs /100 km | progress |
+|---|---|---|---|---|---|---|
+| rule-based AV | 18 | **78.2** | **0.008** | **0.008** | 0 | 1.06 |
+| PPO + barrier teacher, then no filter (phase 2) | **23** | 77.9 | 0.033 | 0.050 | 0 | 1.02 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 22 | 63.8 | 0.025 | 0.099 | 0 | 1.01 |
+| latent planner v2 (ensemble model, phase 3 as prior) | 17 | 46.0 | 0.039 | 0.211 | 0 | 0.95 |
+| PPO, 234k steps (xnet3) | 13 | 7.9 | 0.640 | 1.092 | 0 | 1.07 |
+| latent planner v1 (xnet3 as prior) | 8 | 0.8 | 0.471 | 0.829 | 4.5-5.4 | 1.05 |
+
+* **v1 ran red lights** that its prior never runs, so its conduct factor was 0.08. Its model also predicted the stop-line gap
+  worse than holding it (36 m vs 8.6 m at 2 s).
+* **v2 fixed that** (no red runs, 93.0 on nominal) with 4 s plans, masked distance targets, an ensemble and a cautious-only trust
+  region around the phase 3 policy. Its caution costs about 5 % speed, so it still trails that policy.
+* **v3 trained the policy inside the model instead.** An actor-critic in imagination exploited the model (30-40 crashes per
+  AV-hour in the real simulator); one-step improvement on counterfactual data only matched the prior. Neither has an 18-scenario
+  row; the screens are in `results/wmplan/v3/screen*.json`.
+* **Crash aversion**, a test of the model where the policy fails. The simulator is forked 2-4 s before each of the phase 3
+  policy's crashes and the same seconds replayed with a fix. All 91 crashes reproduced exactly. Braking harder averts 75 % (81 %
+  with the hazard visible, 72 % with perception faults); the world model's converged plan averts 18 % (16 % and 18 %). Both are
+  told when to act. Details and GIFs: [wmplan/README.md](../wmplan/README.md).
 
 ## Limits
 
@@ -136,7 +147,7 @@ tables are in `results/bench/leaderboard.md` and the chart in `docs/img/avbench.
 * **The bars are borrowed.** The safety bar compares with simulated humans, whose crash rates are calibrated to published statistics
   but whose everyday driving is not realistic (see [INCIDENT_AUDIT.md](INCIDENT_AUDIT.md)). The comfort bar is nuPlan's. The harm
   weights and score scales are assumptions, stated so they can be changed.
-* **The latent planner ran on 3 of 18 scenarios** (about 10 minutes per run on CPU, under 2 on an L4, with every AV planned), unaided
-  and with the envelope only.
+* **The latent planners ran on 3 of 18 scenarios**, unaided and with the envelope only: v1 takes about 10 minutes per run on CPU
+  and under 2 on an L4, v2 about 3 on an L4.
 * **One training run per policy.** The GPU retrains show the spread of one recipe is about as large as most gaps between
   policies; ranking them properly needs several seeds each.
