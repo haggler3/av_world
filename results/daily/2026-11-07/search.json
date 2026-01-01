@@ -1,0 +1,16 @@
+{"date":"2026-11-07","method":"PUCT, c=1.2, 3 rounds on paper; Q=(novelty*relevance*visual*holds-up)/sqrt(minutes)",
+"candidates":[
+{"idea":"friction cliff by crash type + fine grid (next-step 7)","minutes":8,"prior":0.7,"probe":"imp_rear_closing/imp_rear_n counters exist; 8 copies x 120 s ran in 14 s","outcome":"KEPT"},
+{"idea":"speed limit x pedestrian violators (next-step 6)","minutes":6,"prior":0.6,"probe":"Behaviour.p_ped_violate exists; link_v scaling via net dict works (as in speedlimit.py)","outcome":"KEPT"},
+{"idea":"speed limit x AV share surface","minutes":20,"prior":0.5,"outcome":"dropped: over budget"},
+{"idea":"twin kicks on every seed, count junction handoffs","minutes":15,"prior":0.4,"outcome":"dropped: over budget"},
+{"idea":"leaderboard seeds with intervals","minutes":45,"prior":0.6,"outcome":"dropped: far over budget"},
+{"idea":"L4 leaderboard random stream check","minutes":10,"prior":0.4,"outcome":"dropped: needs GPU row comparison"},
+{"idea":"half-AV friction interaction with 4x copies","minutes":15,"prior":0.4,"outcome":"dropped: over budget, low prior"},
+{"idea":"required-deceleration histogram at crash","minutes":10,"prior":0.5,"outcome":"dropped: needs xnet recording changes; rear-end closing speed used as proxy"},
+{"idea":"conformal intervals for single AVBench scores","minutes":2,"prior":0.4,"outcome":"dropped: overlaps minibench/twins"},
+{"idea":"CLI 'av-world daily' digest of docs/DAILY.md","minutes":3,"prior":0.3,"outcome":"dropped: low visual appeal"},
+{"idea":"H3 wet-road threshold","minutes":0,"prior":0.3,"outcome":"merged into idea 1"},
+{"idea":"demand surge x friction (wild card)","minutes":12,"prior":0.3,"outcome":"dropped: over budget"},
+{"idea":"adaptive-importance scenario search for crashes (wild card)","minutes":15,"prior":0.3,"outcome":"dropped: over budget"}],
+"final":{"kept":["friction by crash type","limit x violators"],"N":{"friction":2,"violators":1}}}

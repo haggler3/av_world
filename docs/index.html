@@ -299,6 +299,20 @@
       </div>
 
     <div class="result">
+      <figure><img width="700" height="400" src="img/crashmix.gif" alt="Stacked bars of crashes per 1000 vehicle-hours by type as road friction falls from 1.0 to 0.3" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Which crashes make the cliff?</h3>
+          <p>Crash types along a finer friction grid (12 copies per cell), and the speed limit with pedestrian violators switched off.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> ·
+            <a href="img/crashmix.png">figure</a>.</p></div>
+        <ul>
+          <li>Rear-end crashes are <b>not</b> the carrier: they make 12&nbsp;% of the extra crashes from friction 0.6 to 0.45. Cyclist crashes go from 0 (six cells at 0.55 and above) to 12 at 0.5, a post-hoc observation.</li>
+          <li>With no pedestrian violators, pedestrian crashes at limit &times;1.3 fall to 0.23 of the calibrated count (0.08&ndash;0.53), but the limit still multiplies all crashes by 4.0 (1.6&ndash;11.9).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="576" height="608" src="img/friction_blackice.gif" alt="Black box replay: a left-turning car hits a pedestrian on a slick road, braking at the road's limit" loading="lazy"></figure>
       <div class="text">
         <div><h3>The friction cliff</h3>
