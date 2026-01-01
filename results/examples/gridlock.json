@@ -1,0 +1,110 @@
+{
+ "area": "oakland",
+ "lane_km": 81.5114287726879,
+ "copies": 2,
+ "warm_s": 600.0,
+ "seconds": 600.0,
+ "rows": [
+  {
+   "demand": 0.25,
+   "vehicles": 143.45,
+   "density_per_lane_km": 1.7598759113895681,
+   "flow_veh_km_per_h_per_lane_km": 34.97674560546875,
+   "speed_kmh": 19.908916473388672,
+   "trips_per_hour": 1395.0,
+   "trips_started_per_hour": 1440.0,
+   "teleports_per_hour": 9.0,
+   "blocked_arrivals_per_hour": 87.0
+  },
+  {
+   "demand": 0.5,
+   "vehicles": 294.2,
+   "density_per_lane_km": 3.6093098161785355,
+   "flow_veh_km_per_h_per_lane_km": 63.60116958618164,
+   "speed_kmh": 17.69734764099121,
+   "trips_per_hour": 2565.0,
+   "trips_started_per_hour": 2805.0,
+   "teleports_per_hour": 6.0,
+   "blocked_arrivals_per_hour": 234.0
+  },
+  {
+   "demand": 0.75,
+   "vehicles": 480.65,
+   "density_per_lane_km": 5.896719113345388,
+   "flow_veh_km_per_h_per_lane_km": 88.00787353515625,
+   "speed_kmh": 15.08787727355957,
+   "trips_per_hour": 3435.0,
+   "trips_started_per_hour": 4065.0,
+   "teleports_per_hour": 18.0,
+   "blocked_arrivals_per_hour": 588.0
+  },
+  {
+   "demand": 1.0,
+   "vehicles": 685.95,
+   "density_per_lane_km": 8.415384324975074,
+   "flow_veh_km_per_h_per_lane_km": 104.56625366210938,
+   "speed_kmh": 12.568534851074219,
+   "trips_per_hour": 4296.0,
+   "trips_started_per_hour": 5208.0,
+   "teleports_per_hour": 21.0,
+   "blocked_arrivals_per_hour": 960.0
+  },
+  {
+   "demand": 1.5,
+   "vehicles": 1129.2,
+   "density_per_lane_km": 13.853272074876964,
+   "flow_veh_km_per_h_per_lane_km": 122.28778076171875,
+   "speed_kmh": 8.944026947021484,
+   "trips_per_hour": 5676.0,
+   "trips_started_per_hour": 7665.0,
+   "teleports_per_hour": 165.0,
+   "blocked_arrivals_per_hour": 1821.0
+  },
+  {
+   "demand": 2.0,
+   "vehicles": 1548.6,
+   "density_per_lane_km": 18.998562818946567,
+   "flow_veh_km_per_h_per_lane_km": 129.57241821289062,
+   "speed_kmh": 6.924850940704346,
+   "trips_per_hour": 6495.0,
+   "trips_started_per_hour": 9750.0,
+   "teleports_per_hour": 288.0,
+   "blocked_arrivals_per_hour": 2964.0
+  },
+  {
+   "demand": 3.0,
+   "vehicles": 2242.3,
+   "density_per_lane_km": 27.509025835544293,
+   "flow_veh_km_per_h_per_lane_km": 140.53146362304688,
+   "speed_kmh": 5.187798023223877,
+   "trips_per_hour": 8685.0,
+   "trips_started_per_hour": 13371.0,
+   "teleports_per_hour": 483.0,
+   "blocked_arrivals_per_hour": 5715.0
+  },
+  {
+   "demand": 4.0,
+   "vehicles": 2862.15,
+   "density_per_lane_km": 35.11348093261522,
+   "flow_veh_km_per_h_per_lane_km": 144.44732666015625,
+   "speed_kmh": 4.174732685089111,
+   "trips_per_hour": 9975.0,
+   "trips_started_per_hour": 15783.0,
+   "teleports_per_hour": 615.0,
+   "blocked_arrivals_per_hour": 9729.0
+  },
+  {
+   "demand": 6.0,
+   "vehicles": 3791.15,
+   "density_per_lane_km": 46.510655709059336,
+   "flow_veh_km_per_h_per_lane_km": 137.4812469482422,
+   "speed_kmh": 2.990337371826172,
+   "trips_per_hour": 11685.0,
+   "trips_started_per_hour": 18354.0,
+   "teleports_per_hour": 1215.0,
+   "blocked_arrivals_per_hour": 19776.0
+  }
+ ],
+ "peak_demand": 4.0,
+ "wall_s": 335.89683532714844
+}

@@ -1,6 +1,7 @@
 """`av-world`: command line for the simulator.
 
   av-world info                              versions, devices, areas
+  av-world watch [oakland] [--follow]        the city driving live in the terminal (truecolor), or --gif out.gif
   av-world bench [--area oakland]            simulated seconds per wall-clock second on this machine
   av-world import-osm map.osm city.npz       OpenStreetMap extract -> road network (then av_world.make("city.npz"))
   av-world export-carla OUT [--area oakland] [--seconds 60] [--osm map.osm]    OpenDRIVE map + trajectories + replay script for CARLA
@@ -26,6 +27,9 @@ def main(argv=None):
         print(__doc__)
         return 0
     cmd, rest = argv[0], argv[1:]
+    if cmd == "watch":
+        from av_world import watch
+        return watch.main(rest)
     if cmd == "info":
         import jax
 

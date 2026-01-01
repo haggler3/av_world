@@ -36,6 +36,18 @@ v2 fixed v1's red-light runs but does not beat the policy it plans around. Train
 either. Forked at the policy's own crash moments, the converged plan averts 18 % of them, against 75 % for simply braking
 harder ([GIFs, the test and why](wmplan/README.md)).
 
+## Try it in five minutes
+
+```bash
+av-world watch oakland                      # the city driving live in your terminal
+python examples/av_share_sweep.py           # how many AVs until crashes halve? (~7 min)
+python examples/gridlock.py                 # the fundamental diagram of a whole city (~6 min)
+python examples/my_policy.py                # your own driver in 15 lines, scored on AVBench
+```
+Or read the executed [tour notebook](examples/tour.ipynb). Results and figures: [examples/](examples/README.md).
+
+<img src="docs/img/example_av_share.png" width="900" alt="Crashes per 1,000 vehicle-hours against the share of AVs in Oakland: they halve at about 55 % AVs">
+
 ## What it is
 
 * **`xnet`**, an area simulator built from open map data (Pittsburgh's Oakland, Squirrel Hill and Downtown, Midtown Manhattan, the Chicago Loop, central Boston, any OpenStreetMap city, Argoverse 2 / Waymo maps):

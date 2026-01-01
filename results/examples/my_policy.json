@@ -1,0 +1,228 @@
+{
+ "scenarios": [
+  "nominal",
+  "jaywalkers"
+ ],
+ "rows": {
+  "careful_idm (this example)": {
+   "av_score": 75.87068920300146,
+   "absolute_checks": 10,
+   "scenarios": {
+    "nominal": {
+     "metrics": {
+      "crash_per_h": 0.0,
+      "crash_per_1000km": 0.0,
+      "crash_ratio_vs_human": 0.0,
+      "progress": 0.955477836116953,
+      "speed_kmh": 15.557550111425954,
+      "comfort_pass": 0.8497569879677598,
+      "hard_brakes_per_h": 29.30487603884832,
+      "jerk_rms": 3.8908757578252184,
+      "red_runs_per_100km": 0.0,
+      "near_miss_per_h": 0.0,
+      "driving_score": 95.54778361169531,
+      "crash_per_h_unaided": 0.0,
+      "harm_per_h": 0.0,
+      "harm_per_h_unaided": 0.0,
+      "crash_ucb95_per_h": 0.07108466633366552,
+      "filter_share": 0.0019022463393638383,
+      "filter_dependence": 0.0,
+      "barrier_exit_share": 0.0008101238646881248,
+      "human_crash_per_h": 0.007064437622731883,
+      "human_speed_kmh": 16.28248141751942,
+      "av_hours": 42.14315728081597
+     },
+     "factors": {
+      "efficiency": 0.955477836116953,
+      "safety": 1.0,
+      "comfort": 0.8497569879677598,
+      "conduct": 1.0,
+      "self_reliance": 0.9980977536606361
+     },
+     "av_score": 81.03794886925563
+    },
+    "jaywalkers": {
+     "metrics": {
+      "crash_per_h": 0.02187514108113043,
+      "crash_per_1000km": 1.9688440579678759,
+      "crash_ratio_vs_human": 0.8605383207325781,
+      "progress": 0.9631974128113506,
+      "speed_kmh": 11.11065195468485,
+      "comfort_pass": 0.8966114756373544,
+      "hard_brakes_per_h": 19.643876690855123,
+      "jerk_rms": 3.3714346619433484,
+      "red_runs_per_100km": 0.0,
+      "near_miss_per_h": 0.0,
+      "driving_score": 95.35587407805474,
+      "crash_per_h_unaided": 0.02189108836738301,
+      "harm_per_h": 0.02187514108113043,
+      "harm_per_h_unaided": 0.02189108836738301,
+      "crash_ucb95_per_h": 0.10377270560956273,
+      "filter_share": 0.002086645402016719,
+      "filter_dependence": 1.5947286252579462e-05,
+      "barrier_exit_share": 0.000435390041226138,
+      "human_crash_per_h": 0.02542029861320769,
+      "human_speed_kmh": 11.535176285674838,
+      "av_hours": 45.71399088541666
+     },
+     "factors": {
+      "efficiency": 0.9631974128113506,
+      "safety": 0.8204045212772022,
+      "comfort": 0.8966114756373544,
+      "conduct": 1.0,
+      "self_reliance": 0.9979133545979832
+     },
+     "av_score": 70.70342953674731
+    }
+   }
+  },
+  "rule-based AV": {
+   "av_score": 48.149958835413074,
+   "absolute_checks": 10,
+   "scenarios": {
+    "nominal": {
+     "metrics": {
+      "crash_per_h": 0.02518813137217566,
+      "crash_per_1000km": 1.4533971551817235,
+      "crash_ratio_vs_human": 1.8459536002151051,
+      "progress": 1.0611084903329584,
+      "speed_kmh": 17.330521999698213,
+      "comfort_pass": 0.9036508132483811,
+      "hard_brakes_per_h": 18.23620711345518,
+      "jerk_rms": 2.8138218938163417,
+      "red_runs_per_100km": 0.0,
+      "near_miss_per_h": 0.0,
+      "driving_score": 99.26031671385819,
+      "crash_per_h_unaided": 0.02518813137217566,
+      "harm_per_h": 0.02518813137217566,
+      "harm_per_h_unaided": 0.02518813137217566,
+      "crash_ucb95_per_h": 0.11948908270102468,
+      "filter_share": 0.0,
+      "filter_dependence": 0.0,
+      "barrier_exit_share": 0.0011180758751986545,
+      "human_crash_per_h": 0.01364505119155787,
+      "human_speed_kmh": 16.332469448303236,
+      "av_hours": 39.70123806423611,
+      "barrier_veto_s_per_h": 7.560529951441229
+     },
+     "factors": {
+      "efficiency": 1.0,
+      "safety": 0.7987977686375629,
+      "comfort": 0.9036508132483811,
+      "conduct": 1.0,
+      "self_reliance": 1.0
+     },
+     "av_score": 72.18342532503259
+    },
+    "jaywalkers": {
+     "metrics": {
+      "crash_per_h": 0.04462644149343868,
+      "crash_per_1000km": 3.6457654388144034,
+      "crash_ratio_vs_human": 2.3964091839386215,
+      "progress": 1.0604795335008537,
+      "speed_kmh": 12.240623332024104,
+      "comfort_pass": 0.9407165260106726,
+      "hard_brakes_per_h": 11.000417828132635,
+      "jerk_rms": 2.3928523580852916,
+      "red_runs_per_100km": 0.0,
+      "near_miss_per_h": 0.0,
+      "driving_score": 97.82920712259696,
+      "crash_per_h_unaided": 0.04462644149343868,
+      "harm_per_h": 0.29007186970735144,
+      "harm_per_h_unaided": 0.29007186970735144,
+      "crash_ucb95_per_h": 0.14047943286061737,
+      "filter_share": 0.0,
+      "filter_dependence": 0.0,
+      "barrier_exit_share": 0.0008305491743400141,
+      "human_crash_per_h": 0.01862221268076299,
+      "human_speed_kmh": 11.542536131381407,
+      "av_hours": 44.8164794921875,
+      "barrier_veto_s_per_h": 13.225793552863466
+     },
+     "factors": {
+      "efficiency": 1.0,
+      "safety": 0.25636301350062557,
+      "comfort": 0.9407165260106726,
+      "conduct": 1.0,
+      "self_reliance": 1.0
+     },
+     "av_score": 24.116492345793564
+    }
+   }
+  },
+  "PPO + barrier teacher, speed + jaywalkers (phase 3)": {
+   "av_score": 53.81338304373293,
+   "absolute_checks": 13,
+   "scenarios": {
+    "nominal": {
+     "metrics": {
+      "crash_per_h": 0.0,
+      "crash_per_1000km": 0.0,
+      "crash_ratio_vs_human": 0.0,
+      "progress": 1.0075480627336444,
+      "speed_kmh": 16.352036891616983,
+      "comfort_pass": 0.9887598339852572,
+      "hard_brakes_per_h": 2.0346865332060577,
+      "jerk_rms": 1.885602114794882,
+      "red_runs_per_100km": 0.0,
+      "near_miss_per_h": 0.0,
+      "driving_score": 100.0,
+      "crash_per_h_unaided": 0.0,
+      "harm_per_h": 0.0,
+      "harm_per_h_unaided": 0.0,
+      "crash_ucb95_per_h": 0.07433385504989108,
+      "filter_share": 0.009066485995187156,
+      "filter_dependence": 0.0,
+      "barrier_exit_share": 0.0009706712310591269,
+      "human_crash_per_h": 0.02046612790690375,
+      "human_speed_kmh": 16.229535340727274,
+      "av_hours": 40.30104817708333,
+      "barrier_veto_s_per_h": 8.721079812850244
+     },
+     "factors": {
+      "efficiency": 1.0,
+      "safety": 1.0,
+      "comfort": 0.9887598339852572,
+      "conduct": 1.0,
+      "self_reliance": 0.9909335140048129
+     },
+     "av_score": 97.97952567978264
+    },
+    "jaywalkers": {
+     "metrics": {
+      "crash_per_h": 0.022180017508158786,
+      "crash_per_1000km": 1.934133272722432,
+      "crash_ratio_vs_human": 1.191080722476205,
+      "progress": 1.0061928351062068,
+      "speed_kmh": 11.467677962511246,
+      "comfort_pass": 0.991655889237567,
+      "hard_brakes_per_h": 1.5082411905547972,
+      "jerk_rms": 1.7068893113605663,
+      "red_runs_per_100km": 0.0,
+      "near_miss_per_h": 0.02224048594496491,
+      "driving_score": 99.01685989784067,
+      "crash_per_h_unaided": 0.08896194377985964,
+      "harm_per_h": 0.06654005252447635,
+      "harm_per_h_unaided": 0.7339360361838421,
+      "crash_ucb95_per_h": 0.10521899807423624,
+      "filter_share": 0.008278075423322819,
+      "filter_dependence": 0.06678192627170085,
+      "barrier_exit_share": 0.0007191102215405248,
+      "human_crash_per_h": 0.018621758449794648,
+      "human_speed_kmh": 11.397097616284254,
+      "av_hours": 45.08562717013889,
+      "barrier_veto_s_per_h": 18.908297716582826
+     },
+     "factors": {
+      "efficiency": 1.0,
+      "safety": 0.11991327351388723,
+      "comfort": 0.991655889237567,
+      "conduct": 0.8180595751641726,
+      "self_reliance": 0.9917219245766772
+     },
+     "av_score": 9.647240407683213
+    }
+   }
+  }
+ }
+}
