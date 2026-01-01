@@ -8,6 +8,8 @@
   av-world import-av2 SCENARIO_DIR OUT       a logged scenario -> OUT.json (scene), OUT.xodr (OpenDRIVE map), OUT_net.npz (xnet road network)
   av-world validate-av2 DIR [--limit 100]    how well the simulator's drivers predict the logs (xnet.avdata.validate)
   av-world tail METHOD                       the five long-tail methods: calibrate | counterfactual DIR | qd | novelty | explore (docs/LONG_TAIL_METHODS.md)
+  av-world sil [--area A] [--egos 1] [--mode lockstep|realtime] [--port 5555] [--seconds 60]   drive AVs from an external controller (docs/SIL_HIL.md)
+  av-world sil-example [--port 5555] [--delay-ms 0]                                       the example controller
   av-world train [gpu_train options]         PPO on every device (python -m avrl.gpu_train)
   av-world survey | adversary | rare ...     the long-tail tools (python -m avlab.tails / adversary / rare)
 """
@@ -28,7 +30,8 @@ def main(argv=None):
 
         import av_world
         from xnet import network as NW
-        print(f"av_world {av_world.__version__}; jax {jax.__version__}; devices {jax.devices()}; areas {list(NW.AREAS)}")
+        from xnet import cities
+        print(f"av_world {av_world.__version__}; jax {jax.__version__}; devices {jax.devices()}; areas {list(NW.AREAS) + list(cities.CITIES)}")
         return 0
     if cmd == "bench":
         ap = argparse.ArgumentParser()
@@ -62,7 +65,8 @@ def main(argv=None):
         from xnet import network as NW
         from xnet import osm
         from xnet import sim as X
-        net, geo, _ = osm.import_osm(a.osm) if a.osm else NW.build(a.area)
+        from xnet import cities
+        net, geo, _ = osm.import_osm(a.osm) if a.osm else (cities.build(a.area) if a.area in cities.CITIES else NW.build(a.area))
         sim = X.Sim(net, n_envs=1, seed=0, reroute_s=0, beh=X.Behaviour(p_av=a.av_share))
         sim.run(a.warm)
         scene = CE.export(sim, 0, a.seconds, a.out, net=net, geo=geo)
@@ -103,6 +107,32 @@ def main(argv=None):
         a = ap.parse_args(rest)
         from xnet import avdata as AV
         AV.validate(a.dir, a.limit)
+        return 0
+    if cmd == "sil":
+        ap = argparse.ArgumentParser()
+        ap.add_argument("--area", default="oakland")
+        ap.add_argument("--egos", type=int, default=1)
+        ap.add_argument("--mode", default="lockstep", choices=("lockstep", "realtime"))
+        ap.add_argument("--deadline-ms", type=float, default=50.0)
+        ap.add_argument("--speed", type=float, default=1.0)
+        ap.add_argument("--fallback", default="policy", choices=("policy", "brake", "hold"))
+        ap.add_argument("--shield", default="idm", choices=("idm", "cbf", "off"))
+        ap.add_argument("--host", default="127.0.0.1")
+        ap.add_argument("--port", type=int, default=5555)
+        ap.add_argument("--seconds", type=float, default=60.0)
+        ap.add_argument("--record", help="write every exchange to this JSONL file")
+        a = ap.parse_args(rest)
+        import json
+
+        from av_world import sil
+        rec = open(a.record, "w") if a.record else None
+        s = sil.Session(a.area, a.egos, a.mode, a.deadline_ms, a.speed, a.fallback, shield=a.shield, host=a.host, port=a.port, record=rec)
+        print(f"waiting for a controller on {a.host}:{s.port} ...", flush=True)
+        print(json.dumps(s.run(a.seconds), indent=1))
+        return 0
+    if cmd == "sil-example":
+        sys.argv = ["av_world.sil_client"] + rest
+        runpy.run_module("av_world.sil_client", run_name="__main__")
         return 0
     if cmd == "tail":
         table = {"calibrate": ("avlab.tail_calibrate", ["fit"]), "counterfactual": ("avlab.tail_counterfactual", []), "qd": ("avlab.tail_qd", ["run"]),

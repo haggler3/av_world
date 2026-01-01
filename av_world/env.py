@@ -1,6 +1,6 @@
 """A small functional environment over the simulator: many copies of a city, every AV driven by one policy.
 
-    env = av_world.make("oakland", n_envs=8, beh=dict(p_av=0.3))        # area name, (w, s, e, n) box, OSM file, or a net dict
+    env = av_world.make("oakland", n_envs=8, beh=dict(p_av=0.3))        # oakland | squirrel_hill | downtown | new_york | chicago | boston, a box, an OSM file, or a net dict
     state = env.reset(seed=0, warm_s=120)                               # copies of the area, warmed up
     state, tr = env.step(state, policy)                                 # policy(obs [N, 28], key) -> (u [N, 2], aux) per copy
     state, traj = env.rollout(state, policy, steps=100)                 # lax.scan of steps; traj leaves are [steps, n_envs, ...]
@@ -24,6 +24,11 @@ from xnet import sim as X
 rule_policy = None  # pass policy=None (or this) to use the rule-based AV: the simulator's own IDM driver
 
 
+def _cities():
+    from xnet import cities
+    return cities
+
+
 def load_policy(path=None, deterministic=True):
     from avrl import xppo as P
     params = P.load(path or data_path("policy.npz"))
@@ -40,6 +45,8 @@ class Env:
         elif isinstance(area, str) and area.lower().endswith(".npz"):
             from xnet import osm
             self.net_np, self.geo, self.info = osm.load(area), None, {}
+        elif isinstance(area, str) and area in _cities().CITIES:  # new_york, chicago, boston
+            self.net_np, self.geo, self.info = _cities().build(area, **build_kw)
         else:
             self.net_np, self.geo, self.info = NW.build(area, **build_kw)
         self.net, self.nh = X.to_jnp(self.net_np), jnp.asarray(self.net_np["nh"])

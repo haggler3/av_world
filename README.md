@@ -9,12 +9,14 @@ honest account of what it can and cannot do.**
 
 ## What it is
 
-* **`xnet`**, an area simulator built from open map data (Oakland, Squirrel Hill, Downtown Pittsburgh, any OpenStreetMap city, Argoverse 2 / Waymo maps):
+* **`xnet`**, an area simulator built from open map data (Pittsburgh's Oakland, Squirrel Hill and Downtown, Midtown Manhattan, the Chicago Loop, central Boston, any OpenStreetMap city, Argoverse 2 / Waymo maps):
   car following, lane changes, zipper merges, right of way at every conflict point, signals, pedestrians, cyclists, buses, breakdowns, road
   friction, seven crash types, a control-barrier-function safety filter. About 395 simulated seconds per second for 8 copies of a ~380-vehicle area
   on 4 CPU cores, and it shards across devices.
 * **Human drivers calibrated to published crash data by crash type** (`xworld`, `pgh`): a world with the mistakes real people make.
 * **A research stack on top**: multi-agent PPO (`avrl`), AVBench, latent world models and a planner (`dwm`, `wmplan`), a stress lab (`avlab`).
+* **Software and hardware in the loop**: drive any AV from your own controller over TCP, in lockstep (60x real time) or at wall-clock pace with
+  deadlines and fallbacks ([SIL_HIL.md](docs/SIL_HIL.md)).
 * **Long-tail tooling**: sensor faults, aimed human mistakes, dart-outs, famous-incident scenarios, a real-log importer, CARLA export, and
   five methods for teasing novel long-tail data out of the simulator ([report](docs/LONG_TAIL_METHODS.md)).
 
@@ -47,6 +49,8 @@ print(env.metrics(state)["av_crash"])
 
 | | |
 |---|---|
+| [docs/SIL_HIL.md](docs/SIL_HIL.md) | software / hardware in the loop: protocol, modes, timing, measured latency |
+| [docs/CITIES.md](docs/CITIES.md) | New York, Chicago and Boston: what was built, what is real and what is inferred |
 | [docs/LONG_TAIL_METHODS.md](docs/LONG_TAIL_METHODS.md) | five methods for novel long-tail data, with pseudocode and results |
 | [docs/INCIDENT_AUDIT.md](docs/INCIDENT_AUDIT.md) | does the long tail that matters come out of the simulator? |
 | [docs/FAMOUS_EVENTS.md](docs/FAMOUS_EVENTS.md) | ten famous failure patterns as scenarios; do they help training? |
@@ -64,13 +68,13 @@ print(env.metrics(state)["av_crash"])
 
 | package | what it is |
 |---|---|
-| `av_world/` | the pip package: `make()` environment, the `av-world` command, bundled data and start policy |
-| `xnet/` | the area simulator, road network builder, OSM and log importers, junction detector, CARLA export, sensor model |
+| `av_world/` | the pip package: `make()` environment, the `av-world` command, the SIL/HIL plugin, bundled maps and start policy |
+| `xnet/` | the area simulator, road network builder, the extra cities, OSM and log importers, junction detector, CARLA export, sensor model |
 | `xworld/`, `pgh/` | the calibrated intersection simulator; 10,205 mined Pittsburgh intersections |
 | `avrl/` | PPO, AVBench, ladder, unaided training, famous-event training, multi-device trainer |
 | `dwm/`, `wmplan/` | diffusion / flow world models with scaling laws; latent world model and planner |
 | `avlab/` | stress lab, tail scenarios, incident audit, adversary, rare events, the five long-tail methods |
-| `tests/` | 73 tests: dynamics, safety, importers, junctions, sensor model, estimators |
+| `tests/` | 77 tests: dynamics, safety, importers, junctions, sensor model, estimators |
 | `docs/` | guides, the GitHub Pages site and the browser viewer |
 | `results/` | the JSON behind every number in the docs |
 
