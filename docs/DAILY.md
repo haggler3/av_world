@@ -102,6 +102,26 @@ rather than a task metric (planning or crash prediction was not re-tested), and 
 
 ![exposure](img/exposure.png)
 
+#### Ablation: how long must the self-rollout be? (`python -m wmplan.exposure --ablate`, ~4 min)
+
+Same data, 1000 steps, 3 seeds, same held-out evaluation; self-forcing trained on the first K steps of each window (K = 1 is teacher forcing, K = 15 is the full SF above).
+Prediction (`prediction_ablation.md`, before running): the 3 s error falls monotonically with K, at least 70 % of the TF-to-SF gain is reached at K = 5, and one-step error rises with K.
+**Two of the three parts failed.**
+
+| K (trained unroll) | step 1 (0.2 s) | step 5 (1 s) | step 15 (3 s), mean [min, max] |
+|---|---|---|---|
+| 1 (teacher forcing) | **0.212** | 0.465 | 0.824 [0.784, 0.868] |
+| 3 | 0.227 | 0.419 | **2.585** [1.097, 4.170] |
+| 5 | 0.230 | **0.395** | 0.756 [0.752, 0.761] |
+| 8 | 0.235 | 0.401 | 0.684 [0.678, 0.690] |
+| 15 | 0.247 | 0.429 | **0.626** [0.624, 0.627] |
+
+One-step error does rise with K (held). The 3 s error is not monotone: K = 3 is the best or near-best model out to the length it trained on, then **diverges** (2.6, 3x worse than teacher forcing, and
+the seeds disagree by a factor of 4), so a self-rollout shorter than the deployment horizon can be worse than none. And K = 5 gets only 34 % of the gain (0.068 of 0.198), not 70 %: the gain keeps growing up
+to the full horizon. Limits: 3 seeds, one K per value, no K above the 15-step window, and K = 3's seeds are too few to say how often it diverges.
+
+![ablation](img/exposure_ablation.png)
+
 Prior art: Self-Forcing for autoregressive video diffusion trains on the model's own rollouts (Huang et al. 2025, [arXiv 2506.08009](https://arxiv.org/abs/2506.08009)); input-noise augmentation and scheduled sampling are the older fixes.
 Files: `wmplan/exposure.py`, a test in `tests/test_daily.py`, `results/wmplan/exposure.json`.
 
@@ -116,4 +136,5 @@ Files: `wmplan/exposure.py`, a test in `tests/test_daily.py`, `results/wmplan/ex
 3. Watch time with richer features (stop-and-go counts, headway to the leader) and a sequence model; does the rule-based AV stay invisible?
 4. Trip-level discriminator for the human-like reward ([FIXES.md #9](FIXES.md#9-driving-like-people-the-av-turing-test-attempted-twice)).
 5. Seeds per AVBench scenario with intervals (a GPU job).
-6. Does the self-forced scene model plan better? Swap it into the v2 planner and re-run the crash-aversion test; try a sequence model and a longer horizon, where the TF model should fall behind "hold the scene".
+6. Make the short-unroll divergence (K = 3) a test: 10+ seeds, and does a curriculum on K (3 -> 15) or a stability penalty fix it?
+7. Does the self-forced scene model plan better? Swap it into the v2 planner and re-run the crash-aversion test; try a sequence model and a longer horizon, where the TF model should fall behind "hold the scene".

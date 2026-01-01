@@ -71,6 +71,10 @@ def loss_fn(p, b, variant, key):
             return xn, xn
         _, pr = jax.lax.scan(body, x[:, 0], jnp.moveaxis(u, 1, 0))
         pred = jnp.moveaxis(pr, 0, 1)
+    elif variant.startswith("SFK"):  # self-forcing on the first K steps only (ablation of the unroll length)
+        k = int(variant[3:])
+        pred = rollout(p, x[:, 0], u[:, :k])
+        v, x = v[:, :k], x[:, :k + 1]
     else:
         pred = rollout(p, x[:, 0], u)
     err = ((pred - x[:, 1:]) ** 2).mean(-1)
@@ -128,10 +132,29 @@ def evaluate(p, d, te, max_windows=4000, seed=0):
     return se, pers
 
 
+def ablate(ks=(3, 5, 8), steps=1000, seeds=3):
+    """Ablation: how many steps must the self-rollout be? SF trained on the first K steps of each window (K = 1 is TF, K = 15 is SF,
+    both from the main run). Same data, steps, seeds, held-out evaluation. -> results/wmplan/exposure_ablation.json"""
+    d, tr, te = prepare()
+    main_res = json.load(open(f"{OUT}/exposure.json"))["variants"]
+    out = {"TF (K=1)": main_res["TF"]["rmse_by_step_seeds"], "SF (K=15)": main_res["SF"]["rmse_by_step_seeds"]}
+    for k in ks:
+        t0 = time.time()
+        ps = np.array([np.sqrt(evaluate(train(d, tr, f"SFK{k}", steps, s), d, te)[0].mean(0)) for s in range(seeds)])
+        out[f"SF (K={k})"] = ps.tolist()
+        print(f"K={k}: step 1 {ps[:, 0].mean():.3f}  step 15 {ps[:, -1].mean():.3f} [{ps[:, -1].min():.3f}, {ps[:, -1].max():.3f}] ({time.time() - t0:.0f} s)", flush=True)
+    json.dump(out, open(f"{OUT}/exposure_ablation.json", "w"), indent=1)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
+    ap.add_argument("--ablate", action="store_true", help="unroll-length ablation (needs the main run's exposure.json)")
     a = ap.parse_args()
+    if a.ablate:
+        ablate()
+        return
     steps, seeds = (300, 1) if a.quick else (1000, 3)
     d, tr, te = prepare()
     print(f"{len(tr)} training windows, {len(te)} held-out windows", flush=True)
