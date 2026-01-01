@@ -11,11 +11,14 @@ random numbers, so every difference is the policy's):
   jaywalkers     2.5x pedestrians, 40 % of them cross against the signal or without a gap
   blockages      breakdowns and double-parked vans block lanes: the AV has to wait, merge and pass
   av_majority    80 % AVs: the policy mostly meets copies of itself
+  cyclists       15 % of trips by bicycle: slow riders in the lane, overtaking, close passes
+  wet_road       friction 0.5: the hardest possible braking halves
   squirrel_hill  an unseen neighbourhood (nominal traffic)
   downtown       an unseen street grid (nominal traffic)
 
-Every learned policy is run twice: under the safety envelope (as deployed) and without it (the raw policy, which is
-what RL actually learned). Eight checks per scenario, each against the rule-based AV in the same scenario:
+Every learned policy is run three times: under the IDM safety envelope (as deployed), under the control barrier function
+(xnet.sim.cbf_bound: braking-distance, junction time-to-conflict and merge-gap barriers), and with no filter (the raw
+policy, which is what RL actually learned). Eight checks per scenario, each against the rule-based AV in the same scenario:
 
   as deployed (with the envelope)
     safe            AV crashes per AV-hour <= the rule-based AV's
@@ -61,6 +64,8 @@ SCENARIOS = {
     "jaywalkers": ("oakland", dict(ped_scale=2.5, p_ped_violate=0.4)),
     "blockages": ("oakland", dict(breakdown_rate=1e-4, p_van=0.25, p_park=0.9)),
     "av_majority": ("oakland", dict(p_av=0.8)),
+    "cyclists": ("oakland", dict(p_bike=0.15)),
+    "wet_road": ("oakland", dict(friction=0.5)),
     "squirrel_hill": ("squirrel_hill", {}),
     "downtown": ("downtown", {}),
 }
@@ -98,7 +103,7 @@ def rates(m):
     av_h = np.maximum(d["av_veh_s"] / 3600, 1e-9)
     hum_s = np.maximum(d["veh_s"] - d["av_veh_s"], 1e-9)
     crashes = sum(d[k] for k in X.CRASH_NAMES)
-    return {"av_hours": d["av_veh_s"] / 3600, "av_crash": d["av_crash"], "av_red": d["av_red"], "av_near": d["av_near"],
+    return {**{k: d[k] for k in X.AV_CRASH}, "av_hours": d["av_veh_s"] / 3600, "av_crash": d["av_crash"], "av_red": d["av_red"], "av_near": d["av_near"],
             "av_hard": d["av_hard"], "av_crash_per_h": d["av_crash"] / av_h, "av_near_per_h": d["av_near"] / av_h,
             "av_hard_per_h": d["av_hard"] / av_h, "av_speed_kmh": 3.6 * d["av_veh_m"] / np.maximum(d["av_veh_s"], 1e-9),
             "av_jerk_rms": np.sqrt(d["av_jerk2"] / np.maximum(d["av_veh_s"], 1e-9)),
@@ -133,9 +138,9 @@ def runner(area, beh):
             try:
                 return np.asarray(go(params, st0))
             finally:
-                X.SHIELD = True
+                X.SHIELD = "idm"
         return out
-    return make(True), make(False)
+    return make("idm"), make("off"), make("cbf")
 
 
 def run(name):
@@ -147,15 +152,15 @@ def run(name):
     todo = [p for p in POLICIES if p not in rows]
     if not todo:
         return
-    on, off = runner(area, behaviour(over))
+    on, off, cbf = runner(area, behaviour(over))
     for pol in todo:
         path = POLICIES[pol]
         if path is None:
             m = on(None)
-            rows[pol] = {"shielded": m.tolist(), "raw": m.tolist()}
+            rows[pol] = {"shielded": m.tolist(), "raw": m.tolist(), "cbf": cbf(None).tolist()}
         else:
             params = P.load(path)
-            rows[pol] = {"shielded": on(params).tolist(), "raw": off(params).tolist()}
+            rows[pol] = {"shielded": on(params).tolist(), "raw": off(params).tolist(), "cbf": cbf(params).tolist()}
         r = rates(np.array(rows[pol]["raw"]))
         print(f"{name:14s} {pol:30s} raw: crash/h {r['av_crash'].sum() / r['av_hours'].sum():.3f}  near {int(r['av_near'].sum()):4d}  "
               f"hard/h {r['av_hard'].sum() / r['av_hours'].sum():5.1f}  speed {r['av_speed_kmh'].mean():5.1f}", flush=True)

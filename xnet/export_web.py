@@ -4,7 +4,8 @@ Per area  docs/viewer/data/<area>/map.json     road polygons, lane markings, cro
                                                 street labels (metres, area-centred)
 Per run   docs/viewer/data/<run>.json           meta: scenario, frames, events (time, place, type, label)
           docs/viewer/data/<run>.bin            frames: per vehicle x, y (int16, 0.1 m), heading (uint8), speed (uint8,
-                                                0.25 m/s), flags (uint8), id (uint16); signal states; pedestrians
+                                                0.25 m/s), flags (uint8), kind (uint8: car, bus, van, bicycle), id (uint16); signal
+                                                states; pedestrians
 
     python -m xnet.export_web        # the scenarios in SCENARIOS (~1-2 min each)
 """
@@ -131,6 +132,7 @@ def record(net, geo, sim, seconds, center, heads):
         veh["h"] = np.round((th % (2 * np.pi)) / (2 * np.pi) * 256) % 256
         veh["v"] = np.clip(np.round(st.v[a] * 4), 0, 255)
         veh["f"] = flags
+        veh["pad"] = st.kind[a]  # 0 car, 1 bus, 2 van, 3 bicycle
         veh["id"] = a
         sig = np.asarray(X.signal_state(J, float(st.t)))[sig_links].astype(np.uint8)
         legs = np.nonzero(st.ped_t > 0)[0]
@@ -144,14 +146,18 @@ def record(net, geo, sim, seconds, center, heads):
 SCENARIOS = [
     dict(run="oakland_learned", area="oakland", title="Oakland, morning: 30 % of vehicles are learned AVs",
          blurb="One shared PPO policy drives every blue car among calibrated human drivers, pedestrians, buses and vans.",
-         beh=dict(p_av=0.3, demand=1.2), risk=1.0, policy="results/xnet3/policy.npz", seconds=300, seed=4),
+         beh=dict(p_av=0.3, demand=1.2, p_bike=0.06), risk=1.0, policy="results/xnet3/policy.npz", seconds=300, seed=4),
+    dict(run="oakland_planner", area="oakland", title="Oakland: AVs plan in a latent world model, under a barrier function",
+         blurb="Every blue car searches 32 imagined 2.4 s futures each 0.2 s and drives the best, with a control barrier "
+               "function on top; humans x5 riskier, cyclists in the lanes.",
+         beh=dict(p_av=0.15, demand=1.2, p_bike=0.06), risk=5.0, policy="wmplan", shield="cbf", seconds=240, seed=9),
     dict(run="oakland_risky", area="oakland", title="Oakland, stress test: risky humans, breakdowns, rush-hour demand",
          blurb="Human risk amplified ~100x (red runners, drivers who do not look, distraction) plus frequent breakdowns: "
                "the corner cases an AV must survive, compressed into five minutes.",
          beh=dict(p_av=0.15, demand=1.3, p_red=0.6, red_window=3.0, p_nolook=1e-2, distract_rate=4e-5, breakdown_rate=1e-4), risk=1.0, policy=None, seconds=300, seed=7),
     dict(run="squirrel_hill_learned", area="squirrel_hill", title="Squirrel Hill: half of the vehicles are learned AVs",
          blurb="A neighbourhood the policy never trained in: Forbes, Murray and the residential grid.",
-         beh=dict(p_av=0.5, demand=1.0), risk=1.0, policy="results/xnet3/policy.npz", seconds=240, seed=5),
+         beh=dict(p_av=0.5, demand=1.0, p_bike=0.05), risk=1.0, policy="results/xnet3/policy.npz", seconds=240, seed=5),
 ]
 
 
@@ -170,14 +176,21 @@ def main(only=None):
         center = np.array([(x0 + x1) / 2, (y0 + y1) / 2])
         if area not in maps:
             maps[area] = export_map(net, geo, info, area, center)
-        pol = None
-        if sc["policy"]:
+        pol, masked = None, False
+        if sc["policy"] == "wmplan":
+            from avrl import xppo as P
+            from wmplan import model as WM
+            from wmplan import planner as PL
+            pol, masked = PL.make(WM.load(), P.load("results/xnet3/policy.npz")), True
+        elif sc["policy"]:
             from avrl import xppo as P
             pol = P.deterministic(P.load(sc["policy"]))
         beh = X.Behaviour(**({k: min(v * sc["risk"], 0.95) for k, v in knobs.items()} | sc["beh"]))
-        sim = X.Sim(net, n_envs=1, beh=beh, policy=pol, seed=sc["seed"])
-        sim.run(480)
+        X.SHIELD = sc.get("shield", "idm")  # read when the simulator is traced (its first step)
+        sim = X.Sim(net, n_envs=1, beh=beh, policy=pol, seed=sc["seed"], masked=masked)
+        sim.run(480 if not masked else 240)
         blob, events, nf = record(net, geo, sim, sc["seconds"], center, maps[area])
+        X.SHIELD = "idm"
         with open(f"{OUT}/{sc['run']}.bin", "wb") as f:
             f.write(blob)
         meta = {k: sc[k] for k in ("run", "area", "title", "blurb")} | {"frames": nf, "dt": X.DT * EVERY, "events": events,
