@@ -1,0 +1,42 @@
+[
+ {
+  "av_share": 0.0,
+  "crashes_per_MEV": 0.5902655410766602,
+  "rear-end": 0.39351036071777346,
+  "angle": 0.0655850601196289,
+  "left-turn": 0.0655850601196289,
+  "sideswipe": 0.0655850601196289,
+  "crashes": 9,
+  "mev": 0.6098949909210205
+ },
+ {
+  "av_share": 0.25,
+  "crashes_per_MEV": 0.3935271453857422,
+  "rear-end": 0.1967635726928711,
+  "angle": 0.0,
+  "left-turn": 0.1967635726928711,
+  "sideswipe": 0.0,
+  "crashes": 6,
+  "mev": 0.6098690032958984
+ },
+ {
+  "av_share": 0.5,
+  "crashes_per_MEV": 0.06558409214019775,
+  "rear-end": 0.06558409214019775,
+  "angle": 0.0,
+  "left-turn": 0.0,
+  "sideswipe": 0.0,
+  "crashes": 1,
+  "mev": 0.6099039912223816
+ },
+ {
+  "av_share": 1.0,
+  "crashes_per_MEV": 0.0,
+  "rear-end": 0.0,
+  "angle": 0.0,
+  "left-turn": 0.0,
+  "sideswipe": 0.0,
+  "crashes": 0,
+  "mev": 0.6098660230636597
+ }
+]

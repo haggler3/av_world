@@ -1,0 +1,6 @@
+jax>=0.4.30        # CPU: pip install jax ; GPU: pip install "jax[cuda12]"
+numpy
+scipy
+matplotlib
+pillow
+pytest
