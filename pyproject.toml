@@ -6,4 +6,4 @@ requires-python = ">=3.10"
 dependencies = ["jax", "numpy", "scipy", "matplotlib", "pillow", "shapely", "pyarrow"]
 
 [tool.setuptools]
-packages = ["xworld", "xnet", "pgh"]
+packages = ["xworld", "xnet", "pgh", "avrl", "dwm"]
