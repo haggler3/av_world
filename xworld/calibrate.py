@@ -82,33 +82,54 @@ def main(out="results"):
     names = [*TYPES, "red_runs_per_1000"]
     res["fit"] = {"predicted": dict(zip(names, pred.round(4).tolist())), "target": dict(zip(names, target.round(4).tolist()))}
     print("calibrated", res["calibrated"], "\nfit", res["fit"], flush=True)
-    # verification: all calibrated knobs x A together (probabilities capped at 1), rates divided by A
-    A = 25.0
-    amp = {k: min(v * A, 1.0) for k, v in knobs.items()}
-    eff = {k: amp[k] / max(knobs[k], 1e-12) for k in knobs}
-    ver = run(S.Behaviour(**amp, p_aggressive=0.2), seconds=900, seed=7)
-    tot = sum(ver["per_type"])
-    res["verification"] = {"amplification": A, "effective_amplification": eff, "raw": ver,
-                           "crashes_per_MEV_scaled": tot / A, "share": dict(zip(TYPES, (np.array(ver["per_type"]) / max(tot, 1e-9)).round(3).tolist())),
-                           "rlr_share": ver["rlr"] / max(tot, 1e-9)}
-    print("verification", json.dumps(res["verification"], default=float), flush=True)
+    res["verification"] = verify(knobs)
     with open(os.path.join(out, "calibration.json"), "w") as f:
         json.dump(res, f, indent=1, default=float)
 
 
-def av_sweep(out="results", shares=(0.0, 0.25, 0.5, 1.0), A=25.0):
+def amplification(knobs, cap=25.0):
+    """The largest amplification <= cap that keeps every calibrated probability below 0.95 (so scaling stays linear)."""
+    probs = [v for k, v in knobs.items() if k != "distract_rate" and v > 1e-9]
+    return float(min(cap, 0.95 / max(probs)))
+
+
+def verify(knobs, seconds=1800):
+    """All calibrated knobs x A together, crash rates divided by A."""
+    A = amplification(knobs)
+    amp = {k: v * A for k, v in knobs.items()}
+    ver = run(S.Behaviour(**amp, p_aggressive=0.2), seconds=seconds, seed=7)
+    tot = sum(ver["per_type"])
+    out = {"amplification": A, "raw": ver, "crashes_per_MEV_scaled": tot / A,
+           "share": dict(zip(TYPES, (np.array(ver["per_type"]) / max(tot, 1e-9)).round(3).tolist())),
+           "rlr_share": ver["rlr"] / max(tot, 1e-9), "red_runs_per_1000_scaled": ver["red_runs_per_1000"] / A}
+    print("verification", json.dumps(out, default=float), flush=True)
+    return out
+
+
+def av_sweep(out="results", shares=(0.0, 0.25, 0.5, 1.0)):
     with open(os.path.join(out, "calibration.json")) as f:
         knobs = json.load(f)["calibrated"]
-    amp = {k: min(v * A, 1.0) for k, v in knobs.items()} | {"p_aggressive": 0.2}
+    A = amplification(knobs)
+    amp = {k: v * A for k, v in knobs.items()} | {"p_aggressive": 0.2}
     rows = []
     for p in shares:
-        r = run(S.Behaviour(**amp, p_av=p), seconds=900, seed=11)
+        r = run(S.Behaviour(**amp, p_av=p), seconds=1800, seed=11)
         tot = sum(r["per_type"])
-        rows.append({"av_share": p, "crashes_per_MEV": tot / A, **{t: v / A for t, v in zip(TYPES, r["per_type"])}, "crashes": r["crashes"], "mev": r["mev"]})
+        rows.append({"av_share": p, "amplification": A, "crashes_per_MEV": tot / A, **{t: v / A for t, v in zip(TYPES, r["per_type"])}, "crashes": r["crashes"], "mev": r["mev"]})
         print(rows[-1], flush=True)
     with open(os.path.join(out, "av_sweep.json"), "w") as f:
         json.dump(rows, f, indent=1)
 
 
+def reverify(out="results"):
+    path = os.path.join(out, "calibration.json")
+    with open(path) as f:
+        res = json.load(f)
+    res["verification"] = verify(res["calibrated"])
+    with open(path, "w") as f:
+        json.dump(res, f, indent=1, default=float)
+
+
 if __name__ == "__main__":
-    (av_sweep if "av" in sys.argv[1:] else main)()
+    cmd = sys.argv[1] if len(sys.argv) > 1 else ""
+    {"av": av_sweep, "verify": reverify}.get(cmd, main)()

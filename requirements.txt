@@ -4,3 +4,5 @@ scipy
 matplotlib
 pillow
 pytest
+shapely
+pyarrow
