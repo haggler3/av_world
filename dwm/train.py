@@ -136,10 +136,10 @@ def train(cfg: M.Cfg, d, st: Stats, budget_s, log_every=100, verbose=True, max_s
     o = opt.init(p)
 
     @jax.jit
-    def chunk(p, ema, o, key, frac0, frac1, cond, x0):
+    def chunk(p, ema, o, key, frac0, frac1, cond, x0, step0):
         def body(c, xs):
             p, ema, o = c
-            k, frac = xs
+            k, frac, t = xs
             k1, k2 = jax.random.split(k)
             idx = jax.random.randint(k1, (cfg.batch,), 0, n)
             l, g = jax.value_and_grad(M.loss_fn)(p, cfg, ab, x0[idx], cond[idx], k2)
@@ -147,11 +147,13 @@ def train(cfg: M.Cfg, d, st: Stats, budget_s, log_every=100, verbose=True, max_s
             upd, o = opt.update(g, o, p)
             upd = jax.tree.map(lambda u: -lr * u, upd)
             p = optax.apply_updates(p, upd)
-            ema = jax.tree.map(lambda e, q: cfg.ema * e + (1 - cfg.ema) * q, ema, p)
+            dec = jnp.minimum(cfg.ema, (1.0 + t) / (10.0 + t))  # warm-up: short runs are not scored on their initial weights
+            ema = jax.tree.map(lambda e, q: dec * e + (1 - dec) * q, ema, p)
             return (p, ema, o), l
 
         fr = jnp.linspace(frac0, frac1, log_every)
-        (p, ema, o), ls = jax.lax.scan(body, (p, ema, o), (jax.random.split(key, log_every), fr))
+        ts = step0 + jnp.arange(log_every, dtype=jnp.float32)
+        (p, ema, o), ls = jax.lax.scan(body, (p, ema, o), (jax.random.split(key, log_every), fr, ts))
         return p, ema, o, ls.mean()
 
     t0 = time.time()
@@ -164,7 +166,7 @@ def train(cfg: M.Cfg, d, st: Stats, budget_s, log_every=100, verbose=True, max_s
         else:
             f0 = el / budget_s
             f1 = min(1.0, f0 + (el / max(steps, 1)) * log_every / budget_s) if steps else 0.02
-        p, ema, o, l = chunk(p, ema, o, k, f0, f1, cond, x0)
+        p, ema, o, l = chunk(p, ema, o, k, f0, f1, cond, x0, float(steps))
         l = float(l)
         steps += log_every
         curve.append((steps, time.time() - t0, l))

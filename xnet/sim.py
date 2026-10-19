@@ -50,6 +50,7 @@ class Behaviour(NamedTuple):
     breakdown_rate: float = 2e-6  # per second of driving
     p_ped_violate: float = 0.03  # a pedestrian crosses against the signal / without a gap
     demand: float = 1.0  # multiplier on the network's inferred demand
+    ped_scale: float = 1.0  # multiplier on the pedestrian rates
 
 
 class Reward(NamedTuple):
@@ -530,7 +531,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     leg_m2 = jnp.where(m2 >= 0, net["link_leg_out"][net["mov_out"][jnp.maximum(m2, 0)]], G)
     leg_app = leg_app + jnp.zeros(G + 1).at[jnp.where(near2 & (m2 >= 0), leg_m2, G)].add(1.0, mode="drop")[:G]
     leg_app = leg_app + jnp.zeros(G + 1).at[jnp.where(soon, leg_out, G)].add(1.0, mode="drop")[:G]
-    want_ped = (st.ped_t <= 0) & (u_ped[0] < net["leg_rate"] * DT)
+    want_ped = (st.ped_t <= 0) & (u_ped[0] < net["leg_rate"] * beh.ped_scale * DT)
     lawful = walk & (leg_box == 0) & (leg_app == 0)
     # a violating pedestrian crosses against the signal or into a short gap, but does not step in front of a close car
     close = on_link & alive & (st.v > 0.5) & (dist < 4.0 + 1.5 * st.v)

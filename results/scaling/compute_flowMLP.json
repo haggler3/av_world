@@ -1,0 +1,34 @@
+{
+ "rows": [
+  {
+   "arch": "flow matching, MLP",
+   "steps": 250,
+   "skill": 1.6294384377439624,
+   "train_s": 8.634820461273193,
+   "params": 1009694
+  },
+  {
+   "arch": "flow matching, MLP",
+   "steps": 600,
+   "skill": 1.2907754200874546,
+   "train_s": 11.335550785064697,
+   "params": 1009694
+  },
+  {
+   "arch": "flow matching, MLP",
+   "steps": 1500,
+   "skill": 1.1607970264960132,
+   "train_s": 23.488399505615234,
+   "params": 1009694
+  },
+  {
+   "arch": "flow matching, MLP",
+   "steps": 4000,
+   "skill": 1.0507061255137289,
+   "train_s": 58.748136043548584,
+   "params": 1009694
+  }
+ ],
+ "fits": null,
+ "form": "skill = c + a * x^-b"
+}

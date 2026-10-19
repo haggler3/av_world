@@ -244,7 +244,7 @@ def load(path):
     return p
 
 
-def train(out="results/xnet", updates=200, seed=0, init=None, **kw):
+def train(out="results/xnet", updates=200, seed=0, init=None, beh=None, ckpt_at=(), **kw):
     if init is not None:
         kw.setdefault("bc_updates", 0)
     cfg = Config(**kw)
@@ -252,7 +252,7 @@ def train(out="results/xnet", updates=200, seed=0, init=None, **kw):
     os.makedirs(out, exist_ok=True)
     net, geo, info = NW.build(cfg.area)
     knobs = json.load(open(os.path.join(os.path.dirname(NW.__file__), "..", "results", "calibration.json")))["calibrated"]
-    beh = behaviours(cfg.n_envs, seed, knobs)
+    beh = behaviours(cfg.n_envs, seed, knobs) if beh is None else beh
     key = jax.random.PRNGKey(seed)
     params = init_params(key) if init is None else load(init)
     J = X.to_jnp(net)
@@ -286,6 +286,8 @@ def train(out="results/xnet", updates=200, seed=0, init=None, **kw):
                "transitions": int(s["transitions"]), "kl": float(s["kl"]), "vl": float(s["vl"]),
                "log_std": np.asarray(params["log_std"]).round(3).tolist(), **summarize(s["m"])}
         log.append(row)
+        if i + 1 in ckpt_at:
+            save(params, os.path.join(out, f"policy_{i + 1}.npz"))
         if i % 10 == 0 or i == updates - 1:
             print(json.dumps({k: (round(v, 3) if isinstance(v, float) else v) for k, v in row.items()}, default=float), flush=True)
             save(params, os.path.join(out, "policy.npz"))

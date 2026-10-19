@@ -1,0 +1,6 @@
+{"arch": "transformer 64x2", "windows": 10000, "sim_steps": 243.71651436641153, "skill": 1.2042300165580422, "train_s": 64.07568407058716}
+{"arch": "transformer 64x2", "windows": 30000, "sim_steps": 731.1495430992346, "skill": 1.1821971078028186, "train_s": 61.92442297935486}
+{"arch": "transformer 64x2", "windows": 100000, "sim_steps": 2437.165143664115, "skill": 1.1451465585347238, "train_s": 61.36651968955994}
+{"arch": "transformer 64x2", "windows": 300000, "sim_steps": 7311.495430992346, "skill": 1.1838781026071545, "train_s": 65.55591106414795}
+{"arch": "transformer 64x2", "windows": 730000, "sim_steps": 17791.30554874804, "skill": 1.0794438713124448, "train_s": 76.26262712478638}
+data_transformer642 fits null
