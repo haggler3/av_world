@@ -1,14 +1,79 @@
 # av_world
 
-A fast, batched **intersection world** for AV research, in pure JAX. It covers signalised and stop-controlled intersections with
-turn lanes, and human drivers who run reds, don't look, don't signal and get distracted. Crash rates are **calibrated
-to published intersection crash data**. Intersections can be the default 4-way or **real ones auto-mined from
-OpenStreetMap** (here: Pittsburgh). Thousands run in parallel (`jax.vmap`), each with its own layout, so rare events
-like crashes can be measured.
+A fast, batched **intersection and city-area world** for AV research, in pure JAX. It covers:
+
+- signalised and stop-controlled intersections with turn lanes;
+- human drivers who run reds, don't look, don't signal and get distracted;
+- crash rates **calibrated to published intersection crash data**;
+- **whole map areas built from OpenStreetMap** (here: Oakland, Pittsburgh), with car following, lane changes, zipper
+  merges, right of way at every conflict point, pedestrians, buses, double-parked deliveries, breakdowns and
+  congestion-aware routing.
+
+Many copies run in parallel (`jax.vmap`), so rare events like crashes can be measured.
+
+![Oakland, Pittsburgh, every vehicle](docs/xnet_oakland_overview.gif)
+
+*All of Oakland, Pittsburgh (2.4 x 1.8 km, 313 junctions, 75 km of directed lanes) simulated as one area: every vehicle coloured
+by its speed relative to the limit. Below, the same run around Forbes Ave & S Craig St.*
+
+![Oakland street view](docs/xnet_oakland_zoom.gif)
+
+## A whole area: Oakland, Pittsburgh (`xnet/`)
+
+`xnet/network.py` turns the Overture / OpenStreetMap roads inside a bounding box into a network. Roads are cut at the
+area's edge, and those cut points become entries and exits. Junctions closer than 30 m are joined into one, as real
+traffic simulators do. Lanes, signals, stop signs and demand are inferred from road class, as for the single
+intersections below.
+
+| | Oakland |
+|---|---|
+| junctions / directed links | 313 / 622 (68 links with 2 lanes, 76 one-way; Fifth and Forbes are the one-way pair); 74 entries and 74 exits at the area's edge |
+| paths through junction boxes | 1,253, with 1,891 conflict points (crossing or merging into the same lane) |
+| control (inferred) | 34 signals (2 phases; approaches whose straight or right-turn paths cross never share a phase), 276 stop-controlled approaches (two-way and all-way stops) |
+| crosswalks | 608 |
+
+`xnet/sim.py` moves every vehicle every 0.2 s. Vehicles live on *tracks*: a lane of a link, or a path through a box.
+
+| | |
+|---|---|
+| **following** | IDM toward whichever is nearest: the leader on the same track, the last car on the next one or two tracks (across a box or a short link), a stop line, a bus stop, a parked van, a wreck |
+| **lanes** | mandatory lane changes to reach the turn lane; discretionary ones to pass a slow or stopped car; **zipper merges** where a lane ends (the driver alongside holds back to let one in); passing a stopped car on a single-lane street via the opposing lane when it is clear |
+| **junctions** | every move has a priority: signal phase or major road, then straight > right > left, then a fixed tie-break. A driver checks the box (cars before each conflict point) and the cars arriving on higher-priority moves, looking up to three links upstream along their routes. At stop signs, the first to stop goes first. Permissive left turners clear at the change to red. "Don't block the box": enter only if there is room after it |
+| **pedestrians** | at signals they start in a 10 s WALK interval; elsewhere when no car is close. A share cross against the signal or into a short gap. Drivers yield to crosswalks up to two links ahead |
+| **other road users** | buses (3 %) stop 15-35 s at stops on arterials; delivery vans (5 %) double-park 1-3 min; breakdowns block a lane for 5-15 min; crashed cars stay as wrecks for 2-5 min |
+| **risky drivers** | the calibrated knobs from `xworld/calibrate.py`: late red-light running, not looking, not signalling, distraction, aggressive gaps; AVs never do any of these |
+| **routing** | next-hop tables to 64 destinations (map exits and inner blocks), re-solved every 5 simulated minutes from measured link speeds; trips that cannot reach their destination leave by the nearest exit |
+
+**Results** (`python -m xnet.experiment`: 8 copies of Oakland x 1 simulated hour each, moderate demand, about 480,000
+junction entries and 43,000 trips per world):
+
+| | clean world | calibrated risky drivers (x18.5, scaled back) | 3 % of pedestrians violating |
+|---|---|---|---|
+| trips finished / mean trip | 40,767 / 8.1 min | 40,498 / 8.1 min | 40,995 / 7.9 min |
+| mean speed | 11.2 km/h | 11.2 km/h | 11.6 km/h |
+| gridlock teleports (stuck 4 min) | 492 (1.1 % of trips) | 528 | 421 |
+| lane changes / passes on the opposing lane | 47,641 / 19,570 | 47,211 / 19,761 | 46,950 / 19,211 |
+| bus and delivery stops / pedestrian crossings | 10,799 / 112,172 | 10,748 / 112,503 | 10,626 / 117,348 |
+| crashes in the run | 18 (10 rear-end, 7 left-turn, 1 pedestrian) | 31 | 22 |
+| **crashes per million junction entries** | **37 (model artefacts)** | **+1.5 over clean** (0.9 rear-end, 0.3 angle, 0.1 sideswipe, 0.1 pedestrian) | **+8 over clean** (pedestrian) |
+
+**Read these with care:**
+
+- **The clean world is not crash-free.** It has 37 crashes per million junction entries from the model itself, all
+  at Pittsburgh's irregular junctions: odd geometry, very short links, merged junctions. Getting it this low (from
+  567 crashes in the first 10-minute run) took about twenty fixes, listed in the commit history. The single-intersection
+  world below is crash-free when clean.
+- **Driver crash rates are reported as the excess over that baseline**, the same way the calibration subtracts its
+  clean baseline. The driver-caused rate, 1.5 per million entries, is the same order as the single-intersection
+  calibration (0.62) and the published 0.78. But it rests on only 13 extra crashes (about ±40 %).
+- **The pedestrian violation rate (3 %) is a guess, not calibrated.**
+
+**Speed:** 8 copies of Oakland (about 470 vehicles each, 2,048 vehicle slots) run at about **190x real time in total**
+on 4 CPU cores. That is one simulated hour of the whole area in about 19 s, or about 8 simulated hours in 3 minutes.
 
 ![six Pittsburgh intersections simulated in one batch](docs/pgh_grid.gif)
 
-*Six real Pittsburgh intersections, auto-mined from OpenStreetMap, simulated together in one vmapped batch. Pink,
+*Single intersections: six real Pittsburgh intersections, auto-mined from OpenStreetMap, simulated together in one vmapped batch. Pink,
 green, grey: human drivers; blue: AVs. Starred values (lanes, signal or stop control) are inferred: the open map data
 has no lane counts or signal locations.*
 
@@ -153,9 +218,14 @@ python -m pgh.fetch                            # Pittsburgh roads from Overture'
 python -m pgh.mine                             # mine intersections -> data/pgh_intersections.json, docs/pgh_map.png
 python -m pgh.survey                           # calibrated crash survey over 2,048 intersections -> results/pgh_survey.json
 python -m pgh.gifs                             # labelled GIFs -> docs/pgh_*.gif
+
+python -m xnet.experiment                      # whole area: clean / risky drivers / pedestrians (~9 min) -> results/xnet_oakland.json
+python -m xnet.render                          # whole-area overview and street-view GIFs -> docs/xnet_oakland_*.gif
+python -m pytest -q tests/test_xnet.py
 ```
 
-For another city, change `BBOX` in `pgh/fetch.py`.
+For another city, change `BBOX` in `pgh/fetch.py`. For another area of Pittsburgh, add a bounding box to `AREAS` in
+`xnet/network.py` (`squirrel_hill` and `downtown` are there) and pass its name.
 
 In code:
 
@@ -171,12 +241,21 @@ print(S.summary(metrics))                                    # crashes per MEV b
 its = P.load()[:512]                                         # 512 mined Pittsburgh intersections, one per env
 lay = S.stack([P.build(i)[1] for i in its])
 m, _ = S.run_batch(jax.random.PRNGKey(0), len(its), 600, beh, lay=lay, per_env=True)   # [512, metrics]
+
+from xnet import network as NW, sim as X
+net, geo, info = NW.build("oakland")                         # the whole area
+sim = X.Sim(net, n_envs=8, beh=X.Behaviour(demand=1.0, p_av=0.2))
+sim.run(3600)                                                # one hour, 8 copies, rerouting every 5 min
+print(X.summary(sim.st.m))
 ```
 
 ## Limitations
 
 * Lanes, signal locations and demand at the real intersections are inferred from road class, not observed (marked * in
   the GIFs). Signal plans are generic, not Pittsburgh's actual timings.
+* The area simulator has a residual crash rate of its own (37 per million junction entries, above); paths through a
+  junction are fixed curves, and vehicles do not swerve; at most 2 lanes per direction; no parking manoeuvres, cyclists
+  or grades (Pittsburgh's hills).
 * Only 3- and 4-leg intersections; no roundabouts or all-way stops; no pedestrians, cyclists, trucks, grades or
   single-vehicle crashes (about 16 % of real crashes are outside the four modelled types).
 * Arrivals that find the entry occupied are dropped (8-15 % of demand at the Pittsburgh intersections); rates are per
@@ -198,9 +277,14 @@ pgh/mine.py          intersection mining and attribute inference
 pgh/layouts.py       mined intersection -> Geometry + Layout
 pgh/survey.py        calibrated crash survey over many real intersections
 pgh/gifs.py          labelled Pittsburgh GIFs
+xnet/network.py      a whole map area: links, lanes, junction boxes, moves, conflict points, control, crosswalks, routing
+xnet/sim.py          the batched area simulator (following, lane changes, merges, right of way, pedestrians, buses, ...)
+xnet/experiment.py   clean / risky drivers / pedestrians in one area
+xnet/render.py       overview and street-view GIFs
 tests/               geometry, conflict-free signal plans, zero crashes without risky behaviour (default and
-                     real-world-like layouts), behaviour -> crash type, determinism
-results/             calibration.json, av_sweep.json, pgh_survey.json
+                     real-world-like layouts), behaviour -> crash type, determinism; area network consistency,
+                     routes, flow, distraction -> rear-ends, determinism
+results/             calibration.json, av_sweep.json, pgh_survey.json, xnet_oakland.json
 ```
 
 Sources: [Overture Maps](https://docs.overturemaps.org/) (transportation theme, release 2026-09-23.1;
