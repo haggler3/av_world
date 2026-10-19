@@ -1,0 +1,8 @@
+{"mode": "uniform", "updates": 15, "score": 0.04597574099898338, "av_hard_per_h": 13.541328430175781, "av_shield_share": 0.6153143573334052, "av_speed_kmh": 17.705598679938998}
+{"mode": "uniform", "updates": 30, "score": 0.056862570345401764, "av_hard_per_h": 7.701787948608398, "av_shield_share": 0.4295077315983307, "av_speed_kmh": 17.256204112767232}
+{"mode": "uniform", "updates": 60, "score": 0.06189344450831413, "av_hard_per_h": 5.635487079620361, "av_shield_share": 0.36030062012818104, "av_speed_kmh": 16.95050500784676}
+{"mode": "uniform", "updates": 120, "score": 0.06998023390769958, "av_hard_per_h": 4.021501064300537, "av_shield_share": 0.16091033539923127, "av_speed_kmh": 16.919701940457543}
+{"mode": "active", "updates": 15, "score": 0.04442182555794716, "av_hard_per_h": 12.277134895324707, "av_shield_share": 0.6366923474144746, "av_speed_kmh": 17.62398456007658}
+{"mode": "active", "updates": 30, "score": 0.057348333299160004, "av_hard_per_h": 7.213705062866211, "av_shield_share": 0.42884280881587167, "av_speed_kmh": 17.192518534848006}
+{"mode": "active", "updates": 60, "score": 0.06232304871082306, "av_hard_per_h": 5.478834629058838, "av_shield_share": 0.3537442361752349, "av_speed_kmh": 16.970574384984715}
+{"mode": "active", "updates": 120, "score": 0.06853818148374557, "av_hard_per_h": 4.82375955581665, "av_shield_share": 0.22217145055536006, "av_speed_kmh": 17.009382622321244}

@@ -1,20 +1,83 @@
 # av_world
 
-One repository for AV research in pure JAX, from the world to the driver:
+**A city-scale, crash-calibrated driving world in pure JAX, and the research stack built on it: multi-agent RL,
+generative world models, scaling laws and controlled experiments on what makes a simulator a good teacher.**
+
+[**Live site**](https://haggler3.github.io/av_world/) ·
+[**Explore the Pittsburgh simulations in your browser**](https://haggler3.github.io/av_world/viewer/) ·
+[Methods](docs/METHODS.md) · [RL](docs/RL.md) · [World models](docs/WORLD_MODELS.md)
+
+![learned AVs in Oakland](docs/img/xnet_learned_avs.gif)
 
 | package | what it is |
 |---|---|
-| `xworld/` | a batched intersection simulator: turn lanes, signals, risky human drivers, crash rates calibrated to published data |
-| `pgh/` | 10,205 real Pittsburgh intersections auto-mined from OpenStreetMap (Overture Maps) |
-| `xnet/` | a whole map area (Oakland, Pittsburgh): car following, lane changes, zipper merges, right of way at every conflict point, pedestrians, buses, double-parked vans, breakdowns, routing that adapts to congestion. About 380x real time for 8 copies on 4 CPU cores |
-| `avrl/` | driving policies (details: [docs/RL.md](docs/RL.md)): multi-agent PPO in `xnet` (one shared policy drives every AV), the corridor driver exported to Rust, evaluation, the dynamics ladder |
-| `dwm/` | generative world models (diffusion, flow matching) of the traffic around an AV, trained on simulator logs, with scaling laws |
+| `xnet/` | a whole neighbourhood (Oakland, Squirrel Hill, Downtown Pittsburgh) built from open map data: car following, lane changes, zipper merges, right of way at every conflict point, signals and stop signs, pedestrians, buses, double-parked vans, breakdowns, rerouting around congestion. **~380x real time** for 8 copies of the whole area on 4 CPU cores |
+| `xworld/` | a batched intersection simulator whose human drivers reproduce **published crash rates by crash type** (rear-end, angle, left-turn, sideswipe) |
+| `pgh/` | 10,205 real Pittsburgh intersections auto-mined from OpenStreetMap (Overture Maps), simulated as-is |
+| `avrl/` | multi-agent PPO (one shared policy drives every AV in the area), the dynamics ladder, active scenario selection, a Rust export of the corridor driver ([docs/RL.md](docs/RL.md)) |
+| `dwm/` | diffusion and flow-matching world models of the traffic around an AV, trained on simulator logs, with scaling laws across architectures |
+| `docs/viewer/` | a browser replay of whole-area simulations: zoom anywhere, follow any AV, jump to crashes, red-light runs and breakdowns |
 
 ```bash
 pip install -e . && python -m pgh.fetch && export JAX_DEFAULT_PRNG_IMPL=unsafe_rbg && python -m pytest -q tests
 ```
 
-Every experiment below is a set of jobs of 5 minutes or less on 4 CPU cores.
+Every experiment in this README is a set of jobs of 5 minutes or less on 4 CPU cores.
+
+## What this does that common tools don't
+
+The driving-simulation field has split into two camps. **Log-replay simulators** (Waymax, GPUDrive, nuPlan) replay
+short recorded snippets and are as realistic as their logs, but cannot create situations the logs don't contain.
+**Self-play simulators** (Gigaflow) scale to billions of kilometres, but every agent is the same policy, so the
+world never contains a distracted human or a red-light runner. av_world sits in between: a **synthetic, open-ended
+city whose human drivers are calibrated to real crash statistics**, so the policy learns among the mistakes real
+humans make, at the rates they make them.
+
+| | av_world | Waymax | GPUDrive | Gigaflow | MetaDrive | CARLA | SUMO |
+|---|---|---|---|---|---|---|---|
+| Framework | JAX | JAX | C++/CUDA (Madrona) | GPU batch sim | Python / Panda3D | Unreal | C++ |
+| Scenes | whole neighbourhoods from any OSM map, unbounded duration | ~9 s logged snippets (WOMD) | ~9 s logged snippets (WOMD) | procedural maps | procedural + imported | hand-built towns | any OSM map |
+| Other road users | calibrated human drivers, pedestrians, buses, vans, breakdowns | logs or IDM | logs or the policy | the policy (self-play) | rule-based traffic | traffic manager | car-following models |
+| Crashes | modelled and **calibrated by crash type** | detected | detected | detected | detected | detected | collision-free by default |
+| Signals, stop signs, right of way | full conflict-point model | logged light states | from logs | yes | partial | yes | yes |
+| RL + world models + scaling laws in one repo | **yes** | sim + baselines | sim + baselines | not released | sim + baselines | sim | sim |
+| Runs on a laptop CPU | **380x real time** | yes | GPU-focused | multi-GPU | yes | GPU | yes |
+
+**What's distinctive here:**
+
+1. **Calibrated risk, not just traffic.** Red runners, drivers who don't look, distraction and breakdowns are tuned
+   so crash rates *by type* match published intersection data. Most simulators are either collision-free by
+   default (SUMO) or inherit whatever their logs contain.
+2. **The simulator itself is the experimental variable.** The dynamics ladder switches sources of dynamics on one at
+   a time and measures what each buys the learner. Active scenario selection asks which simulated data teaches
+   fastest. These are questions about the *teacher*, not the student.
+3. **Sim → policy → generative world model → scaling laws in one codebase.** The same logs train PPO and the
+   diffusion world models, so the scaling laws for policy and model can be compared directly.
+4. **Any city, from open data.** `pgh/` mines 10,205 Pittsburgh intersections automatically; `xnet/` turns a
+   bounding box into a simulated neighbourhood.
+5. **Inspectable.** Every run can be replayed in the [browser viewer](https://haggler3.github.io/av_world/viewer/):
+   key moments are indexed, so you can jump straight to each crash, red run or breakdown.
+
+## Where this sits in current research
+
+- **Scale beats hand-tuning.** Gigaflow ([Cusumano-Towner et al., ICML 2025](https://arxiv.org/abs/2502.03349))
+  trained one self-play policy on 1.6 billion km and set the state of the art on CARLA, nuPlan and Waymax without
+  ever seeing human data. Here: the same bet at laptop scale, plus calibrated humans as the hard part of the world.
+- **Throughput is the bottleneck.** GPUDrive ([Kazemkhani et al., ICLR 2025](https://arxiv.org/abs/2408.01584))
+  reaches over a million steps per second on a GPU. `xnet` is jitted end to end with fixed shapes, so the same code
+  moves to a GPU.
+- **Scaling laws for driving.** Waymo ([Baniodeh et al., 2025](https://waymo.com/research/scaling-laws-of-motion-forecasting-and-planning))
+  found power laws in compute for motion forecasting and planning. This repo fits the same laws for policy score vs
+  simulator steps and for world-model error vs compute and data, across four architectures.
+- **Generative world models.** GAIA-2 ([Wayve, 2025](https://arxiv.org/abs/2503.20523)) generates multi-camera
+  driving video with latent diffusion. `dwm/` applies diffusion and flow matching to the traffic state itself: 3 s
+  futures in 0.06 ms.
+- **Data-driven simulation in JAX.** Waymax ([Gulino et al., NeurIPS 2023](https://arxiv.org/abs/2310.08710)) made
+  log-replay simulation differentiable and batched. `xnet` keeps that interface style (pure `step`, vmapped worlds)
+  but generates its own traffic.
+- **Adaptive curricula.** Prioritised level replay ([Jiang et al., 2021](https://arxiv.org/abs/2010.03934)) selects
+  training environments by learning potential. Here it is tested against uniform scenario sampling on a 54-scenario
+  grid of the same city.
 
 ## Does a more dynamic world train a better driver?
 
@@ -82,14 +145,43 @@ steps. Two things explain this:
 **The driving policy (C).** The score rises as a power law in simulation steps, with nearly the same exponent from
 the empty-streets world and the full world (b = 0.76 and 0.77). Same law, different offset early on.
 
+## Active learning: which simulated data teaches fastest?
+
+![active learning](docs/img/active_learning.png)
+
+**The experiment (`avrl/active.py`).** A grid of 54 scenarios on the Oakland map: demand (0.7, 1, 1.35) x human risk
+(1, 5, 15x calibrated) x pedestrian rate (0.3, 1, 2x) x AV share (25, 60 %). Every 5 PPO updates each of the 8
+simulated copies of the area is assigned a scenario by one of four rules. All start from the same imitation policy,
+get 62,400 simulator steps, and are scored in the held-out test world of the dynamics ladder.
+
+| rule | 7.8 k steps | 15.6 k | 31.2 k | 62.4 k |
+|---|---|---|---|---|
+| uniform (domain randomisation) | 0.0460 | 0.0569 | 0.0619 | **0.0700** |
+| prioritised level replay, \|advantage\| | 0.0444 | 0.0573 | 0.0623 | 0.0685 |
+| failure-focused replay (hard brakes, near misses, crashes per AV-hour) | 0.0444 | 0.0573 | **0.0635** | 0.0694 |
+| uniform + critic warm-up (policy held for 10 updates) | 0.0427 | 0.0526 | 0.0596 | 0.0677 |
+
+**How to read it:**
+
+- **A.** Failure-focused replay leads at mid-budget (+2.6 % at 31 k steps) and finishes level with uniform sampling.
+  Level replay tracks uniform throughout. Holding the policy while the critic warms up costs steps and never catches up.
+- **B, the reason.** Measured by the policy's own learning signal, the *least* informative scenario still carries
+  73 % of the signal of the most informative one. Every corner of this world still teaches. When the signal is this
+  flat, uniform sampling is already near-optimal, so selection rules can only reorder the data.
+- **What this means for "more data, faster".** At this stage the lever is *volume* of dynamic simulation, not
+  selection. This matches the dynamics ladder (richer worlds help early, steps dominate later) and the RL power law
+  (b ≈ 0.77). Selection should start to pay once the policy has mastered the common cases and the signal concentrates
+  on rare ones. The failure score already spreads out much more than the advantage does (orange points in B).
+
 ## What's next
 
 1. **Scale the simulation.** The power laws are fitted up to 62 k simulator steps (RL) and 18 k (world-model data).
    Next: 4-16x longer runs on a GPU to test them, where JAX should push `xnet` well past 380x real time.
 2. **Train the driver inside the world model.** The diffusion model samples 3 s futures in 0.06 ms each. Use it as a
    learned simulator for imagined rollouts (Dreamer-style) and compare steps-to-score with the dynamics ladder.
-3. **A curriculum up the ladder.** Dynamics speed up early learning, so start in the full world and anneal toward
-   the hardest cases: risky humans x15, rare events oversampled.
+3. **Failure-focused replay at scale.** The failure score separates scenarios far more than the learning signal does.
+   With longer runs, oversample the scenarios where AVs still brake hard or nearly collide, and mine new ones
+   (breakdowns on arterials, red runners at high demand) from the browser viewer's key moments.
 4. **Bigger worlds.** Squirrel Hill and Downtown are already defined in `xnet/network.py`. Train one policy across
    areas and measure transfer to an unseen neighbourhood.
 5. **Close the loop with Rust.** Port the 28-feature observation to `small_av_world`, so the city-area policy runs in
@@ -384,13 +476,16 @@ xnet/experiment.py   clean / risky drivers / pedestrians in one area
 xnet/render.py       overview and street-view GIFs
 avrl/xppo.py         multi-agent PPO in xnet (one shared policy drives every AV); xeval.py, xviz.py
 avrl/ladder.py       the dynamics ladder (training worlds of increasing dynamics, scored in one test world); ladder_plot.py
+avrl/active.py       active scenario selection: uniform vs level replay vs failure-focused replay; active_plot.py
+xnet/export_web.py   recordings + maps for the browser viewer (docs/viewer/)
+docs/index.html      the project site (GitHub Pages from /docs)
 avrl/env.py, ppo.py  the corridor driver (small_av_world), export.py: weights and parity vectors for Rust
 dwm/                 diffusion / flow world models; DWM_SOURCE=city | xnet; xnet_data.py (logs from the area simulator)
 dwm/scaling.py       scaling laws across architectures (compute, simulated data); scaling_plot.py
 tests/               geometry, conflict-free signal plans, zero crashes without risky behaviour (default and
                      real-world-like layouts), behaviour -> crash type, determinism; area network consistency,
                      routes, flow, distraction -> rear-ends, determinism
-results/             calibration.json, av_sweep.json, pgh_survey.json, xnet_oakland.json, ladder/, scaling/, xnet*/ (policies), dwm/, final/
+results/             calibration.json, av_sweep.json, pgh_survey.json, xnet_oakland.json, ladder/, active/, scaling/, xnet*/ (policies), dwm/, final/
 ```
 
 Sources: [Overture Maps](https://docs.overturemaps.org/) (transportation theme, release 2026-09-23.1;

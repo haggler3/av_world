@@ -117,19 +117,24 @@ def make_fns(cfg: Config, net, beh, opt):
     J = X.to_jnp(net)
     E = cfg.n_envs
 
-    def env_step(params, st, key, pol):
+    beh0 = beh
+
+    def env_step(params, st, key, pol, beh):
         keys = jax.random.split(key, E)
         return jax.vmap(lambda s, b, k: X.step(s, J, b, nh, rl=(pol(params), k)))(st, beh, keys)
 
-    def rollout(params, st, key, pol):
+    def rollout(params, st, key, pol, beh):
         def body(st, k):
-            st, tr = env_step(params, st, k, pol)
+            st, tr = env_step(params, st, k, pol, beh)
             return st, tr
         return jax.lax.scan(body, st, jax.random.split(key, cfg.n_steps + 1))
 
     @jax.jit
-    def warm(params, st, key):
-        return rollout(params, st, key, deterministic)[0]
+    def _warm(params, st, key, beh):
+        return rollout(params, st, key, deterministic, beh)[0]
+
+    def warm(params, st, key, beh=None):
+        return _warm(params, st, key, beh0 if beh is None else beh)
 
     def bc_loss(params, tr):
         target = jnp.stack([accel_to_u(tr["a_rule"]), jnp.broadcast_to(U_RULE[1], tr["a_rule"].shape)], -1)
@@ -138,8 +143,8 @@ def make_fns(cfg: Config, net, beh, opt):
         return (err * w).sum() / jnp.maximum(w.sum(), 1.0)
 
     @jax.jit
-    def bc_update(params, opt_state, st, key):
-        st, tr = rollout(params, st, key, deterministic)  # the rule-based shield caps it, close to the rule driver
+    def _bc_update(params, opt_state, st, key, beh):
+        st, tr = rollout(params, st, key, deterministic, beh)  # the rule-based shield caps it, close to the rule driver
 
         def one(c, _):
             params, opt_state = c
@@ -149,6 +154,9 @@ def make_fns(cfg: Config, net, beh, opt):
 
         (params, opt_state), loss = jax.lax.scan(one, (params, opt_state), None, length=8)
         return params, opt_state, st, loss[-1]
+
+    def bc_update(params, opt_state, st, key, beh=None):
+        return _bc_update(params, opt_state, st, key, beh0 if beh is None else beh)
 
     def gae(tr):
         r, d, v_ = tr["reward"], tr["done"].astype(jnp.float32), tr["aux"][..., 1]
@@ -180,10 +188,10 @@ def make_fns(cfg: Config, net, beh, opt):
         return pg + cfg.vf * vl, (pg, vl, kl)
 
     @jax.jit
-    def update(params, opt_state, st, key):
+    def _update(params, opt_state, st, key, beh):
         k_roll, k_perm = jax.random.split(key)
         m0 = st.m
-        st, tr = rollout(params, st, k_roll, stochastic)
+        st, tr = rollout(params, st, k_roll, stochastic, beh)
         adv, ret, w = gae(tr)
         T = cfg.n_steps
         flat = lambda x: x[:T].reshape((T * E * cfg.n_slots,) + x.shape[3:])
@@ -208,8 +216,13 @@ def make_fns(cfg: Config, net, beh, opt):
         nv = jnp.maximum(w.sum(), 1.0)
         dm = (st.m - m0).sum(0)
         stats = {"reward_per_step": (tr["reward"][:T] * tr["valid"][:T]).sum() / nv, "transitions": w.sum(),
-                 "pg": aux[0].mean(), "vl": aux[1].mean(), "kl": aux[2].mean(), "m": dm}
+                 "pg": aux[0].mean(), "vl": aux[1].mean(), "kl": aux[2].mean(), "m": dm,
+                 # per copy of the area: mean |advantage| per AV decision = how much there is still to learn there
+                 "signal": (jnp.abs(adv) * w).sum((0, 2)) / jnp.maximum(w.sum((0, 2)), 1.0), "valid": w.sum((0, 2)), "m_env": st.m - m0}
         return params, opt_state, st, stats
+
+    def update(params, opt_state, st, key, beh=None):
+        return _update(params, opt_state, st, key, beh0 if beh is None else beh)
 
     return warm, bc_update, update
 

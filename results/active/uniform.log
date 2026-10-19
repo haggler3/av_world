@@ -1,0 +1,4 @@
+uniform update 15: 35 s, reward/step 0.0387
+uniform update 30: 64 s, reward/step 0.0263
+uniform update 60: 122 s, reward/step 0.0222
+uniform update 120: 233 s, reward/step 0.0171
