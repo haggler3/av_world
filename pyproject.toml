@@ -1,0 +1,9 @@
+[project]
+name = "av_world"
+version = "0.2.0"
+description = "Batched JAX intersection and city-area traffic worlds (xworld, xnet) with Pittsburgh maps"
+requires-python = ">=3.10"
+dependencies = ["jax", "numpy", "scipy", "matplotlib", "pillow", "shapely", "pyarrow"]
+
+[tool.setuptools]
+packages = ["xworld", "xnet", "pgh"]
