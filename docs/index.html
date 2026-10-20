@@ -285,6 +285,21 @@
       </div>
     </div>
 
+    <div class="result">
+      <figure><img width="2175" height="1530" src="img/dynamic_sim.png" alt="Crash rates by training variant, safety against speed, held-out cities, and the rare-event estimator" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Making the simulator teach harder</h3>
+          <p>Four additions to the simulator itself, each tested from the same starting policy with no safety filter, two seeds,
+            about 900 AV-hours per score. Every copy of the area can be a different city, any dangerous moment can be forked into many
+            futures, and the world model can shape the reward.</p></div>
+        <ul>
+          <li><b>Mutating cities</b> was the clear win: fewer crashes in all four worlds, <span class="big">−39 %</span> in Oakland, <span class="big">−63 %</span> in Squirrel Hill (never trained in), at 4–8 % lower speed.</li>
+          <li>Fork-at-danger and world-model shaping reached the same plateau (~0.025 crashes per AV-hour), slightly sooner in one seed.</li>
+          <li>Rare-event splitting is unbiased but noisier than plain Monte Carlo; raising risk rates and reweighting has an effective sample of <b>10⁻⁶</b>.</li>
+        </ul>
+      </div>
+    </div>
+
     <div class="viewer-cta">
       <div>
         <h2 style="font-size:28px">Look around the simulations yourself</h2>
