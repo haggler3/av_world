@@ -4,8 +4,9 @@ Per area  docs/viewer/data/<area>/map.json     road polygons, lane markings, cro
                                                 street labels (metres, area-centred)
 Per run   docs/viewer/data/<run>.json           meta: scenario, frames, events (time, place, type, label)
           docs/viewer/data/<run>.bin            frames: per vehicle x, y (int16, 0.1 m), heading (uint8), speed (uint8,
-                                                0.25 m/s), flags (uint8), kind (uint8: car, bus, van, bicycle), id (uint16); signal
-                                                states; pedestrians
+                                                0.25 m/s), flags (uint8), kind (uint8: car, bus, van, bicycle; high bits: barrier
+                                                interventions), id (uint16), barrier value (int8, 0.5 m), keep-clear
+                                                zone (uint8, 0.5 m); signal states; pedestrians
 
     python -m xnet.export_web        # the scenarios in SCENARIOS (~1-2 min each)
 """
@@ -25,6 +26,9 @@ from . import sim as X
 OUT = "docs/viewer/data"
 EVERY = 2  # record every 2nd step: 2.5 frames per second
 F_AV, F_BUS, F_VAN, F_WRECK, F_STOP, F_BROKEN, F_RED, F_DIST = (1 << i for i in range(8))
+K_CUT, K_VETO_J, K_VETO_M = 16, 32, 64  # high bits of the kind byte: the barrier function braked / held / blocked this AV
+REC = 12  # bytes per vehicle record
+MAX_BARRIER_EVENTS = 40
 CRASH_TYPES = X.CRASH_NAMES
 
 
@@ -93,10 +97,27 @@ def record(net, geo, sim, seconds, center, heads):
     prev = None
     n = int(seconds / X.DT)
     t_start = float(np.asarray(sim.st.t)[0])
+    pbar = None
+    n_bar = 0
     for k in range(n):
-        sim.st = sim.one(sim.st, sim.nh)
+        sim.st, info = sim.one_info(sim.st, sim.nh)
         st = jax.tree.map(lambda a: np.asarray(a[0]), sim.st)
+        bar = {k_: np.asarray(v[0]) for k_, v in info.items()}
         t = float(st.t) - t_start
+        if pbar is not None and n_bar < MAX_BARRIER_EVENTS:  # the barrier function stepping in for an AV
+            for cond, label in ((bar["bar_veto_j"] & ~pbar["bar_veto_j"], "Barrier holds an AV at a junction"),
+                                (bar["bar_veto_m"] & ~pbar["bar_veto_m"], "Barrier blocks an AV's merge"),
+                                ((bar["bar_cut"] > 2.0) & (pbar["bar_cut"] <= 2.0) & st.alive, "Barrier brakes an AV")):
+                for i in np.nonzero(cond & st.alive)[0][:2]:
+                    if t - seen.get(("barrier", int(i)), -1e9) < 60 or t - seen.get("barrier", -1e9) < 6:  # spread over the run
+                        continue
+                    seen["barrier"] = t
+                    seen[("barrier", int(i))] = t
+                    n_bar += 1
+                    x, y, _ = tracks.pose(st.trk[i:i + 1], st.s[i:i + 1], st.length[i:i + 1])
+                    events.append({"t": round(t, 1), "type": "barrier", "label": label,
+                                   "x": round(float(x[0] - center[0]), 1), "y": round(float(y[0] - center[1]), 1), "ids": [int(i)]})
+        pbar = bar
         if prev is not None:  # events: compare with the previous step
             dm = dict(zip(X.METRICS, st.m - prev.m))
             new_wreck = st.alive & (st.wreck_t > 0) & ~((prev.wreck_t > 0) & prev.alive)
@@ -126,13 +147,16 @@ def record(net, geo, sim, seconds, center, heads):
         x, y, th = tracks.pose(st.trk[a], st.s[a], st.length[a])
         flags = (st.av[a] * F_AV | (st.kind[a] == X.BUS) * F_BUS | (st.kind[a] == X.VAN) * F_VAN | (st.wreck_t[a] > 0) * F_WRECK
                  | (st.stop_t[a] > 0) * F_STOP | st.broken[a] * F_BROKEN | st.ran_red[a] * F_RED | (st.dist_t[a] > 0) * F_DIST).astype(np.uint8)
-        veh = np.zeros(len(a), dtype=[("x", "<i2"), ("y", "<i2"), ("h", "u1"), ("v", "u1"), ("f", "u1"), ("pad", "u1"), ("id", "<u2")])
+        veh = np.zeros(len(a), dtype=[("x", "<i2"), ("y", "<i2"), ("h", "u1"), ("v", "u1"), ("f", "u1"), ("pad", "u1"), ("id", "<u2"),
+                                      ("bh", "i1"), ("br", "u1")])
         veh["x"] = np.clip(np.round((x - center[0]) * 10), -32767, 32767)
         veh["y"] = np.clip(np.round((y - center[1]) * 10), -32767, 32767)
         veh["h"] = np.round((th % (2 * np.pi)) / (2 * np.pi) * 256) % 256
         veh["v"] = np.clip(np.round(st.v[a] * 4), 0, 255)
         veh["f"] = flags
-        veh["pad"] = st.kind[a]  # 0 car, 1 bus, 2 van, 3 bicycle
+        veh["pad"] = st.kind[a] | (bar["bar_cut"][a] > 0.5) * K_CUT | bar["bar_veto_j"][a] * K_VETO_J | bar["bar_veto_m"][a] * K_VETO_M
+        veh["bh"] = np.clip(np.round(bar["bar_h"][a] * 2), -127, 127)  # barrier value, 0.5 m
+        veh["br"] = np.clip(np.round(bar["bar_reach"][a] * 2), 0, 255)  # keep-clear zone ahead, 0.5 m
         veh["id"] = a
         sig = np.asarray(X.signal_state(J, float(st.t)))[sig_links].astype(np.uint8)
         legs = np.nonzero(st.ped_t > 0)[0]
@@ -145,18 +169,22 @@ def record(net, geo, sim, seconds, center, heads):
 
 SCENARIOS = [
     dict(run="oakland_learned", area="oakland", title="Oakland, morning: 30 % of vehicles are learned AVs",
-         blurb="One shared PPO policy drives every blue car among calibrated human drivers, pedestrians, buses and vans.",
-         beh=dict(p_av=0.3, demand=1.2, p_bike=0.06), risk=1.0, policy="results/xnet3/policy.npz", seconds=300, seed=4),
+         blurb="One shared PPO policy, trained with the barrier function as its teacher, drives every blue car among "
+               "calibrated human drivers, pedestrians, cyclists, buses and vans. The band ahead of each AV is its barrier.",
+         shield="cbf",
+         beh=dict(p_av=0.3, demand=1.2, p_bike=0.06), risk=1.0, policy="results/unaided/phase2/policy.npz", seconds=300, seed=4),
     dict(run="oakland_planner", area="oakland", title="Oakland: AVs plan in a latent world model, under a barrier function",
          blurb="Every blue car searches 32 imagined 2.4 s futures each 0.2 s and drives the best, with a control barrier "
                "function on top; humans x5 riskier, cyclists in the lanes.",
          beh=dict(p_av=0.15, demand=1.2, p_bike=0.06), risk=5.0, policy="wmplan", shield="cbf", seconds=240, seed=9),
     dict(run="oakland_risky", area="oakland", title="Oakland, stress test: risky humans, breakdowns, rush-hour demand",
          blurb="Human risk amplified ~100x (red runners, drivers who do not look, distraction) plus frequent breakdowns: "
-               "the corner cases an AV must survive, compressed into five minutes.",
+               "the corner cases an AV must survive, compressed into five minutes. Rule-based AVs under the barrier function.",
+         shield="cbf",
          beh=dict(p_av=0.15, demand=1.3, p_red=0.6, red_window=3.0, p_nolook=1e-2, distract_rate=4e-5, breakdown_rate=1e-4), risk=1.0, policy=None, seconds=300, seed=7),
     dict(run="squirrel_hill_learned", area="squirrel_hill", title="Squirrel Hill: half of the vehicles are learned AVs",
-         blurb="A neighbourhood the policy never trained in: Forbes, Murray and the residential grid.",
+         blurb="A neighbourhood the policy never trained in: Forbes, Murray and the residential grid. Barrier function on.",
+         shield="cbf",
          beh=dict(p_av=0.5, demand=1.0, p_bike=0.05), risk=1.0, policy="results/xnet3/policy.npz", seconds=240, seed=5),
 ]
 
@@ -193,7 +221,8 @@ def main(only=None):
         X.SHIELD = "idm"
         with open(f"{OUT}/{sc['run']}.bin", "wb") as f:
             f.write(blob)
-        meta = {k: sc[k] for k in ("run", "area", "title", "blurb")} | {"frames": nf, "dt": X.DT * EVERY, "events": events,
+        meta = {k: sc[k] for k in ("run", "area", "title", "blurb")} | {"frames": nf, "dt": X.DT * EVERY, "events": events, "rec": REC,
+                                                                         "barrier": sc.get("shield", "idm"),
                                                                          "learned": bool(sc["policy"]), "risk": sc["risk"], **sc["beh"]}
         with open(f"{OUT}/{sc['run']}.json", "w") as f:
             json.dump(meta, f, separators=(",", ":"))

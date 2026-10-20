@@ -80,6 +80,9 @@ POLICIES = {  # name -> checkpoint (None = the rule-based AV, the bar to clear)
     "PPO, full world, 10x envelope penalty": "results/bench/self_reliant/policy_120.npz",
     "PPO, 130k steps (xnet)": "results/xnet/policy.npz",
     "PPO, 234k steps (xnet3)": "results/xnet3/policy.npz",
+    "PPO + barrier teacher (phase 1)": "results/unaided/phase1/policy.npz",
+    "PPO + barrier teacher, then no filter (phase 2)": "results/unaided/phase2/policy.npz",
+    "PPO + barrier teacher, speed + jaywalkers (phase 3)": "results/unaided/phase3/policy.npz",
 }
 STEPS = {"imitation (BC)": 0, "PPO, full world": 62_400, "PPO, 130k steps (xnet)": 130_000, "PPO, 234k steps (xnet3)": 234_000}
 RENAME = {"PPO, long run (xnet3)": "PPO, 234k steps (xnet3)"}

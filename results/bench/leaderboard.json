@@ -9889,6 +9889,3296 @@
      ]
     }
    }
+  },
+  "PPO + barrier teacher (phase 1)": {
+   "passed": 66,
+   "overcome": [
+    "blockages"
+   ],
+   "scenarios": {
+    "nominal": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.02518813137217566
+      ],
+      "efficient": [
+       false,
+       16.73348237715735,
+       17.330521999698213
+      ],
+      "smooth": [
+       true,
+       2.5361605740765567,
+       18.23620711345518
+      ],
+      "good neighbour": [
+       true,
+       16.344007638490364,
+       16.332469448303236
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.02518813137217566
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       false,
+       0.024857590094940835,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.010940300515624363,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.229161241319446,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 93.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.024857590094940835,
+      "av_hard_per_h": 2.311755878829498,
+      "av_speed_kmh": 16.87184477923852,
+      "av_jerk_rms": 1.3816979374036253,
+      "shield_share": 0.039926813601384975,
+      "human_speed_kmh": 16.34097851867018,
+      "human_crash_per_h": 0.02048251813595187,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.21827365451389,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 102.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.5361605740765567,
+      "av_speed_kmh": 16.73348237715735,
+      "av_jerk_rms": 1.967058616759642,
+      "shield_share": 0.010940300515624363,
+      "human_speed_kmh": 16.344007638490364,
+      "human_crash_per_h": 0.013654448244318497,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -0.7904135113462499,
+      -0.3899142909968304
+     ],
+     "hard_diff_ci": [
+      -17.151162772660168,
+      -14.292976133093916
+     ]
+    },
+    "rush_hour": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       13.788275360503755,
+       14.339401906334691
+      ],
+      "smooth": [
+       true,
+       2.3190908826732115,
+       15.921462889560587
+      ],
+      "good neighbour": [
+       true,
+       13.571798193992432,
+       13.614191457497874
+      ],
+      "safe unaided": [
+       false,
+       0.017193634974540045,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.017193634974540045,
+       0.034611875846870845
+      ],
+      "self-reliant": [
+       true,
+       0.009254413287770425,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 58.16105794270833,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 114.0,
+      "av_crash_per_h": 0.017193634974540045,
+      "av_near_per_h": 0.017193634974540045,
+      "av_hard_per_h": 1.960074387097565,
+      "av_speed_kmh": 13.953938274290755,
+      "av_jerk_rms": 1.306825435326858,
+      "shield_share": 0.03631773307594373,
+      "human_speed_kmh": 13.513380186994057,
+      "human_crash_per_h": 0.0,
+      "teleports": 4.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 58.21246636284722,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 135.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.3190908826732115,
+      "av_speed_kmh": 13.788275360503755,
+      "av_jerk_rms": 1.8191735542805678,
+      "shield_share": 0.009254413287770425,
+      "human_speed_kmh": 13.571798193992432,
+      "human_crash_per_h": 0.0,
+      "teleports": 5.0
+     },
+     "speed_diff_ci": [
+      -0.670379817892986,
+      -0.4330884490528582
+     ],
+     "hard_diff_ci": [
+      -14.495914708017395,
+      -12.554010471576856
+     ]
+    },
+    "red_runners": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       true,
+       16.68001619723854,
+       17.180172182257635
+      ],
+      "smooth": [
+       true,
+       2.669973177020499,
+       18.4145847952937
+      ],
+      "good neighbour": [
+       true,
+       16.303997677037987,
+       16.236839493243405
+      ],
+      "safe unaided": [
+       false,
+       0.024752609372822906,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.01069362713800494,
+       0.05
+      ]
+     },
+     "passed": 7,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.39978108723958,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 100.0,
+      "av_crash_per_h": 0.024752609372822906,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.4752609372822905,
+      "av_speed_kmh": 16.899776753138106,
+      "av_jerk_rms": 1.4019362670432611,
+      "shield_share": 0.038091515534844134,
+      "human_speed_kmh": 16.272286743579926,
+      "human_crash_per_h": 0.027385909774470356,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.44984456380208,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 108.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.669973177020499,
+      "av_speed_kmh": 16.68001619723854,
+      "av_jerk_rms": 1.9588748829151044,
+      "shield_share": 0.01069362713800494,
+      "human_speed_kmh": 16.303997677037987,
+      "human_crash_per_h": 0.027399267819899424,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -0.679771988331239,
+      -0.33956695103642937
+     ],
+     "hard_diff_ci": [
+      -16.53402201001793,
+      -14.797829061541464
+     ]
+    },
+    "inattentive": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.48994986079225,
+       17.2406289796491
+      ],
+      "smooth": [
+       true,
+       2.3976835043329685,
+       18.36460556543684
+      ],
+      "good neighbour": [
+       true,
+       16.132460287829826,
+       16.276354269194254
+      ],
+      "safe unaided": [
+       false,
+       0.05002273236284474,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.02501136618142237,
+       0.02529559995239234
+      ],
+      "self-reliant": [
+       true,
+       0.010839527509171963,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 1.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 39.981822374131944,
+      "av_crash": 2.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 94.0,
+      "av_crash_per_h": 0.05002273236284474,
+      "av_near_per_h": 0.02501136618142237,
+      "av_hard_per_h": 2.3510684210537027,
+      "av_speed_kmh": 16.721270113866712,
+      "av_jerk_rms": 1.3754568739341009,
+      "shield_share": 0.04061706915828652,
+      "human_speed_kmh": 16.13034021099014,
+      "human_crash_per_h": 0.08872037356247649,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.03864556206597,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 96.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.3976835043329685,
+      "av_speed_kmh": 16.48994986079225,
+      "av_jerk_rms": 1.9583098984251852,
+      "shield_share": 0.010839527509171963,
+      "human_speed_kmh": 16.132460287829826,
+      "human_crash_per_h": 0.10925315590359812,
+      "teleports": 1.0
+     },
+     "speed_diff_ci": [
+      -1.0079390931283596,
+      -0.5021621424105345
+     ],
+     "hard_diff_ci": [
+      -17.052145948622915,
+      -15.056624657218185
+     ]
+    },
+    "jaywalkers": {
+     "checks": {
+      "safe": [
+       true,
+       0.02221352042696623,
+       0.04462644149343868
+      ],
+      "efficient": [
+       true,
+       11.886537386998718,
+       12.240623332024104
+      ],
+      "smooth": [
+       true,
+       1.4216653073258387,
+       11.000417828132635
+      ],
+      "good neighbour": [
+       true,
+       11.534602525181274,
+       11.542536131381407
+      ],
+      "safe unaided": [
+       false,
+       0.24539636720132893,
+       0.04462644149343868
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.010400863897692856,
+       0.05
+      ]
+     },
+     "passed": 7,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 10.0,
+      "av_bicycle": 0.0,
+      "av_hours": 44.825439453125,
+      "av_crash": 11.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 62.0,
+      "av_crash_per_h": 0.24539636720132893,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 1.3831431605893085,
+      "av_speed_kmh": 11.950939549576537,
+      "av_jerk_rms": 1.219562294257096,
+      "shield_share": 0.05625525811751677,
+      "human_speed_kmh": 11.504060588674884,
+      "human_crash_per_h": 0.012407568010648214,
+      "teleports": 14.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 45.017628038194445,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 64.0,
+      "av_crash_per_h": 0.02221352042696623,
+      "av_near_per_h": 0.02221352042696623,
+      "av_hard_per_h": 1.4216653073258387,
+      "av_speed_kmh": 11.886537386998718,
+      "av_jerk_rms": 1.7487500611685116,
+      "shield_share": 0.010400863897692856,
+      "human_speed_kmh": 11.534602525181274,
+      "human_crash_per_h": 0.006213328233585976,
+      "teleports": 14.0
+     },
+     "speed_diff_ci": [
+      -0.528073524229597,
+      -0.16104323852378477
+     ],
+     "hard_diff_ci": [
+      -10.947754844766287,
+      -8.204283987805844
+     ]
+    },
+    "blockages": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       true,
+       14.401733822812952,
+       14.683215979702238
+      ],
+      "smooth": [
+       true,
+       1.8561606756662152,
+       12.734790036686306
+      ],
+      "good neighbour": [
+       true,
+       10.672533753194376,
+       10.688180373894166
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.012156914970727012,
+       0.05
+      ]
+     },
+     "passed": 8,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 29.564089898003473,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 57.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 1.9280147028591377,
+      "av_speed_kmh": 14.503624976637854,
+      "av_jerk_rms": 1.3426012568882044,
+      "shield_share": 0.04180747671462973,
+      "human_speed_kmh": 10.682676240390633,
+      "human_crash_per_h": 0.01235971031828358,
+      "teleports": 5.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 29.631055501302082,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 55.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 1.8561606756662152,
+      "av_speed_kmh": 14.401733822812952,
+      "av_jerk_rms": 1.894017075728953,
+      "shield_share": 0.012156914970727012,
+      "human_speed_kmh": 10.672533753194376,
+      "human_crash_per_h": 0.01236018834098512,
+      "teleports": 5.0
+     },
+     "speed_diff_ci": [
+      -0.4923722664556403,
+      -0.07964944418507994
+     ],
+     "hard_diff_ci": [
+      -12.403893016736529,
+      -9.114232051588816
+     ]
+    },
+    "av_majority": {
+     "checks": {
+      "safe": [
+       false,
+       0.007630680811478194,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.52920853967573,
+       17.40198102685429
+      ],
+      "smooth": [
+       true,
+       2.846243942681366,
+       18.923981940995777
+      ],
+      "good neighbour": [
+       false,
+       14.38093885911014,
+       14.593056057038657
+      ],
+      "safe unaided": [
+       false,
+       0.022955247885749687,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       false,
+       0.007651749295249896,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.011103912360836018,
+       0.05
+      ]
+     },
+     "passed": 3,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 3.0,
+      "av_bicycle": 0.0,
+      "av_hours": 130.6890700954861,
+      "av_crash": 3.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 328.0,
+      "av_crash_per_h": 0.022955247885749687,
+      "av_near_per_h": 0.007651749295249896,
+      "av_hard_per_h": 2.5097737688419657,
+      "av_speed_kmh": 16.533520398234362,
+      "av_jerk_rms": 1.3615006514085652,
+      "shield_share": 0.03995871011134416,
+      "human_speed_kmh": 14.12187689937197,
+      "human_crash_per_h": 0.0,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 131.04990559895833,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 373.0,
+      "av_crash_per_h": 0.007630680811478194,
+      "av_near_per_h": 0.007630680811478194,
+      "av_hard_per_h": 2.846243942681366,
+      "av_speed_kmh": 16.52920853967573,
+      "av_jerk_rms": 1.975638165168793,
+      "shield_share": 0.011103912360836018,
+      "human_speed_kmh": 14.38093885911014,
+      "human_crash_per_h": 0.0,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -1.040204795459839,
+      -0.692467543083535
+     ],
+     "hard_diff_ci": [
+      -17.027168778757787,
+      -15.225367308543834
+     ]
+    },
+    "cyclists": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.3190950605169,
+       17.18726617941454
+      ],
+      "smooth": [
+       true,
+       2.6639257947764374,
+       16.76378694601946
+      ],
+      "good neighbour": [
+       true,
+       15.109146136071049,
+       15.215303703793804
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.027939644910032434
+      ],
+      "self-reliant": [
+       true,
+       0.010527541800662897,
+       0.05
+      ]
+     },
+     "passed": 7,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 36.319386393229166,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 95.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.615682957069736,
+      "av_speed_kmh": 16.45608963912511,
+      "av_jerk_rms": 1.3881381395027532,
+      "shield_share": 0.03819508972984287,
+      "human_speed_kmh": 15.148688762748783,
+      "human_crash_per_h": 0.0,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 36.412425672743055,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 97.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.6639257947764374,
+      "av_speed_kmh": 16.3190950605169,
+      "av_jerk_rms": 1.9464103277480351,
+      "shield_share": 0.010527541800662897,
+      "human_speed_kmh": 15.109146136071049,
+      "human_crash_per_h": 0.0,
+      "teleports": 1.0
+     },
+     "speed_diff_ci": [
+      -1.1089770607453315,
+      -0.5832282719316446
+     ],
+     "hard_diff_ci": [
+      -15.35350151201824,
+      -12.858407204581498
+     ]
+    },
+    "wet_road": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.582480776654858,
+       17.31975561598912
+      ],
+      "smooth": [
+       true,
+       2.86216646684401,
+       19.7802185664746
+      ],
+      "good neighbour": [
+       true,
+       16.389158819576306,
+       16.407224389414615
+      ],
+      "safe unaided": [
+       false,
+       0.024883314071332534,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.010559596766805653,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.18757297092014,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 105.0,
+      "av_crash_per_h": 0.024883314071332534,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.612747977489916,
+      "av_speed_kmh": 16.769820833051153,
+      "av_jerk_rms": 1.3608434559306402,
+      "shield_share": 0.039874128392973086,
+      "human_speed_kmh": 16.28257765135745,
+      "human_crash_per_h": 0.02731699922044773,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.17935411241319,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 115.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.86216646684401,
+      "av_speed_kmh": 16.582480776654858,
+      "av_jerk_rms": 1.8860022037326658,
+      "shield_share": 0.010559596766805653,
+      "human_speed_kmh": 16.389158819576306,
+      "human_crash_per_h": 0.020496621507471245,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -0.9268357112057648,
+      -0.541508701343866
+     ],
+     "hard_diff_ci": [
+      -18.324976331369356,
+      -15.651194812540023
+     ]
+    },
+    "squirrel_hill": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       17.985846778837562,
+       18.77647468548932
+      ],
+      "smooth": [
+       true,
+       4.222946132060493,
+       14.343459559287924
+      ],
+      "good neighbour": [
+       true,
+       16.86549457504218,
+       16.653407281943448
+      ],
+      "safe unaided": [
+       false,
+       0.03612572422331237,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       false,
+       0.03612572422331237,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.01139152752907676,
+       0.05
+      ]
+     },
+     "passed": 5,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 27.68110595703125,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 100.0,
+      "av_crash_per_h": 0.03612572422331237,
+      "av_near_per_h": 0.03612572422331237,
+      "av_hard_per_h": 3.6125724223312363,
+      "av_speed_kmh": 17.914319342758773,
+      "av_jerk_rms": 1.4678383438135585,
+      "shield_share": 0.043940922563622274,
+      "human_speed_kmh": 16.67903298294265,
+      "human_crash_per_h": 0.010409061460721857,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 27.70577609592014,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 117.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.03609355668427771,
+      "av_hard_per_h": 4.222946132060493,
+      "av_speed_kmh": 17.985846778837562,
+      "av_jerk_rms": 2.194233201291772,
+      "shield_share": 0.01139152752907676,
+      "human_speed_kmh": 16.86549457504218,
+      "human_crash_per_h": 0.0,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -1.0158223542478102,
+      -0.4558913525638294
+     ],
+     "hard_diff_ci": [
+      -11.993314498833286,
+      -8.614569839301575
+     ]
+    },
+    "downtown": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       13.928467325834403,
+       14.875071385068722
+      ],
+      "smooth": [
+       true,
+       6.809023793574418,
+       27.040819405695625
+      ],
+      "good neighbour": [
+       false,
+       13.20911217998286,
+       13.451247277800846
+      ],
+      "safe unaided": [
+       false,
+       0.11627258003237648,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.009287072471744392,
+       0.05
+      ]
+     },
+     "passed": 5,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 2.0,
+      "av_bicycle": 0.0,
+      "av_hours": 17.200960015190972,
+      "av_crash": 2.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 92.0,
+      "av_crash_per_h": 0.11627258003237648,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 5.348538681489318,
+      "av_speed_kmh": 14.003969120205563,
+      "av_jerk_rms": 1.5096064999401555,
+      "shield_share": 0.06099788740254062,
+      "human_speed_kmh": 13.164560425141222,
+      "human_crash_per_h": 0.016200637512489145,
+      "teleports": 7.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 17.32994384765625,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 118.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 6.809023793574418,
+      "av_speed_kmh": 13.928467325834403,
+      "av_jerk_rms": 1.9319072127781238,
+      "shield_share": 0.009287072471744392,
+      "human_speed_kmh": 13.20911217998286,
+      "human_crash_per_h": 0.032467385630839986,
+      "teleports": 7.0
+     },
+     "speed_diff_ci": [
+      -1.2431981358030948,
+      -0.6494348975576758
+     ],
+     "hard_diff_ci": [
+      -23.78636038618157,
+      -16.936394397594
+     ]
+    }
+   }
+  },
+  "PPO + barrier teacher, then no filter (phase 2)": {
+   "passed": 67,
+   "overcome": [
+    "red_runners",
+    "blockages"
+   ],
+   "scenarios": {
+    "nominal": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.02518813137217566
+      ],
+      "efficient": [
+       false,
+       16.719987071573865,
+       17.330521999698213
+      ],
+      "smooth": [
+       true,
+       2.4691637673307096,
+       18.23620711345518
+      ],
+      "good neighbour": [
+       true,
+       16.3481522856102,
+       16.332469448303236
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.02518813137217566
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.012434498118981927,
+       0.05
+      ]
+     },
+     "passed": 7,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.06951877170139,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 96.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.395836110410161,
+      "av_speed_kmh": 16.73922980293432,
+      "av_jerk_rms": 1.284127802724057,
+      "shield_share": 0.02853374256495435,
+      "human_speed_kmh": 16.34720846864509,
+      "human_crash_per_h": 0.020502708876287336,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.0945458984375,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 99.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.4691637673307096,
+      "av_speed_kmh": 16.719987071573865,
+      "av_jerk_rms": 1.88399531350701,
+      "shield_share": 0.012434498118981927,
+      "human_speed_kmh": 16.3481522856102,
+      "human_crash_per_h": 0.020480202602300556,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -0.8266986325719002,
+      -0.3688733872180276
+     ],
+     "hard_diff_ci": [
+      -17.184571149042437,
+      -14.40249365941388
+     ]
+    },
+    "rush_hour": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       13.901871324205935,
+       14.339401906334691
+      ],
+      "smooth": [
+       true,
+       2.391700741073541,
+       15.921462889560587
+      ],
+      "good neighbour": [
+       true,
+       13.563068029731575,
+       13.614191457497874
+      ],
+      "safe unaided": [
+       false,
+       0.01717301757441077,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.034611875846870845
+      ],
+      "self-reliant": [
+       true,
+       0.010624045578054091,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 58.230884331597224,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 133.0,
+      "av_crash_per_h": 0.01717301757441077,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.284011337396633,
+      "av_speed_kmh": 14.024254643800292,
+      "av_jerk_rms": 1.2430986722772182,
+      "shield_share": 0.02505638669759723,
+      "human_speed_kmh": 13.532463082309754,
+      "human_crash_per_h": 0.0,
+      "teleports": 4.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 58.11763888888889,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 139.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.391700741073541,
+      "av_speed_kmh": 13.901871324205935,
+      "av_jerk_rms": 1.7559389818572944,
+      "shield_share": 0.010624045578054091,
+      "human_speed_kmh": 13.563068029731575,
+      "human_crash_per_h": 0.0,
+      "teleports": 4.0
+     },
+     "speed_diff_ci": [
+      -0.5447659490675553,
+      -0.33070618559427467
+     ],
+     "hard_diff_ci": [
+      -14.559328343057787,
+      -12.465215001747271
+     ]
+    },
+    "red_runners": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       true,
+       16.733214460838404,
+       17.180172182257635
+      ],
+      "smooth": [
+       true,
+       2.520360180723782,
+       18.4145847952937
+      ],
+      "good neighbour": [
+       true,
+       16.227999656347645,
+       16.236839493243405
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.012387652652969178,
+       0.05
+      ]
+     },
+     "passed": 8,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.379338921440976,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 96.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.377453483990177,
+      "av_speed_kmh": 16.91998547708316,
+      "av_jerk_rms": 1.3055950715851676,
+      "shield_share": 0.027172862447225693,
+      "human_speed_kmh": 16.23394090200793,
+      "human_crash_per_h": 0.02738956916099605,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.47040608723958,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 102.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.520360180723782,
+      "av_speed_kmh": 16.733214460838404,
+      "av_jerk_rms": 1.8883083814547088,
+      "shield_share": 0.012387652652969178,
+      "human_speed_kmh": 16.227999656347645,
+      "human_crash_per_h": 0.027402393222993593,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -0.6692747694527875,
+      -0.2491501625914233
+     ],
+     "hard_diff_ci": [
+      -16.643202716321994,
+      -15.089163706623228
+     ]
+    },
+    "inattentive": {
+     "checks": {
+      "safe": [
+       false,
+       0.02497578083004349,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.453233673572115,
+       17.2406289796491
+      ],
+      "smooth": [
+       true,
+       2.5225538638343923,
+       18.36460556543684
+      ],
+      "good neighbour": [
+       true,
+       16.149949241766347,
+       16.276354269194254
+      ],
+      "safe unaided": [
+       false,
+       0.10020077733476573,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.02529559995239234
+      ],
+      "self-reliant": [
+       true,
+       0.012213156825891268,
+       0.05
+      ]
+     },
+     "passed": 5,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 3.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 39.919849989149306,
+      "av_crash": 4.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 96.0,
+      "av_crash_per_h": 0.10020077733476573,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.4048186560343776,
+      "av_speed_kmh": 16.550435204655923,
+      "av_jerk_rms": 1.2780213235404834,
+      "shield_share": 0.03077138038401396,
+      "human_speed_kmh": 16.130257797003928,
+      "human_crash_per_h": 0.08872741331090828,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 1.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.03878824869792,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 101.0,
+      "av_crash_per_h": 0.02497578083004349,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.5225538638343923,
+      "av_speed_kmh": 16.453233673572115,
+      "av_jerk_rms": 1.8757140158178487,
+      "shield_share": 0.012213156825891268,
+      "human_speed_kmh": 16.149949241766347,
+      "human_crash_per_h": 0.08871622927842643,
+      "teleports": 1.0
+     },
+     "speed_diff_ci": [
+      -1.0651655498221544,
+      -0.5015700449284216
+     ],
+     "hard_diff_ci": [
+      -17.203560470948748,
+      -14.689595223685942
+     ]
+    },
+    "jaywalkers": {
+     "checks": {
+      "safe": [
+       true,
+       0.022183309161204815,
+       0.04462644149343868
+      ],
+      "efficient": [
+       false,
+       11.845796279161492,
+       12.240623332024104
+      ],
+      "smooth": [
+       true,
+       1.575014950445542,
+       11.000417828132635
+      ],
+      "good neighbour": [
+       true,
+       11.43126383736723,
+       11.542536131381407
+      ],
+      "safe unaided": [
+       false,
+       0.2677397010474839,
+       0.04462644149343868
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       false,
+       0.02231164175395699,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.0117731751342772,
+       0.05
+      ]
+     },
+     "passed": 5,
+     "raw": {
+      "av_rear-end": 1.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 10.0,
+      "av_bicycle": 0.0,
+      "av_hours": 44.81965115017361,
+      "av_crash": 12.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 68.0,
+      "av_crash_per_h": 0.2677397010474839,
+      "av_near_per_h": 0.02231164175395699,
+      "av_hard_per_h": 1.5171916392690754,
+      "av_speed_kmh": 12.013202013407781,
+      "av_jerk_rms": 1.1583475172089361,
+      "shield_share": 0.037605032640641516,
+      "human_speed_kmh": 11.473471311108142,
+      "human_crash_per_h": 0.012409441984348948,
+      "teleports": 14.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 45.078937174479165,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 71.0,
+      "av_crash_per_h": 0.022183309161204815,
+      "av_near_per_h": 0.022183309161204815,
+      "av_hard_per_h": 1.575014950445542,
+      "av_speed_kmh": 11.845796279161492,
+      "av_jerk_rms": 1.691502365479006,
+      "shield_share": 0.0117731751342772,
+      "human_speed_kmh": 11.43126383736723,
+      "human_crash_per_h": 0.01242139053888655,
+      "teleports": 14.0
+     },
+     "speed_diff_ci": [
+      -0.6055676990976551,
+      -0.2067268229155747
+     ],
+     "hard_diff_ci": [
+      -10.69053267433481,
+      -8.150727417475418
+     ]
+    },
+    "blockages": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       true,
+       14.453294828798144,
+       14.683215979702238
+      ],
+      "smooth": [
+       true,
+       2.3324261692865473,
+       12.734790036686306
+      ],
+      "good neighbour": [
+       true,
+       10.66818665990615,
+       10.688180373894166
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.013810516947611332,
+       0.05
+      ]
+     },
+     "passed": 8,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 29.559356825086805,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 62.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.0974745955020597,
+      "av_speed_kmh": 14.452142964717417,
+      "av_jerk_rms": 1.2687582851722938,
+      "shield_share": 0.035373270037584476,
+      "human_speed_kmh": 10.684245993175443,
+      "human_crash_per_h": 0.012356358112068679,
+      "teleports": 5.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 29.582929958767362,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 69.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.3324261692865473,
+      "av_speed_kmh": 14.453294828798144,
+      "av_jerk_rms": 1.853996106554233,
+      "shield_share": 0.013810516947611332,
+      "human_speed_kmh": 10.66818665990615,
+      "human_crash_per_h": 0.012345188034227576,
+      "teleports": 5.0
+     },
+     "speed_diff_ci": [
+      -0.49404989430853496,
+      0.022834458698871574
+     ],
+     "hard_diff_ci": [
+      -11.839420736251084,
+      -8.75827856468186
+     ]
+    },
+    "av_majority": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.515958631092424,
+       17.40198102685429
+      ],
+      "smooth": [
+       true,
+       2.6939268335526805,
+       18.923981940995777
+      ],
+      "good neighbour": [
+       false,
+       14.266139227955547,
+       14.593056057038657
+      ],
+      "safe unaided": [
+       false,
+       0.007659309078627421,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.012528290416266304,
+       0.05
+      ]
+     },
+     "passed": 5,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 130.56007921006943,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 321.0,
+      "av_crash_per_h": 0.007659309078627421,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.4586382142394023,
+      "av_speed_kmh": 16.617597004970797,
+      "av_jerk_rms": 1.267611299520177,
+      "shield_share": 0.028052219500472927,
+      "human_speed_kmh": 14.22519802126187,
+      "human_crash_per_h": 0.0,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 130.66427625868056,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 352.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.007653201231683751,
+      "av_hard_per_h": 2.6939268335526805,
+      "av_speed_kmh": 16.515958631092424,
+      "av_jerk_rms": 1.9011843439049816,
+      "shield_share": 0.012528290416266304,
+      "human_speed_kmh": 14.266139227955547,
+      "human_crash_per_h": 0.0,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -1.079901480560459,
+      -0.7184909959520489
+     ],
+     "hard_diff_ci": [
+      -17.100984882305074,
+      -15.461612580794936
+     ]
+    },
+    "cyclists": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.337359837710117,
+       17.18726617941454
+      ],
+      "smooth": [
+       true,
+       2.6496151041861014,
+       16.76378694601946
+      ],
+      "good neighbour": [
+       true,
+       15.092611381526508,
+       15.215303703793804
+      ],
+      "safe unaided": [
+       false,
+       0.05518761318333633,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.027939644910032434
+      ],
+      "self-reliant": [
+       true,
+       0.01150159889843747,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 2.0,
+      "av_bicycle": 0.0,
+      "av_hours": 36.240016276041665,
+      "av_crash": 2.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 93.0,
+      "av_crash_per_h": 0.05518761318333633,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.5662240130251393,
+      "av_speed_kmh": 16.549020747722096,
+      "av_jerk_rms": 1.2962435129321164,
+      "shield_share": 0.026569769769266255,
+      "human_speed_kmh": 15.115969899712992,
+      "human_crash_per_h": 0.0,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 36.23167751736111,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 96.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.6496151041861014,
+      "av_speed_kmh": 16.337359837710117,
+      "av_jerk_rms": 1.8803687289642412,
+      "shield_share": 0.01150159889843747,
+      "human_speed_kmh": 15.092611381526508,
+      "human_crash_per_h": 0.006448157256450141,
+      "teleports": 1.0
+     },
+     "speed_diff_ci": [
+      -1.1295135019381357,
+      -0.48843118257341783
+     ],
+     "hard_diff_ci": [
+      -15.55881909158617,
+      -12.67944914897212
+     ]
+    },
+    "wet_road": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.538066628740594,
+       17.31975561598912
+      ],
+      "smooth": [
+       true,
+       2.6654485742844902,
+       19.7802185664746
+      ],
+      "good neighbour": [
+       true,
+       16.324452270139123,
+       16.407224389414615
+      ],
+      "safe unaided": [
+       false,
+       0.024920055085597897,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.011987598935852677,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.128322211371525,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 106.0,
+      "av_crash_per_h": 0.024920055085597897,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.641525839073377,
+      "av_speed_kmh": 16.686935162909553,
+      "av_jerk_rms": 1.2602529406494916,
+      "shield_share": 0.02883665707655103,
+      "human_speed_kmh": 16.284902923306745,
+      "human_crash_per_h": 0.03419928316766185,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.143336859809025,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 107.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.6654485742844902,
+      "av_speed_kmh": 16.538066628740594,
+      "av_jerk_rms": 1.8041277181131077,
+      "shield_share": 0.011987598935852677,
+      "human_speed_kmh": 16.324452270139123,
+      "human_crash_per_h": 0.03415175586559511,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -0.9784006486488753,
+      -0.5596988496669844
+     ],
+     "hard_diff_ci": [
+      -18.553879490830518,
+      -15.726895183533296
+     ]
+    },
+    "squirrel_hill": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       18.03899514535972,
+       18.77647468548932
+      ],
+      "smooth": [
+       true,
+       3.8743065089001147,
+       14.343459559287924
+      ],
+      "good neighbour": [
+       true,
+       16.711722761030757,
+       16.653407281943448
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       false,
+       0.03627197142149634,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.013539956963347182,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 27.56949679904514,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 103.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.03627197142149634,
+      "av_hard_per_h": 3.7360130564141225,
+      "av_speed_kmh": 18.26873659215442,
+      "av_jerk_rms": 1.3555608563608048,
+      "shield_share": 0.03041404803692468,
+      "human_speed_kmh": 16.754927504348444,
+      "human_crash_per_h": 0.0,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 27.617845865885418,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 107.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.03620847204579546,
+      "av_hard_per_h": 3.8743065089001147,
+      "av_speed_kmh": 18.03899514535972,
+      "av_jerk_rms": 2.096808812513771,
+      "shield_share": 0.013539956963347182,
+      "human_speed_kmh": 16.711722761030757,
+      "human_crash_per_h": 0.0,
+      "teleports": 1.0
+     },
+     "speed_diff_ci": [
+      -1.0301980127449277,
+      -0.3564525976952299
+     ],
+     "hard_diff_ci": [
+      -12.717230540087181,
+      -8.691221268070809
+     ]
+    },
+    "downtown": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       14.010837968928838,
+       14.875071385068722
+      ],
+      "smooth": [
+       true,
+       6.126866545243119,
+       27.040819405695625
+      ],
+      "good neighbour": [
+       false,
+       13.21946589706043,
+       13.451247277800846
+      ],
+      "safe unaided": [
+       false,
+       0.05794176315257512,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.0076971169334107735,
+       0.05
+      ]
+     },
+     "passed": 5,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 17.25870849609375,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 99.0,
+      "av_crash_per_h": 0.05794176315257512,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 5.736234552104937,
+      "av_speed_kmh": 13.97955996795662,
+      "av_jerk_rms": 1.4317973260381245,
+      "shield_share": 0.04010857604894922,
+      "human_speed_kmh": 13.228804349354244,
+      "human_crash_per_h": 0.0,
+      "teleports": 7.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 17.30085015190972,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 106.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 6.126866545243119,
+      "av_speed_kmh": 14.010837968928838,
+      "av_jerk_rms": 1.8431160223345726,
+      "shield_share": 0.0076971169334107735,
+      "human_speed_kmh": 13.21946589706043,
+      "human_crash_per_h": 0.0,
+      "teleports": 7.0
+     },
+     "speed_diff_ci": [
+      -1.1801675442600876,
+      -0.5607043453566476
+     ],
+     "hard_diff_ci": [
+      -24.580203999344583,
+      -17.23171159190936
+     ]
+    }
+   }
+  },
+  "PPO + barrier teacher, speed + jaywalkers (phase 3)": {
+   "passed": 61,
+   "overcome": [],
+   "scenarios": {
+    "nominal": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.02518813137217566
+      ],
+      "efficient": [
+       false,
+       16.352036891616983,
+       17.330521999698213
+      ],
+      "smooth": [
+       true,
+       2.0346865332060577,
+       18.23620711345518
+      ],
+      "good neighbour": [
+       true,
+       16.229535340727274,
+       16.332469448303236
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.02518813137217566
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.009066485995187156,
+       0.05
+      ]
+     },
+     "passed": 7,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.178479817708336,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 76.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 1.8915598684872,
+      "av_speed_kmh": 16.54999287440505,
+      "av_jerk_rms": 1.3351179397796602,
+      "shield_share": 0.015703541978369248,
+      "human_speed_kmh": 16.308605600374147,
+      "human_crash_per_h": 0.020476216753522347,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.30104817708333,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 82.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.0346865332060577,
+      "av_speed_kmh": 16.352036891616983,
+      "av_jerk_rms": 1.885602114794882,
+      "shield_share": 0.009066485995187156,
+      "human_speed_kmh": 16.229535340727274,
+      "human_crash_per_h": 0.02046612790690375,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -1.1833397651056654,
+      -0.7495282350069639
+     ],
+     "hard_diff_ci": [
+      -17.376086206060513,
+      -14.97063134481393
+     ]
+    },
+    "rush_hour": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       13.665032588038237,
+       14.339401906334691
+      ],
+      "smooth": [
+       true,
+       2.557713554760173,
+       15.921462889560587
+      ],
+      "good neighbour": [
+       true,
+       13.485217835813494,
+       13.614191457497874
+      ],
+      "safe unaided": [
+       false,
+       0.017145733582053135,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.017145733582053135,
+       0.034611875846870845
+      ],
+      "self-reliant": [
+       true,
+       0.00794874812786206,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 58.32354709201389,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 115.0,
+      "av_crash_per_h": 0.017145733582053135,
+      "av_near_per_h": 0.017145733582053135,
+      "av_hard_per_h": 1.9717593619361105,
+      "av_speed_kmh": 13.717546758821017,
+      "av_jerk_rms": 1.2816393325701552,
+      "shield_share": 0.013571800670949617,
+      "human_speed_kmh": 13.46687390768715,
+      "human_crash_per_h": 0.0,
+      "teleports": 4.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 58.25515516493056,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 149.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.017165862783625325,
+      "av_hard_per_h": 2.557713554760173,
+      "av_speed_kmh": 13.665032588038237,
+      "av_jerk_rms": 1.7849106147920812,
+      "shield_share": 0.00794874812786206,
+      "human_speed_kmh": 13.485217835813494,
+      "human_crash_per_h": 0.0,
+      "teleports": 4.0
+     },
+     "speed_diff_ci": [
+      -0.8656636220190508,
+      -0.5122693856388566
+     ],
+     "hard_diff_ci": [
+      -14.311346969153552,
+      -12.391970911705451
+     ]
+    },
+    "red_runners": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.306671760000587,
+       17.180172182257635
+      ],
+      "smooth": [
+       true,
+       2.4011792034548,
+       18.4145847952937
+      ],
+      "good neighbour": [
+       true,
+       16.265758424400644,
+       16.236839493243405
+      ],
+      "safe unaided": [
+       false,
+       0.024732234016929627,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.009137133234681382,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.43306396484375,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 97.0,
+      "av_crash_per_h": 0.024732234016929627,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.3990266996421736,
+      "av_speed_kmh": 16.421478037190493,
+      "av_jerk_rms": 1.3622842539438909,
+      "shield_share": 0.015254292336441816,
+      "human_speed_kmh": 16.240657659227857,
+      "human_crash_per_h": 0.027392479747419995,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.39681830512153,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 97.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.4011792034548,
+      "av_speed_kmh": 16.306671760000587,
+      "av_jerk_rms": 1.904943570267058,
+      "shield_share": 0.009137133234681382,
+      "human_speed_kmh": 16.265758424400644,
+      "human_crash_per_h": 0.02736716264124396,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -1.0665297005526813,
+      -0.7037950783483045
+     ],
+     "hard_diff_ci": [
+      -16.89746475958989,
+      -14.961516012768367
+     ]
+    },
+    "inattentive": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.123499846584686,
+       17.2406289796491
+      ],
+      "smooth": [
+       true,
+       2.1132769851703928,
+       18.36460556543684
+      ],
+      "good neighbour": [
+       false,
+       16.05805021100556,
+       16.276354269194254
+      ],
+      "safe unaided": [
+       false,
+       0.04989526244862029,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.02529559995239234
+      ],
+      "self-reliant": [
+       true,
+       0.009350905352682064,
+       0.05
+      ]
+     },
+     "passed": 5,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 2.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.083965928819445,
+      "av_crash": 2.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 76.0,
+      "av_crash_per_h": 0.04989526244862029,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 1.896019973047571,
+      "av_speed_kmh": 16.331448922743363,
+      "av_jerk_rms": 1.3278218321831292,
+      "shield_share": 0.01713763667158861,
+      "human_speed_kmh": 16.09042841292905,
+      "human_crash_per_h": 0.09541093050141489,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.22189263237847,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 85.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.1132769851703928,
+      "av_speed_kmh": 16.123499846584686,
+      "av_jerk_rms": 1.8816496199586374,
+      "shield_share": 0.009350905352682064,
+      "human_speed_kmh": 16.05805021100556,
+      "human_crash_per_h": 0.08176510917393756,
+      "teleports": 1.0
+     },
+     "speed_diff_ci": [
+      -1.3172587218407428,
+      -0.9118624693049288
+     ],
+     "hard_diff_ci": [
+      -17.199727277142014,
+      -15.361524942308208
+     ]
+    },
+    "jaywalkers": {
+     "checks": {
+      "safe": [
+       true,
+       0.022180017508158786,
+       0.04462644149343868
+      ],
+      "efficient": [
+       false,
+       11.467677962511246,
+       12.240623332024104
+      ],
+      "smooth": [
+       true,
+       1.5082411905547972,
+       11.000417828132635
+      ],
+      "good neighbour": [
+       false,
+       11.397097616284254,
+       11.542536131381407
+      ],
+      "safe unaided": [
+       false,
+       0.08896194377985964,
+       0.04462644149343868
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       false,
+       0.02224048594496491,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.008278075423322819,
+       0.05
+      ]
+     },
+     "passed": 4,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 3.0,
+      "av_bicycle": 0.0,
+      "av_hours": 44.963046332465275,
+      "av_crash": 4.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 55.0,
+      "av_crash_per_h": 0.08896194377985964,
+      "av_near_per_h": 0.02224048594496491,
+      "av_hard_per_h": 1.22322672697307,
+      "av_speed_kmh": 11.496654509411163,
+      "av_jerk_rms": 1.2016203001037538,
+      "shield_share": 0.014137535565682695,
+      "human_speed_kmh": 11.343546295967506,
+      "human_crash_per_h": 0.018609847050420517,
+      "teleports": 13.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 45.08562717013889,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 68.0,
+      "av_crash_per_h": 0.022180017508158786,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 1.5082411905547972,
+      "av_speed_kmh": 11.467677962511246,
+      "av_jerk_rms": 1.7068893113605663,
+      "shield_share": 0.008278075423322819,
+      "human_speed_kmh": 11.397097616284254,
+      "human_crash_per_h": 0.018621758449794648,
+      "teleports": 13.0
+     },
+     "speed_diff_ci": [
+      -1.0267514023974849,
+      -0.5693398080441534
+     ],
+     "hard_diff_ci": [
+      -10.75670555239758,
+      -8.323762606956693
+     ]
+    },
+    "blockages": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       14.139745783677474,
+       14.683215979702238
+      ],
+      "smooth": [
+       true,
+       2.1150605692306916,
+       12.734790036686306
+      ],
+      "good neighbour": [
+       true,
+       10.613940048466214,
+       10.688180373894166
+      ],
+      "safe unaided": [
+       false,
+       0.03365578793048338,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.010409306028991613,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 29.71257134331597,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 60.0,
+      "av_crash_per_h": 0.03365578793048338,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.0193472758290025,
+      "av_speed_kmh": 14.172227618848531,
+      "av_jerk_rms": 1.3005457200773152,
+      "shield_share": 0.017300944762264597,
+      "human_speed_kmh": 10.601831333866114,
+      "human_crash_per_h": 0.012345088937911702,
+      "teleports": 5.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 29.786381022135416,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 63.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.1150605692306916,
+      "av_speed_kmh": 14.139745783677474,
+      "av_jerk_rms": 1.8339710515899281,
+      "shield_share": 0.010409306028991613,
+      "human_speed_kmh": 10.613940048466214,
+      "human_crash_per_h": 0.012351331927928175,
+      "teleports": 5.0
+     },
+     "speed_diff_ci": [
+      -0.7902807222848808,
+      -0.31719305969035816
+     ],
+     "hard_diff_ci": [
+      -12.2815216552942,
+      -8.710211490895539
+     ]
+    },
+    "av_majority": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.053937629311225,
+       17.40198102685429
+      ],
+      "smooth": [
+       true,
+       2.4657346482765607,
+       18.923981940995777
+      ],
+      "good neighbour": [
+       false,
+       14.105362102372409,
+       14.593056057038657
+      ],
+      "safe unaided": [
+       false,
+       0.030476250189081473,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       false,
+       0.007619062547270368,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.009460834173541141,
+       0.05
+      ]
+     },
+     "passed": 4,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 1.0,
+      "av_pedestrian": 1.0,
+      "av_bicycle": 0.0,
+      "av_hours": 131.24974283854166,
+      "av_crash": 4.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 318.0,
+      "av_crash_per_h": 0.030476250189081473,
+      "av_near_per_h": 0.007619062547270368,
+      "av_hard_per_h": 2.422861890031977,
+      "av_speed_kmh": 16.286861196975064,
+      "av_jerk_rms": 1.3285974746137936,
+      "shield_share": 0.01570161806616635,
+      "human_speed_kmh": 14.07760489273252,
+      "human_crash_per_h": -0.01779214775143142,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 131.80655924479166,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 325.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.4657346482765607,
+      "av_speed_kmh": 16.053937629311225,
+      "av_jerk_rms": 1.8835976881709817,
+      "shield_share": 0.009460834173541141,
+      "human_speed_kmh": 14.105362102372409,
+      "human_crash_per_h": 0.0,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -1.5283015162504934,
+      -1.151332516128516
+     ],
+     "hard_diff_ci": [
+      -17.382498322505572,
+      -15.656909347479889
+     ]
+    },
+    "cyclists": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.214047508382063,
+       17.18726617941454
+      ],
+      "smooth": [
+       true,
+       2.5013051491114964,
+       16.76378694601946
+      ],
+      "good neighbour": [
+       true,
+       15.153495889202322,
+       15.215303703793804
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.027939644910032434
+      ],
+      "self-reliant": [
+       true,
+       0.008592700899908665,
+       0.05
+      ]
+     },
+     "passed": 7,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 36.300876193576386,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 83.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.286446188169068,
+      "av_speed_kmh": 16.327202750270796,
+      "av_jerk_rms": 1.348257664434837,
+      "shield_share": 0.014774666332385665,
+      "human_speed_kmh": 15.1734733554087,
+      "human_crash_per_h": 0.0,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 36.381006944444444,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 91.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.5013051491114964,
+      "av_speed_kmh": 16.214047508382063,
+      "av_jerk_rms": 1.8932207257080622,
+      "shield_share": 0.008592700899908665,
+      "human_speed_kmh": 15.153495889202322,
+      "human_crash_per_h": 0.0,
+      "teleports": 1.0
+     },
+     "speed_diff_ci": [
+      -1.288323029381908,
+      -0.5797655480715107
+     ],
+     "hard_diff_ci": [
+      -15.58865137922092,
+      -12.893787863881597
+     ]
+    },
+    "wet_road": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       16.23434541562653,
+       17.31975561598912
+      ],
+      "smooth": [
+       true,
+       2.404965390279551,
+       19.7802185664746
+      ],
+      "good neighbour": [
+       false,
+       16.233215725512395,
+       16.407224389414615
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.009092311879287123,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.21185574001736,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 87.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.163541035322595,
+      "av_speed_kmh": 16.45133075527676,
+      "av_jerk_rms": 1.302893242662893,
+      "shield_share": 0.016400635779255764,
+      "human_speed_kmh": 16.22435211944796,
+      "human_crash_per_h": 0.04099566022688413,
+      "teleports": 0.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 40.33322075737847,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 97.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 2.404965390279551,
+      "av_speed_kmh": 16.23434541562653,
+      "av_jerk_rms": 1.8127619779966475,
+      "shield_share": 0.009092311879287123,
+      "human_speed_kmh": 16.233215725512395,
+      "human_crash_per_h": 0.03414892149389163,
+      "teleports": 0.0
+     },
+     "speed_diff_ci": [
+      -1.314222448547242,
+      -0.8633977398607682
+     ],
+     "hard_diff_ci": [
+      -18.8218182066983,
+      -16.09318374136802
+     ]
+    },
+    "squirrel_hill": {
+     "checks": {
+      "safe": [
+       false,
+       0.03603533680024215,
+       0.0
+      ],
+      "efficient": [
+       false,
+       17.737904403033504,
+       18.77647468548932
+      ],
+      "smooth": [
+       true,
+       3.4233569960230046,
+       14.343459559287924
+      ],
+      "good neighbour": [
+       true,
+       16.74956471826659,
+       16.653407281943448
+      ],
+      "safe unaided": [
+       false,
+       0.03612435208484519,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       false,
+       0.03612435208484519,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.010071876635667682,
+       0.05
+      ]
+     },
+     "passed": 4,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 27.682157389322917,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 90.0,
+      "av_crash_per_h": 0.03612435208484519,
+      "av_near_per_h": 0.03612435208484519,
+      "av_hard_per_h": 3.251191687636067,
+      "av_speed_kmh": 17.821887576771232,
+      "av_jerk_rms": 1.4182876509275775,
+      "shield_share": 0.015946894537009995,
+      "human_speed_kmh": 16.762505645739264,
+      "human_crash_per_h": 0.0,
+      "teleports": 1.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 1.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 27.750538465711806,
+      "av_crash": 1.0,
+      "av_red": 0.0,
+      "av_near": 1.0,
+      "av_hard": 95.0,
+      "av_crash_per_h": 0.03603533680024215,
+      "av_near_per_h": 0.03603533680024215,
+      "av_hard_per_h": 3.4233569960230046,
+      "av_speed_kmh": 17.737904403033504,
+      "av_jerk_rms": 2.1108415788549793,
+      "shield_share": 0.010071876635667682,
+      "human_speed_kmh": 16.74956471826659,
+      "human_crash_per_h": 0.0,
+      "teleports": 1.0
+     },
+     "speed_diff_ci": [
+      -1.2760172558228815,
+      -0.7512527871494735
+     ],
+     "hard_diff_ci": [
+      -12.986108439474506,
+      -9.16523391411389
+     ]
+    },
+    "downtown": {
+     "checks": {
+      "safe": [
+       true,
+       0.0,
+       0.0
+      ],
+      "efficient": [
+       false,
+       13.599377034292502,
+       14.875071385068722
+      ],
+      "smooth": [
+       true,
+       5.388263386527495,
+       27.040819405695625
+      ],
+      "good neighbour": [
+       false,
+       13.269761371368915,
+       13.451247277800846
+      ],
+      "safe unaided": [
+       true,
+       0.0,
+       0.0
+      ],
+      "lawful": [
+       true,
+       0.0,
+       0.0
+      ],
+      "courteous": [
+       true,
+       0.0,
+       0.0
+      ],
+      "self-reliant": [
+       true,
+       0.005283173143173235,
+       0.05
+      ]
+     },
+     "passed": 6,
+     "raw": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 17.398575303819445,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 92.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 5.287789281217962,
+      "av_speed_kmh": 13.752945291120842,
+      "av_jerk_rms": 1.440356604032988,
+      "shield_share": 0.01126529020781218,
+      "human_speed_kmh": 13.179101058185495,
+      "human_crash_per_h": 0.0323685434023761,
+      "teleports": 7.0
+     },
+     "shielded": {
+      "av_rear-end": 0.0,
+      "av_angle": 0.0,
+      "av_left-turn": 0.0,
+      "av_sideswipe": 0.0,
+      "av_merge": 0.0,
+      "av_pedestrian": 0.0,
+      "av_bicycle": 0.0,
+      "av_hours": 17.445323893229165,
+      "av_crash": 0.0,
+      "av_red": 0.0,
+      "av_near": 0.0,
+      "av_hard": 94.0,
+      "av_crash_per_h": 0.0,
+      "av_near_per_h": 0.0,
+      "av_hard_per_h": 5.388263386527495,
+      "av_speed_kmh": 13.599377034292502,
+      "av_jerk_rms": 1.7962650388595276,
+      "shield_share": 0.005283173143173235,
+      "human_speed_kmh": 13.269761371368915,
+      "human_crash_per_h": 0.0,
+      "teleports": 7.0
+     },
+     "speed_diff_ci": [
+      -1.81751543877152,
+      -0.7958587984060714
+     ],
+     "hard_diff_ci": [
+      -24.970352808557887,
+      -18.250586120397987
+     ]
+    }
+   }
   }
  }
 }
