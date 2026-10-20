@@ -3,9 +3,12 @@
 **A city-scale, crash-calibrated driving world in pure JAX, and the research stack built on it: multi-agent RL,
 generative world models, scaling laws and controlled experiments on what makes a simulator a good teacher.**
 
-[**Live site**](https://haggler3.github.io/av_world/) ·
-[**Explore the Pittsburgh simulations in your browser**](https://haggler3.github.io/av_world/viewer/) ·
-[Methods](docs/METHODS.md) · [RL](docs/RL.md) · [World models](docs/WORLD_MODELS.md)
+# [▶ Open the av_world website](https://claude.ai/artifact/TxVxceTs8JuX2qgwmBartX)
+
+The site, with the browser replay viewer, is hosted at the link above. It is also built from `docs/` for GitHub Pages:
+[haggler3.github.io/av_world](https://haggler3.github.io/av_world/) (live once Pages is enabled: Settings → Pages →
+Deploy from a branch → `main`, `/docs`) · [Methods](docs/METHODS.md) · [RL](docs/RL.md) ·
+[World models](docs/WORLD_MODELS.md)
 
 ![learned AVs in Oakland](docs/img/xnet_learned_avs.gif)
 
