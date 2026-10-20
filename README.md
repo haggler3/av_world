@@ -292,7 +292,7 @@ python -m avrl.bench run && python -m avrl.bench report   # score the new polici
 Four additions to the simulator itself, each aimed at how fast or how well a policy learns. Every policy starts from the
 234k-step PPO driver (0.56 crashes per AV-hour with no filter), trains for 100 updates (52k simulator steps) with no
 safety filter and the barrier function as the teacher, 2 seeds per variant. Each is scored with no filter in the
-ladder's test world (humans 5× riskier, 25 % AVs): ~900 AV-hours per policy and world, from the same warm states and the
+ladder's test world (humans 5× riskier, 25 % AVs): ~460 AV-hours per policy in Oakland (180-470 in the other worlds), from the same warm states and the
 same random numbers (3 replicates × 16 copies × 5 simulated minutes; 95 % intervals about ±0.01 per AV-hour).
 
 | | idea | what it adds to the simulator | result |
