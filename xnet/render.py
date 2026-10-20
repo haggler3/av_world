@@ -23,7 +23,7 @@ from . import sim as X  # noqa: E402
 BG, ASPHALT, GROUND, LINE = "#0d1117", "#30353d", "#141a1f", "#c9d1d9"
 LIGHT = np.array(["#ff4d4d", "#ffb020", "#3ddc84"])
 CARS = ["#8b949e", "#a5d6ff", "#d2a8ff", "#ffa198", "#7ee787", "#6e7681", "#b392f0"]
-BUS, VAN, AVC, WRECK = "#f2cc60", "#e6edf3", "#2f81f7", "#f0883e"
+BUS, VAN, AVC, WRECK, BIKE = "#f2cc60", "#e6edf3", "#2f81f7", "#f0883e", "#3ddc84"
 
 
 class Tracks:
@@ -158,11 +158,11 @@ def snapshot_artists(ax, net, geo, tracks, st, zoom, sig_heads):
     kind = st.kind[a]
     wreck = st.wreck_t[a] > 0
     if zoom:
-        wd = np.where(kind == X.BUS, 2.5, np.where(kind == X.VAN, 2.1, 1.85))
+        wd = np.where(kind == X.BUS, 2.5, np.where(kind == X.VAN, 2.1, np.where(kind == X.BIKE, 0.7, 1.85)))
         polys = car_polys(x, y, th, length - 0.3, wd)
         idx = np.nonzero(a)[0]
         cols = np.array(CARS)[idx % len(CARS)]
-        cols = np.where(kind == X.BUS, BUS, np.where(kind == X.VAN, VAN, cols))
+        cols = np.where(kind == X.BUS, BUS, np.where(kind == X.VAN, VAN, np.where(kind == X.BIKE, BIKE, cols)))
         cols = np.where(st.av[a], AVC, cols)
         cols = np.where(wreck, WRECK, cols)
         ec = np.where(st.broken[a] | wreck, "#ff4d4d", np.where(st.stop_t[a] > 0, "#ffb020", np.where(st.dist_t[a] > 0, "#ffb020", "none")))
@@ -238,7 +238,7 @@ def animate(net, geo, info, frames, out, zoom=None, title="", fps=8, dpi=80, eve
     fig.text(0.015, 0.955, title, color="#e6edf3", fontsize=12, weight="bold")
     hud = fig.text(0.015, 0.918, "", color="#8b949e", fontsize=8.5)
     if zoom:
-        foot = ("grey/pastel: drivers   yellow: bus   white: delivery van   blue: AV   pink dots: pedestrians\n"
+        foot = ("grey/pastel: drivers   yellow: bus   white: delivery van   blue: AV   green: cyclist   pink dots: pedestrians\n"
                 "amber outline: stopped at a bus stop / double-parked / distracted   red outline + orange: breakdown or crash")
     else:
         foot = "every vehicle, coloured by speed vs the limit (blue fast ... red stopped); dots at junctions: signal heads"

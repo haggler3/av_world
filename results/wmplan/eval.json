@@ -1,0 +1,122 @@
+{
+ "rule": {
+  "av_hours": 23.143129348754883,
+  "crashes": 0.0,
+  "crash_per_h": 0.0,
+  "types": {
+   "rear-end": 0.0,
+   "angle": 0.0,
+   "left-turn": 0.0,
+   "sideswipe": 0.0,
+   "merge": 0.0,
+   "pedestrian": 0.0,
+   "bicycle": 0.0
+  },
+  "near_per_h": 0.0,
+  "red": 0.0,
+  "speed_kmh": 15.508176803588867,
+  "hard_per_h": 16.981281280517578,
+  "jerk_rms": 2.6988542079925537,
+  "h_neg_share": 0.0010826366487890482,
+  "veto_junction_s_per_h": 0.0,
+  "veto_merge_s_per_h": 0.0,
+  "human_speed_kmh": 14.805488586425781,
+  "wall_s": 12.798250913619995
+ },
+ "ppo raw": {
+  "av_hours": 22.64533805847168,
+  "crashes": 13.0,
+  "crash_per_h": 0.574069619178772,
+  "types": {
+   "rear-end": 10.0,
+   "angle": 0.0,
+   "left-turn": 0.0,
+   "sideswipe": 0.0,
+   "merge": 0.0,
+   "pedestrian": 2.0,
+   "bicycle": 0.0
+  },
+  "near_per_h": 0.0,
+  "red": 0.0,
+  "speed_kmh": 15.745546340942383,
+  "hard_per_h": 2.5170743465423584,
+  "jerk_rms": 1.2111872434616089,
+  "h_neg_share": 0.009749309159815311,
+  "veto_junction_s_per_h": 0.0,
+  "veto_merge_s_per_h": 0.0,
+  "human_speed_kmh": 14.650198936462402,
+  "wall_s": 15.90103554725647
+ },
+ "ppo+cbf": {
+  "av_hours": 23.287490844726562,
+  "crashes": 0.0,
+  "crash_per_h": 0.0,
+  "types": {
+   "rear-end": 0.0,
+   "angle": 0.0,
+   "left-turn": 0.0,
+   "sideswipe": 0.0,
+   "merge": 0.0,
+   "pedestrian": 0.0,
+   "bicycle": 0.0
+  },
+  "near_per_h": 0.0,
+  "red": 0.0,
+  "speed_kmh": 15.28685188293457,
+  "hard_per_h": 3.048847198486328,
+  "jerk_rms": 2.130937099456787,
+  "h_neg_share": 0.0009733423939906061,
+  "veto_junction_s_per_h": 10.503497123718262,
+  "veto_merge_s_per_h": 0.7471820116043091,
+  "human_speed_kmh": 14.75473403930664,
+  "wall_s": 15.253634452819824
+ },
+ "wm-mpc raw": {
+  "av_hours": 23.07400894165039,
+  "crashes": 6.0,
+  "crash_per_h": 0.2600328326225281,
+  "types": {
+   "rear-end": 3.0,
+   "angle": 1.0,
+   "left-turn": 1.0,
+   "sideswipe": 0.0,
+   "merge": 0.0,
+   "pedestrian": 0.0,
+   "bicycle": 0.0
+  },
+  "near_per_h": 0.08667761087417603,
+  "red": 1.0,
+  "speed_kmh": 15.24856948852539,
+  "hard_per_h": 4.767268657684326,
+  "jerk_rms": 1.6403732299804688,
+  "h_neg_share": 0.010090658441185951,
+  "veto_junction_s_per_h": 0.0,
+  "veto_merge_s_per_h": 0.0,
+  "human_speed_kmh": 14.646773338317871,
+  "wall_s": 407.8148009777069
+ },
+ "wm-mpc+cbf": {
+  "av_hours": 23.753559112548828,
+  "crashes": 0.0,
+  "crash_per_h": 0.0,
+  "types": {
+   "rear-end": 0.0,
+   "angle": 0.0,
+   "left-turn": 0.0,
+   "sideswipe": 0.0,
+   "merge": 0.0,
+   "pedestrian": 0.0,
+   "bicycle": 0.0
+  },
+  "near_per_h": 0.0,
+  "red": 0.0,
+  "speed_kmh": 14.336654663085938,
+  "hard_per_h": 5.472864151000977,
+  "jerk_rms": 2.1272425651550293,
+  "h_neg_share": 0.001003360259346664,
+  "veto_junction_s_per_h": 7.687283515930176,
+  "veto_merge_s_per_h": 9.539531707763672,
+  "human_speed_kmh": 14.642518043518066,
+  "wall_s": 405.93331956863403
+ }
+}
