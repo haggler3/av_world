@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
 <title>av_world · Driving worlds that teach</title>
 <meta name="description" content="A city-scale, crash-calibrated driving simulator in pure JAX, and the research stack on top of it: multi-agent RL, generative world models, scaling laws, and controlled experiments on what makes a simulator a good teacher.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,14 +13,16 @@
     --bg: #0d1117; --bg-2: #11161d; --panel: #161b22; --line: #2a313a; --ink: #e6edf3; --ink-2: #a3adb8; --ink-3: #6e7681;
     --accent: #3987e5; --accent-2: #6da7ec; --warm: #f0883e; --good: #3ddc84;
     --font: "Inter", system-ui, -apple-system, Segoe UI, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+    color-scheme: dark;  /* a deliberately dark page: the charts and replays are dark */
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
   a { color: var(--accent-2); text-decoration: none; }
   a:hover { text-decoration: underline; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
-  nav.top { position: sticky; top: 0; z-index: 10; background: rgba(13, 17, 23, 0.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 11; background: var(--bg); }
+  nav.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: rgba(13, 17, 23, 0.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
   nav.top .wrap { display: flex; align-items: center; gap: 22px; height: 56px; }
   .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
   .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 14px var(--accent); }
@@ -93,7 +96,7 @@
     .grid3, .grid2, .trends, .result .text, .project, .viewer-cta { grid-template-columns: 1fr; }
     nav.top .links a.opt { display: none; }
     header.hero { padding-top: 48px; }
-    .wrap { padding: 0 16px; }
+    .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   }
 </style>
 </head>
@@ -106,7 +109,7 @@
       <a class="opt" href="#results">Results</a>
       <a class="opt" href="#research">Research</a>
       <a href="#projects">Projects</a>
-      <a href="viewer/">Viewer</a>
+      <a href="viewer/index.html">Viewer</a>
       <a href="https://github.com/haggler3/av_world">GitHub</a>
     </div>
   </div>
@@ -120,7 +123,7 @@
       whose mistakes match published crash statistics. On top of it: multi-agent RL, diffusion world models, scaling laws,
       and controlled experiments on which simulated data makes a driving policy learn fastest.</p>
     <div class="cta">
-      <a class="btn primary" href="viewer/">▶ Explore the simulations</a>
+      <a class="btn primary" href="viewer/index.html">▶ Explore the simulations</a>
       <a class="btn" href="https://github.com/haggler3/av_world">View on GitHub</a>
       <a class="btn" href="#results">See the results</a>
     </div>
@@ -131,7 +134,7 @@
       <div class="stat"><b>380×</b><span>real time: 8 copies of a whole neighbourhood on 4 CPU cores</span></div>
       <div class="stat"><b>10,205</b><span>real Pittsburgh intersections auto-mined from OpenStreetMap</span></div>
       <div class="stat"><b>+20 %</b><span>early learning gain from training in the most dynamic world</span></div>
-      <div class="stat"><b>72</b><span>AVBench checks across 9 stress scenarios: the bar the RL has to clear</span></div>
+      <div class="stat"><b>88</b><span>AVBench checks across 11 stress scenarios: the bar the RL has to clear</span></div>
     </div>
   </div>
 </header>
@@ -161,6 +164,15 @@
       <div class="card"><span class="k">06 · Inspectable</span><h3>Every key moment, one click away</h3>
         <p>The browser viewer indexes each crash, red run and breakdown, so you can jump straight to it, follow any AV
           and watch the area from three camera views.</p></div>
+      <div class="card"><span class="k">07 · Seven crash types</span><h3>Junctions, merges and cyclists, not just rear-ends</h3>
+        <p>Rear-end, angle, left-turn, sideswipe, merge, pedestrian and bicycle crashes, each counted with whether an AV
+          was involved. A car too fast to stop at a line overruns into the junction, with the conflicts that follow.</p></div>
+      <div class="card"><span class="k">08 · Barrier function</span><h3>A safety filter with a guarantee to check</h3>
+        <p>A control barrier function bounds the AV's braking distance, vetoes junction entries that would not clear
+          before traffic with priority arrives, and vetoes merges the car behind could not absorb.</p></div>
+      <div class="card"><span class="k">09 · Imagined futures</span><h3>A planner that thinks in latent space</h3>
+        <p>A learned latent model unrolls each candidate merge or junction entry 2.4 s ahead and decodes crash risk,
+          red-light risk and safety margins. The AV picks the best plan every 0.2 s.</p></div>
     </div>
 
     <h3 style="margin:44px 0 14px;font-size:19px">Compared with the common tools</h3>
@@ -170,8 +182,8 @@
         <tbody>
           <tr><th>Framework</th><td class="us">JAX</td><td>JAX</td><td>C++/CUDA (Madrona)</td><td>GPU batch sim</td><td>Python / Panda3D</td><td>Unreal Engine</td><td>C++</td></tr>
           <tr><th>Scenes</th><td class="us">whole neighbourhoods from any OSM map, unbounded duration</td><td>~9 s logged snippets (WOMD)</td><td>~9 s logged snippets (WOMD)</td><td>procedural maps</td><td>procedural + imported</td><td>hand-built towns</td><td>any OSM map</td></tr>
-          <tr><th>Other road users</th><td class="us">calibrated humans, pedestrians, buses, vans, breakdowns</td><td>logs or IDM</td><td>logs or the policy</td><td>the policy (self-play)</td><td>rule-based traffic</td><td>traffic manager</td><td>car-following models</td></tr>
-          <tr><th>Crashes</th><td class="us">modelled, calibrated by crash type</td><td>detected</td><td>detected</td><td>detected</td><td>detected</td><td>detected</td><td>collision-free by default</td></tr>
+          <tr><th>Other road users</th><td class="us">calibrated humans, pedestrians, cyclists, buses, vans, breakdowns</td><td>logs or IDM</td><td>logs or the policy</td><td>the policy (self-play)</td><td>rule-based traffic</td><td>traffic manager</td><td>car-following models</td></tr>
+          <tr><th>Crashes</th><td class="us">seven types incl. merge and bicycle, calibrated by type</td><td>detected</td><td>detected</td><td>detected</td><td>detected</td><td>detected</td><td>collision-free by default</td></tr>
           <tr><th>RL + world models + scaling laws</th><td class="us">in one repo</td><td>sim + baselines</td><td>sim + baselines</td><td>not released</td><td>sim + baselines</td><td>sim</td><td>sim</td></tr>
           <tr><th>Hardware</th><td class="us">laptop CPU, 380× real time</td><td>CPU / GPU</td><td>GPU</td><td>multi-GPU node</td><td>CPU</td><td>GPU</td><td>CPU</td></tr>
         </tbody>
@@ -232,13 +244,43 @@
       <figure><img width="2550" height="840" src="img/avbench.png" alt="AVBench: checks passed per policy, crash rates with and without the safety envelope, and the speed-safety trade-off" loading="lazy"></figure>
       <div class="text">
         <div><h3>AVBench: the bar the learned driver has to clear</h3>
-          <p>Nine scenarios (rush hour, red runners, inattentive humans, jaywalkers, blockages, an 80 % AV world and two
-            unseen neighbourhoods) × eight checks, each against the rule-based AV driving the same traffic. Every policy is
-            scored as deployed, with the safety envelope on, and as raw RL output, with it off.</p></div>
+          <p>Eleven scenarios (rush hour, red runners, inattentive humans, jaywalkers, blockages, an 80 % AV world,
+            cyclists, a wet road and two unseen neighbourhoods) × eight checks, each against the rule-based AV driving the
+            same traffic. Every policy runs with the IDM envelope, with the barrier function, and with no filter.</p></div>
         <ul>
-          <li>As deployed, the best policy has <span class="big">3.7×</span> fewer crashes and <span class="big">5×</span> fewer hard brakes than the rule-based AV, at the same speed.</li>
-          <li>Unaided, no policy overcomes a scenario yet. The 62k-step policies crash <span class="big">45–57</span> times per AV-hour: they accelerate and let the envelope brake, which the training score cannot see.</li>
-          <li>A 10× envelope penalty removes raw crashes but halves the speed. The bar has two sides, and 72 checks to clear.</li>
+          <li>The best policy passes <span class="big">67 / 88</span>: as fast as the rule-based AV with <b>5×</b> fewer hard brakes, but no scenario fully overcome.</li>
+          <li>Unaided, the 62k-step policies crash <span class="big">63–80</span> times per AV-hour, across all seven crash types: they accelerate and let the filter brake, which the training score cannot see.</li>
+          <li>A 10× penalty on leaning on the filter removes almost every unaided crash but halves the speed. The bar has two sides.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
+      <figure><img width="921" height="460" src="img/wm_planner_junction.gif" alt="An AV at a junction with 32 candidate plans unfolded in latent space and decoded into speed, junction margin and crash risk" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Planning in a latent world model</h3>
+          <p>A 48-d latent model of the AV's scene, trained on 800 k decisions including 666 crashes, unrolls every
+            candidate plan of acceleration and gap acceptance 2.4 s into the future. A cross-entropy planner picks the best
+            plan for every AV, every 0.2 s.</p></div>
+        <ul>
+          <li>Predicts the AV's speed 3 s ahead with <span class="big">64 %</span> less error than holding the scene still; crash AUROC <b>0.954</b>, red-light-run AUROC <b>0.9999</b>.</li>
+          <li>With no safety filter, planning <b>halves</b> the crash rate of the policy it starts from: <span class="big">0.26</span> vs 0.57 per AV-hour.</li>
+          <li>With the barrier function on top, every driver in the test: <b>0 crashes</b>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
+      <figure><img width="2550" height="840" src="img/avlab_overview.png" alt="Crash rate vs speed per configuration, rate ratios per factor, and crash types" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>The stress lab: 192 conditions, 1,300 AV-hours per driver</h3>
+          <p>Latin-hypercube conditions over traffic, human risk, pedestrians, jaywalking, cyclists, AV share, road
+            friction, sensor noise and breakdowns. Every driver runs every condition on identical traffic, then Poisson
+            regressions say what drives the crashes.</p></div>
+        <ul>
+          <li>PPO with the barrier function: <span class="big">0.021</span> crashes per AV-hour, a third of the human drivers' rate in the same conditions.</li>
+          <li>Road friction dominates (<b>20–50×</b> from snow to dry). Below ~0.45 every driver crashes: the edge of the operating domain.</li>
+          <li>Pedestrians are <b>51–65 %</b> of AV crashes. The dense Downtown grid does not transfer yet.</li>
         </ul>
       </div>
     </div>
@@ -246,15 +288,15 @@
     <div class="viewer-cta">
       <div>
         <h2 style="font-size:28px">Look around the simulations yourself</h2>
-        <p class="sub" style="margin:0">Three recorded runs from Oakland and Squirrel Hill, replayed in your browser.</p>
+        <p class="sub" style="margin:0">Four recorded runs from Oakland and Squirrel Hill, one with every AV driven by the latent planner, replayed in your browser.</p>
         <ul>
           <li>Zoom from the whole neighbourhood down to a single lane; pan, pinch, scroll.</li>
           <li>Area, street and follow-an-AV cameras; colour by vehicle type or speed.</li>
-          <li>Indexed key moments: crashes, red-light runs, breakdowns, buses and double-parked vans.</li>
+          <li>Indexed key moments: crashes by type, red-light runs, breakdowns, buses and double-parked vans; cyclists in green.</li>
         </ul>
-        <a class="btn primary" href="viewer/">▶ Open the viewer</a>
+        <a class="btn primary" href="viewer/index.html">▶ Open the viewer</a>
       </div>
-      <a href="viewer/"><img width="691" height="547" src="xnet_oakland_overview.gif" alt="Every vehicle in Oakland coloured by speed" style="width:100%;border-radius:12px;border:1px solid var(--line);display:block" loading="lazy"></a>
+      <a href="viewer/index.html"><img width="691" height="547" src="xnet_oakland_overview.gif" alt="Every vehicle in Oakland coloured by speed" style="width:100%;border-radius:12px;border:1px solid var(--line);display:block" loading="lazy"></a>
     </div>
   </div>
 </section>
@@ -298,7 +340,7 @@
         <div><span class="k">Monorepo · JAX</span><h3><a href="https://github.com/haggler3/av_world">av_world</a></h3>
           <p>The world and the driver: <code>xworld</code> (crash-calibrated intersections), <code>pgh</code> (10,205 mined
             Pittsburgh intersections), <code>xnet</code> (whole neighbourhoods), <code>avrl</code> (multi-agent PPO, AVBench,
-            dynamics ladder, active learning), <code>dwm</code> (diffusion / flow world models, scaling laws), and the browser viewer.</p>
+            dynamics ladder, active learning), <code>wmplan</code> (latent world-model planning), <code>avlab</code> (stress lab), <code>dwm</code> (diffusion / flow world models, scaling laws), and the browser viewer.</p>
           <div class="tags"><span>JAX</span><span>multi-agent PPO</span><span>diffusion</span><span>OpenStreetMap</span><span>scaling laws</span></div></div>
       </div>
       <div class="card project">
@@ -333,11 +375,10 @@
   <div class="wrap">
     <h2>What's next</h2>
     <ol class="next">
-      <li><div><b>Overcome AVBench unaided</b><span>Anneal the envelope penalty, or train with the envelope off and a large crash penalty, from the 234k-step policy. Target: all 72 checks.</span></div></li>
+      <li><div><b>Pass AVBench unaided</b><span>Train from the 234k-step policy with the barrier function's vetoes and corrections as an annealed penalty, or distil the latent planner into it. Target: all 88 checks.</span></div></li>
+      <li><div><b>Amortise the planner</b><span>Train the policy on the planner's choices in imagined rollouts (Dreamer / TD-MPC style), keeping the foresight at the policy's speed.</span></div></li>
+      <li><div><b>Close the operating-domain gaps</b><span>A barrier whose braking assumption adapts to the road, training with sensor noise, and one policy across Oakland, Squirrel Hill and Downtown.</span></div></li>
       <li><div><b>Scale the simulation on a GPU</b><span>Test the fitted power laws 4–16× further out (62 k → 1 M simulator steps); the jitted step moves unchanged.</span></div></li>
-      <li><div><b>Train the driver inside the world model</b><span>The diffusion model samples a 3 s future in 0.06 ms. Use imagined rollouts (Dreamer-style) and compare steps-to-score with the dynamics ladder.</span></div></li>
-      <li><div><b>Failure-focused replay at scale</b><span>The failure score separates scenarios far more than the learning signal. Oversample where AVs still brake hard or nearly collide, and mine new scenarios from the viewer's key moments.</span></div></li>
-      <li><div><b>One policy, many neighbourhoods</b><span>Train across Oakland, Squirrel Hill and Downtown and measure transfer to an unseen part of the city.</span></div></li>
       <li><div><b>Close the loop with Rust</b><span>Port the 28-feature observation to small_av_world so the city-area policy runs in the Rust AV stack, as the corridor driver already does.</span></div></li>
     </ol>
   </div>

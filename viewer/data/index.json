@@ -6,7 +6,16 @@
   "blurb": "One shared PPO policy drives every blue car among calibrated human drivers, pedestrians, buses and vans.",
   "frames": 750,
   "dt": 0.4,
-  "n_events": 101
+  "n_events": 108
+ },
+ {
+  "run": "oakland_planner",
+  "area": "oakland",
+  "title": "Oakland: AVs plan in a latent world model, under a barrier function",
+  "blurb": "Every blue car searches 32 imagined 2.4 s futures each 0.2 s and drives the best, with a control barrier function on top; humans x5 riskier, cyclists in the lanes.",
+  "frames": 600,
+  "dt": 0.4,
+  "n_events": 61
  },
  {
   "run": "oakland_risky",
@@ -15,7 +24,7 @@
   "blurb": "Human risk amplified ~100x (red runners, drivers who do not look, distraction) plus frequent breakdowns: the corner cases an AV must survive, compressed into five minutes.",
   "frames": 750,
   "dt": 0.4,
-  "n_events": 122
+  "n_events": 121
  },
  {
   "run": "squirrel_hill_learned",
@@ -24,6 +33,6 @@
   "blurb": "A neighbourhood the policy never trained in: Forbes, Murray and the residential grid.",
   "frames": 600,
   "dt": 0.4,
-  "n_events": 46
+  "n_events": 45
  }
 ]

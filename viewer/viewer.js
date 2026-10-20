@@ -10,7 +10,16 @@
     van: { color: "#c9d1d9", name: "Double-parking" },
   };
   const HUMAN = ["#8b949e", "#a8b0ba", "#9c8f80", "#b5a58f", "#767f8a", "#c4c9cf", "#8a7f74"];  // muted, so the AVs stand out
-  const COL = { av: "#2f81f7", bus: "#f2cc60", van: "#e6edf3", wreck: "#f0883e" };
+  // the recording: raw bytes (.bin), or base64 text (.b64.txt) where a host does not serve binary files
+  async function loadFrames(run) {
+    const r = await fetch(DATA + run + ".bin");
+    if (r.ok) return r.arrayBuffer();
+    const t = (await (await fetch(DATA + run + ".b64.txt")).text()).trim();
+    const bin = atob(t), out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out.buffer;
+  }
+  const COL = { av: "#2f81f7", bus: "#f2cc60", van: "#e6edf3", wreck: "#f0883e", bike: "#3ddc84" };
   const LIGHT = ["#ff4d4d", "#ffb020", "#3ddc84"];
   const F = { AV: 1, BUS: 2, VAN: 4, WRECK: 8, STOP: 16, BROKEN: 32, RED: 64, DIST: 128 };
 
@@ -39,7 +48,7 @@
     S.playing = false; setPlay();
     const meta = await (await fetch(DATA + run + ".json")).json();
     if (!mapCache[meta.area]) mapCache[meta.area] = await (await fetch(DATA + meta.area + "/map.json")).json();
-    const buf = await (await fetch(DATA + run + ".bin")).arrayBuffer();
+    const buf = await loadFrames(run);
     S.run = meta; S.map = mapCache[meta.area]; S.dt = meta.dt;
     S.frames = parse(buf);
     S.paths = buildPaths(S.map);
@@ -62,18 +71,18 @@
       const nv = dv.getUint16(o, true), ns = dv.getUint16(o + 2, true), np = dv.getUint16(o + 4, true);
       o += 6;
       const x = new Float32Array(nv), y = new Float32Array(nv), h = new Float32Array(nv), v = new Float32Array(nv);
-      const f = new Uint8Array(nv), id = new Uint16Array(nv);
+      const f = new Uint8Array(nv), id = new Uint16Array(nv), k = new Uint8Array(nv);  // k: 0 car, 1 bus, 2 van, 3 bicycle
       for (let i = 0; i < nv; i++, o += 10) {
         x[i] = dv.getInt16(o, true) / 10; y[i] = dv.getInt16(o + 2, true) / 10;
         h[i] = dv.getUint8(o + 4) / 256 * 2 * Math.PI; v[i] = dv.getUint8(o + 5) / 4;
-        f[i] = dv.getUint8(o + 6); id[i] = dv.getUint16(o + 8, true);
+        f[i] = dv.getUint8(o + 6); k[i] = dv.getUint8(o + 7); id[i] = dv.getUint16(o + 8, true);
       }
       const sig = new Uint8Array(buf.slice(o, o + ns)); o += ns;
       const leg = new Uint16Array(np), p = new Float32Array(np);
       for (let i = 0; i < np; i++, o += 4) { leg[i] = dv.getUint16(o, true); p[i] = dv.getUint8(o + 2) / 255; }
       const byId = new Map();
       for (let i = 0; i < nv; i++) byId.set(id[i], i);
-      out.push({ x, y, h, v, f, id, sig, leg, p, byId });
+      out.push({ x, y, h, v, f, k, id, sig, leg, p, byId });
     }
     return out;
   }
@@ -184,16 +193,17 @@
       const fl = f0.f[i];
       const [x, y] = lerpPos(f0, f1, i, a);
       let c;
+      const bike = f0.k[i] === 3;
       if (S.color === "speed") c = speedColour(f0.v[i]);
-      else c = fl & F.WRECK ? COL.wreck : fl & F.AV ? COL.av : fl & F.BUS ? COL.bus : fl & F.VAN ? COL.van : HUMAN[f0.id[i] % HUMAN.length];
+      else c = fl & F.WRECK ? COL.wreck : fl & F.AV ? COL.av : fl & F.BUS ? COL.bus : fl & F.VAN ? COL.van : bike ? COL.bike : HUMAN[f0.id[i] % HUMAN.length];
       if (fl & F.WRECK) { ctx.fillStyle = "rgba(240,136,62,0.22)"; ctx.beginPath(); ctx.arc(x, -y, 7, 0, 7); ctx.fill(); c = COL.wreck; }
       if (!big) {
         ctx.fillStyle = c; ctx.beginPath();
-        const r = Math.max(1.6 / z, fl & F.BUS ? 4 : 2.4);
+        const r = Math.max(1.6 / z, fl & F.BUS ? 4 : bike ? 1.4 : 2.4);
         ctx.arc(x, -y, r, 0, 7); ctx.fill();
         continue;
       }
-      const L = fl & F.BUS ? 12 : fl & F.VAN ? 7 : 4.6, W = fl & F.BUS ? 2.5 : fl & F.VAN ? 2.1 : 1.85;
+      const L = fl & F.BUS ? 12 : fl & F.VAN ? 7 : bike ? 1.8 : 4.6, W = fl & F.BUS ? 2.5 : fl & F.VAN ? 2.1 : bike ? 0.7 : 1.85;
       ctx.save(); ctx.translate(x, -y); ctx.rotate(-f0.h[i]);
       ctx.fillStyle = c; roundRect(-L / 2, -W / 2, L, W, 0.5); ctx.fill();
       ctx.fillStyle = "rgba(13,27,42,0.85)"; ctx.fillRect(L * 0.12, -W * 0.4, L * 0.16, W * 0.8);
@@ -317,7 +327,7 @@
   });
   function legend() {
     const items = S.color === "type"
-      ? [["#8b949e", "human driver"], [COL.av, "AV (learned or rule-based)"], [COL.bus, "bus"], [COL.van, "delivery van"], [COL.wreck, "crash wreck"], ["#f778ba", "pedestrian"]]
+      ? [["#8b949e", "human driver"], [COL.av, "AV (learned or rule-based)"], [COL.bus, "bus"], [COL.van, "delivery van"], [COL.bike, "cyclist"], [COL.wreck, "crash wreck"], ["#f778ba", "pedestrian"]]
       : [[speedColour(0), "stopped"], [speedColour(5), "18 km/h"], [speedColour(10), "36 km/h"], [speedColour(15), "54 km/h"]];
     $("#legend-items").innerHTML = items.map(([c, n]) => `<li><i style="background:${c}"></i>${n}</li>`).join("");
   }
