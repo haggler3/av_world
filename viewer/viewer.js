@@ -7,7 +7,7 @@
   const EV = {
     crash: { color: "#f0883e", name: "Crashes" }, red: { color: "#ff6b6b", name: "Red-light runs" },
     breakdown: { color: "#d2a8ff", name: "Breakdowns" }, bus: { color: "#f2cc60", name: "Bus stops" },
-    van: { color: "#c9d1d9", name: "Double-parking" },
+    van: { color: "#c9d1d9", name: "Double-parking" }, barrier: { color: "#39d0ff", name: "Barrier steps in" },
   };
   const HUMAN = ["#8b949e", "#a8b0ba", "#9c8f80", "#b5a58f", "#767f8a", "#c4c9cf", "#8a7f74"];  // muted, so the AVs stand out
   // the recording: raw bytes (.bin), or base64 text (.b64.txt) where a host does not serve binary files
@@ -19,13 +19,18 @@
     for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
     return out.buffer;
   }
+  const B = { CUT: 16, HOLD: 32, MERGE: 64 };  // the barrier function braked / held at a junction / blocked a merge
+  function barrierColour(hv, alpha) {  // barrier value: slack >= 5 m, tight, or inside the barrier
+    const c = hv >= 5 ? "61,220,132" : hv >= 0 ? "255,176,32" : "255,77,77";
+    return `rgba(${c},${alpha})`;
+  }
   const COL = { av: "#2f81f7", bus: "#f2cc60", van: "#e6edf3", wreck: "#f0883e", bike: "#3ddc84" };
   const LIGHT = ["#ff4d4d", "#ffb020", "#3ddc84"];
   const F = { AV: 1, BUS: 2, VAN: 4, WRECK: 8, STOP: 16, BROKEN: 32, RED: 64, DIST: 128 };
 
   const S = {
     index: [], run: null, map: null, frames: [], dt: 0.4, t: 0, playing: false, speed: 4,
-    cam: { x: 0, y: 0, z: 0.25 }, view: "area", follow: -1, color: "type",
+    cam: { x: 0, y: 0, z: 0.25 }, view: "area", follow: -1, color: "type", barrier: true,
     filters: new Set(Object.keys(EV)), focus: null, paths: null, trail: [],
   };
 
@@ -50,7 +55,7 @@
     if (!mapCache[meta.area]) mapCache[meta.area] = await (await fetch(DATA + meta.area + "/map.json")).json();
     const buf = await loadFrames(run);
     S.run = meta; S.map = mapCache[meta.area]; S.dt = meta.dt;
-    S.frames = parse(buf);
+    S.frames = parse(buf, meta.rec || 10);
     S.paths = buildPaths(S.map);
     S.t = 0; S.follow = -1; S.focus = null; S.trail = [];
     $("#blurb").textContent = meta.blurb;
@@ -64,7 +69,7 @@
     S.playing = true; setPlay();
   }
 
-  function parse(buf) {
+  function parse(buf, rec) {
     const dv = new DataView(buf), out = [];
     let o = 0;
     while (o < buf.byteLength) {
@@ -72,17 +77,19 @@
       o += 6;
       const x = new Float32Array(nv), y = new Float32Array(nv), h = new Float32Array(nv), v = new Float32Array(nv);
       const f = new Uint8Array(nv), id = new Uint16Array(nv), k = new Uint8Array(nv);  // k: 0 car, 1 bus, 2 van, 3 bicycle
-      for (let i = 0; i < nv; i++, o += 10) {
+      const bb = new Uint8Array(nv), bh = new Float32Array(nv).fill(99), br = new Float32Array(nv);  // barrier: interventions, value, reach
+      for (let i = 0; i < nv; i++, o += rec) {
         x[i] = dv.getInt16(o, true) / 10; y[i] = dv.getInt16(o + 2, true) / 10;
         h[i] = dv.getUint8(o + 4) / 256 * 2 * Math.PI; v[i] = dv.getUint8(o + 5) / 4;
-        f[i] = dv.getUint8(o + 6); k[i] = dv.getUint8(o + 7); id[i] = dv.getUint16(o + 8, true);
+        f[i] = dv.getUint8(o + 6); const kb = dv.getUint8(o + 7); k[i] = kb & 3; bb[i] = kb & 0x70; id[i] = dv.getUint16(o + 8, true);
+        if (rec >= 12) { bh[i] = dv.getInt8(o + 10) / 2; br[i] = dv.getUint8(o + 11) / 2; }
       }
       const sig = new Uint8Array(buf.slice(o, o + ns)); o += ns;
       const leg = new Uint16Array(np), p = new Float32Array(np);
       for (let i = 0; i < np; i++, o += 4) { leg[i] = dv.getUint16(o, true); p[i] = dv.getUint8(o + 2) / 255; }
       const byId = new Map();
       for (let i = 0; i < nv; i++) byId.set(id[i], i);
-      out.push({ x, y, h, v, f, k, id, sig, leg, p, byId });
+      out.push({ x, y, h, v, f, k, bb, bh, br, id, sig, leg, p, byId });
     }
     return out;
   }
@@ -172,6 +179,7 @@
       for (const p of S.trail) ctx.lineTo(p[0], -p[1]);
       ctx.strokeStyle = "rgba(47,129,247,0.55)"; ctx.lineWidth = Math.max(0.8, 2 / z); ctx.stroke();
     }
+    if (S.barrier) barriers(f0, f1, a, z);
     vehicles(f0, f1, a, z);
     if (z > 2.2) peds(f0);
     focusRing(z);
@@ -213,6 +221,33 @@
         roundRect(-L / 2 - 0.3, -W / 2 - 0.3, L + 0.6, W + 0.6, 0.6); ctx.stroke();
       }
       ctx.fillStyle = "#fff3b0"; ctx.fillRect(L / 2 - 0.25, -W * 0.38, 0.22, 0.28); ctx.fillRect(L / 2 - 0.25, W * 0.1, 0.22, 0.28);
+      ctx.restore();
+    }
+  }
+  // each AV's barrier: the zone it must keep clear ahead (stopping distance + margin), coloured by the barrier value,
+  // and what the filter is doing (braking: orange outline, holding at a junction: red bar, blocking a merge: side bar)
+  function barriers(f0, f1, a, z) {
+    const big = z > 1.6;
+    for (let i = 0; i < f0.x.length; i++) {
+      if (!(f0.f[i] & F.AV) || f0.f[i] & F.WRECK) continue;
+      const [x, y] = lerpPos(f0, f1, i, a);
+      const hv = f0.bh[i], b = f0.bb[i];
+      if (!big) {
+        ctx.strokeStyle = barrierColour(hv, 0.95); ctx.lineWidth = Math.max(1.2 / z, 0.8);
+        ctx.beginPath(); ctx.arc(x, -y, Math.max(4.2 / z, 3.6), 0, 7); ctx.stroke();
+        continue;
+      }
+      const L = 4.6, W = 1.85, reach = Math.max(f0.br[i], 3.0);
+      ctx.save(); ctx.translate(x, -y); ctx.rotate(-f0.h[i]);
+      ctx.fillStyle = barrierColour(hv, 0.55); roundRect(-L / 2 - 0.7, -W / 2 - 0.7, L + 1.4, W + 1.4, 0.9); ctx.fill();  // underglow
+      const g = ctx.createLinearGradient(L / 2, 0, L / 2 + reach, 0);
+      g.addColorStop(0, barrierColour(hv, 0.6)); g.addColorStop(1, barrierColour(hv, 0.12));
+      ctx.fillStyle = g; ctx.fillRect(L / 2, -W / 2 - 0.25, reach, W + 0.5);
+      ctx.strokeStyle = barrierColour(hv, 0.9); ctx.lineWidth = 0.25;
+      ctx.beginPath(); ctx.moveTo(L / 2 + reach, -W / 2 - 0.25); ctx.lineTo(L / 2 + reach, W / 2 + 0.25); ctx.stroke();
+      if (b & B.HOLD) { ctx.fillStyle = "#ff4d4d"; ctx.fillRect(L / 2 + 0.6, -W / 2 - 0.6, 0.6, W + 1.2); }
+      if (b & B.MERGE) { ctx.fillStyle = "#d2a8ff"; ctx.fillRect(-L / 2, W / 2 + 0.45, L, 0.45); ctx.fillRect(-L / 2, -W / 2 - 0.9, L, 0.45); }
+      if (b & B.CUT) { ctx.strokeStyle = "#ff8c1a"; ctx.lineWidth = 0.45; roundRect(-L / 2 - 0.55, -W / 2 - 0.55, L + 1.1, W + 1.1, 0.7); ctx.stroke(); }
       ctx.restore();
     }
   }
@@ -275,12 +310,16 @@
   }
   function hud(fr) {
     const tsec = S.t * S.dt;
-    let av = 0, sp = 0, wreck = 0;
-    for (let i = 0; i < fr.v.length; i++) { sp += fr.v[i]; if (fr.f[i] & F.AV) av++; if (fr.f[i] & F.WRECK) wreck++; }
+    let av = 0, sp = 0, wreck = 0, act = 0, tight = 0;
+    for (let i = 0; i < fr.v.length; i++) {
+      sp += fr.v[i]; if (fr.f[i] & F.WRECK) wreck++;
+      if (fr.f[i] & F.AV) { av++; if (fr.bb[i]) act++; if (fr.bh[i] < 5) tight++; }
+    }
     const crashes = S.run.events.filter((e) => e.type === "crash" && e.t <= tsec).length;
     $("#hud").innerHTML = [
       ["Vehicles", fr.v.length], ["AVs", av], ["Mean speed", (3.6 * sp / Math.max(fr.v.length, 1)).toFixed(1) + " km/h"],
       ["Pedestrians crossing", fr.leg.length], ["Crashes so far", crashes],
+      ...(S.run.rec >= 12 ? [["Barrier: AVs tight / filter acting", `${tight} / ${act}`]] : []),
     ].map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("");
     $("#clock").textContent = fmt(tsec);
     if (document.activeElement !== $("#scrub")) $("#scrub").value = Math.floor(S.t);
@@ -321,17 +360,21 @@
   $("#speed").onchange = (e) => { S.speed = +e.target.value; };
   $("#scrub").oninput = (e) => { S.t = +e.target.value; S.trail = []; };
   document.querySelectorAll(".views button").forEach((b) => b.onclick = () => setView(b.dataset.view));
-  document.querySelectorAll("#legend .seg button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll("#legend .seg button[data-color]").forEach((b) => b.onclick = () => {
     S.color = b.dataset.color;
-    document.querySelectorAll("#legend .seg button").forEach((x) => x.classList.toggle("on", x === b)); legend();
+    document.querySelectorAll("#legend .seg button[data-color]").forEach((x) => x.classList.toggle("on", x === b)); legend();
   });
   function legend() {
     const items = S.color === "type"
       ? [["#8b949e", "human driver"], [COL.av, "AV (learned or rule-based)"], [COL.bus, "bus"], [COL.van, "delivery van"], [COL.bike, "cyclist"], [COL.wreck, "crash wreck"], ["#f778ba", "pedestrian"]]
       : [[speedColour(0), "stopped"], [speedColour(5), "18 km/h"], [speedColour(10), "36 km/h"], [speedColour(15), "54 km/h"]];
-    $("#legend-items").innerHTML = items.map(([c, n]) => `<li><i style="background:${c}"></i>${n}</li>`).join("");
+    const bar = S.barrier ? [[barrierColour(9, 1), "barrier slack ≥ 5 m"], [barrierColour(2, 1), "barrier tight (0-5 m)"],
+      [barrierColour(-1, 1), "inside the barrier"], ["#ff8c1a", "barrier brakes the AV"], ["#ff4d4d", "held at a junction"],
+      ["#d2a8ff", "merge blocked"]] : [];
+    $("#legend-items").innerHTML = items.concat(bar).map(([c, n]) => `<li><i style="background:${c}"></i>${n}</li>`).join("");
   }
   legend();
+  $("#bar").onclick = () => { S.barrier = !S.barrier; $("#bar").classList.toggle("on", S.barrier); $("#bar").textContent = S.barrier ? "AV barriers: on" : "AV barriers: off"; legend(); };
   window.addEventListener("keydown", (e) => {
     if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT") return;
     if (e.code === "Space") { S.playing = !S.playing; setPlay(); e.preventDefault(); }
