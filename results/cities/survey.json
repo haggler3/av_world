@@ -1,0 +1,90 @@
+{
+ "oakland": {
+  "links": 622,
+  "junction_moves": 1253,
+  "signals": 34,
+  "crosswalks": 608,
+  "km_of_lanes": 81.5114287726879,
+  "vehicles_mean": 574.0580444335938,
+  "mean_speed_kmh": 14.348716735839844,
+  "simulated_s_per_s": 668.3491215075486,
+  "trips_per_area_hour": 3609.75,
+  "crashes_per_area_hour": {
+   "rear-end": 0.75,
+   "angle": 0.0,
+   "left-turn": 0.75,
+   "sideswipe": 0.0,
+   "merge": 0.0,
+   "pedestrian": 1.5,
+   "bicycle": 0.0
+  },
+  "av_crashes": 0.0,
+  "av_hours": 158.70639038085938
+ },
+ "new_york": {
+  "links": 400,
+  "junction_moves": 990,
+  "signals": 74,
+  "crosswalks": 699,
+  "km_of_lanes": 81.51143502044678,
+  "vehicles_mean": 279.3450927734375,
+  "mean_speed_kmh": 17.923730850219727,
+  "simulated_s_per_s": 667.3075420054885,
+  "trips_per_area_hour": 2649.0,
+  "crashes_per_area_hour": {
+   "rear-end": 0.0,
+   "angle": 0.0,
+   "left-turn": 0.0,
+   "sideswipe": 0.0,
+   "merge": 1.5,
+   "pedestrian": 0.75,
+   "bicycle": 0.0
+  },
+  "av_crashes": 2.0,
+  "av_hours": 74.1841049194336
+ },
+ "chicago": {
+  "links": 457,
+  "junction_moves": 1127,
+  "signals": 139,
+  "crosswalks": 716,
+  "km_of_lanes": 78.65753528022766,
+  "vehicles_mean": 378.7608947753906,
+  "mean_speed_kmh": 15.198473930358887,
+  "simulated_s_per_s": 604.1745558350557,
+  "trips_per_area_hour": 3180.0,
+  "crashes_per_area_hour": {
+   "rear-end": 1.5,
+   "angle": 0.0,
+   "left-turn": 0.0,
+   "sideswipe": 0.0,
+   "merge": 0.75,
+   "pedestrian": 3.0,
+   "bicycle": 0.0
+  },
+  "av_crashes": 3.0,
+  "av_hours": 109.1551513671875
+ },
+ "boston": {
+  "links": 603,
+  "junction_moves": 1281,
+  "signals": 97,
+  "crosswalks": 926,
+  "km_of_lanes": 63.86625089073181,
+  "vehicles_mean": 308.5758972167969,
+  "mean_speed_kmh": 12.951735496520996,
+  "simulated_s_per_s": 648.393881554761,
+  "trips_per_area_hour": 2126.25,
+  "crashes_per_area_hour": {
+   "rear-end": 0.0,
+   "angle": 3.75,
+   "left-turn": 0.75,
+   "sideswipe": 0.0,
+   "merge": 0.75,
+   "pedestrian": 4.5,
+   "bicycle": 0.0
+  },
+  "av_crashes": 1.0,
+  "av_hours": 91.79802703857422
+ }
+}

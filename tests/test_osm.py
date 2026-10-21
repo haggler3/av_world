@@ -53,3 +53,11 @@ def test_save_load_roundtrip(tmp_path):
     back = osm.load(tmp_path / "c.npz")
     assert set(back) == set(net) and np.allclose(back["link_len"], net["link_len"])
     assert jnp.asarray(back["nh"]).shape == jnp.asarray(net["nh"]).shape
+
+
+def test_new_cities_build_from_the_bundled_maps():
+    from xnet import cities
+    for name in cities.CITIES:
+        net, geo, info = cities.build(name)
+        assert net["link_len"].shape[0] > 300 and int(net["node_signal"].sum()) > 30
+        assert (osm.mine.LAT0, osm.mine.LON0) == (40.44, -79.99)  # Pittsburgh's grid restored
