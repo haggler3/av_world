@@ -1,0 +1,104 @@
+{
+ "humans x5, rule-based AVs (IDM envelope)": {
+  "area_hours_per_run": 2.1333333333333333,
+  "plain": [
+   {
+    "crash_windows": 1,
+    "signatures": 1
+   },
+   {
+    "crash_windows": 1,
+    "signatures": 1
+   },
+   {
+    "crash_windows": 2,
+    "signatures": 2
+   }
+  ],
+  "go-explore (barrier)": [
+   {
+    "crash_windows": 0,
+    "signatures": 0,
+    "cells": 4
+   },
+   {
+    "crash_windows": 0,
+    "signatures": 0,
+    "cells": 3
+   },
+   {
+    "crash_windows": 0,
+    "signatures": 0,
+    "cells": 4
+   }
+  ],
+  "go-explore (mistakes)": [
+   {
+    "crash_windows": 1,
+    "signatures": 1,
+    "cells": 3
+   },
+   {
+    "crash_windows": 0,
+    "signatures": 0,
+    "cells": 4
+   },
+   {
+    "crash_windows": 2,
+    "signatures": 2,
+    "cells": 2
+   }
+  ]
+ },
+ "humans x1, every AV under the barrier function": {
+  "area_hours_per_run": 2.1333333333333333,
+  "plain": [
+   {
+    "crash_windows": 0,
+    "signatures": 0
+   },
+   {
+    "crash_windows": 1,
+    "signatures": 1
+   },
+   {
+    "crash_windows": 1,
+    "signatures": 1
+   }
+  ],
+  "go-explore (barrier)": [
+   {
+    "crash_windows": 0,
+    "signatures": 0,
+    "cells": 4
+   },
+   {
+    "crash_windows": 0,
+    "signatures": 0,
+    "cells": 5
+   },
+   {
+    "crash_windows": 0,
+    "signatures": 0,
+    "cells": 3
+   }
+  ],
+  "go-explore (mistakes)": [
+   {
+    "crash_windows": 0,
+    "signatures": 0,
+    "cells": 2
+   },
+   {
+    "crash_windows": 1,
+    "signatures": 1,
+    "cells": 3
+   },
+   {
+    "crash_windows": 1,
+    "signatures": 1,
+    "cells": 2
+   }
+  ]
+ }
+}

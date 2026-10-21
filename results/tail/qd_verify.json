@@ -1,0 +1,90 @@
+{
+ "map-elites": [
+  {
+   "cell": "pedestrian|3",
+   "found": 0.9352346297953481,
+   "again": 0.18201131389120973,
+   "again_crashes": 1.0,
+   "same_type": true
+  },
+  {
+   "cell": "pedestrian|2",
+   "found": 0.6416192531725248,
+   "again": 0.18842460388613477,
+   "again_crashes": 1.0,
+   "same_type": true
+  },
+  {
+   "cell": "rear-end|1",
+   "found": 0.622670938070389,
+   "again": 0.5503296992026608,
+   "again_crashes": 3.0,
+   "same_type": false
+  },
+  {
+   "cell": "rear-end|0",
+   "found": 0.45861047892101137,
+   "again": 0.34533690723557825,
+   "again_crashes": 2.0,
+   "same_type": false
+  },
+  {
+   "cell": "angle|0",
+   "found": 0.3109454152631991,
+   "again": 0.0,
+   "again_crashes": 0.0,
+   "same_type": false
+  },
+  {
+   "cell": "angle|1",
+   "found": 0.31078705236050286,
+   "again": 0.0,
+   "again_crashes": 0.0,
+   "same_type": false
+  },
+  {
+   "cell": "merge|0",
+   "found": 0.30607342025838397,
+   "again": 0.17242524450764043,
+   "again_crashes": 1.0,
+   "same_type": false
+  }
+ ],
+ "random": [
+  {
+   "cell": "pedestrian|1",
+   "found": 0.5615304996332778,
+   "again": 0.0,
+   "again_crashes": 0.0,
+   "same_type": false
+  },
+  {
+   "cell": "pedestrian|2",
+   "found": 0.556254570664769,
+   "again": 0.46812839396471967,
+   "again_crashes": 3.0,
+   "same_type": true
+  },
+  {
+   "cell": "pedestrian|0",
+   "found": 0.42927011039172763,
+   "again": 0.31458359147552195,
+   "again_crashes": 2.0,
+   "same_type": false
+  },
+  {
+   "cell": "pedestrian|3",
+   "found": 0.40849355737636855,
+   "again": 0.0,
+   "again_crashes": 0.0,
+   "same_type": false
+  },
+  {
+   "cell": "rear-end|1",
+   "found": 0.31823267604899425,
+   "again": 0.0,
+   "again_crashes": 0.0,
+   "same_type": false
+  }
+ ]
+}

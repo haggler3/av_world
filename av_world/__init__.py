@@ -9,7 +9,7 @@ See README.md; command line: `av-world --help`.
 """
 import os
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _FALLBACK = {"policy.npz": "results/xnet3/policy.npz", "calibration.json": "results/calibration.json",
              "pgh_areas.parquet": "data/pgh_segments.parquet"}
