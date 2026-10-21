@@ -17,6 +17,8 @@ honest account of what it can and cannot do.**
 * **A research stack on top**: multi-agent PPO (`avrl`), AVBench, latent world models and a planner (`dwm`, `wmplan`), a stress lab (`avlab`).
 * **Software and hardware in the loop**: drive any AV from your own controller over TCP, in lockstep (60x real time) or at wall-clock pace with
   deadlines and fallbacks ([SIL_HIL.md](docs/SIL_HIL.md)).
+* **NVIDIA-ready export**: any simulated long-tail scene or real Argoverse 2 log as an OpenUSD stage (Omniverse) and a camera-view
+  map-and-box control video of the kind driving world models such as Cosmos are conditioned on ([NVIDIA.md](docs/NVIDIA.md)).
 * **Long-tail tooling**: sensor faults, aimed human mistakes, dart-outs, famous-incident scenarios, a real-log importer, CARLA export, and
   five methods for teasing novel long-tail data out of the simulator ([report](docs/LONG_TAIL_METHODS.md)).
 
@@ -49,6 +51,7 @@ print(env.metrics(state)["av_crash"])
 
 | | |
 |---|---|
+| [docs/NVIDIA.md](docs/NVIDIA.md) | OpenUSD stages and Cosmos-style control videos from long-tail scenes |
 | [docs/SIL_HIL.md](docs/SIL_HIL.md) | software / hardware in the loop: protocol, modes, timing, measured latency |
 | [docs/CITIES.md](docs/CITIES.md) | New York, Chicago and Boston: what was built, what is real and what is inferred |
 | [docs/LONG_TAIL_METHODS.md](docs/LONG_TAIL_METHODS.md) | five methods for novel long-tail data, with pseudocode and results |
@@ -69,12 +72,12 @@ print(env.metrics(state)["av_crash"])
 | package | what it is |
 |---|---|
 | `av_world/` | the pip package: `make()` environment, the `av-world` command, the SIL/HIL plugin, bundled maps and start policy |
-| `xnet/` | the area simulator, road network builder, the extra cities, OSM and log importers, junction detector, CARLA export, sensor model |
+| `xnet/` | the area simulator, road network builder, the extra cities, the NVIDIA exporter, OSM and log importers, junction detector, CARLA export, sensor model |
 | `xworld/`, `pgh/` | the calibrated intersection simulator; 10,205 mined Pittsburgh intersections |
 | `avrl/` | PPO, AVBench, ladder, unaided training, famous-event training, multi-device trainer |
 | `dwm/`, `wmplan/` | diffusion / flow world models with scaling laws; latent world model and planner |
 | `avlab/` | stress lab, tail scenarios, incident audit, adversary, rare events, the five long-tail methods |
-| `tests/` | 77 tests: dynamics, safety, importers, junctions, sensor model, estimators |
+| `tests/` | 80 tests: dynamics, safety, importers, junctions, sensor model, estimators |
 | `docs/` | guides, the GitHub Pages site and the browser viewer |
 | `results/` | the JSON behind every number in the docs |
 
