@@ -30,10 +30,13 @@ OBS_DIM = 28  # AV policy observation (see step)
 SCALE = 32768  # sort key = track * SCALE + position in 1/8 m
 CRASH_NAMES = ("rear-end", "angle", "left-turn", "sideswipe", "merge", "pedestrian", "bicycle")
 AV_CRASH = tuple("av_" + c for c in CRASH_NAMES)  # crashes of each type with an AV involved
+# long-tail signatures: a crash (or fault) with a named cause, counted per event
+TAILS = ("tail_stalled", "tail_pileup", "tail_distracted", "tail_masked_ped", "tail_phantom", "tail_blind", "tail_cutin",
+         "tail_squeeze", "blackouts", "ghosts")
 METRICS = ("entered", "finished", "trip_s", "spawned", "blocked", "teleports") + CRASH_NAMES + (
     "red_runs", "lane_changes", "veh_s", "veh_m", "breakdowns", "stops", "passes", "peds", "rlr_crashes",
     "av_finished", "av_trip_s", "av_veh_s", "av_veh_m", "av_hard", "av_jerk2", "av_crash", "av_red", "av_near", "av_shield") + \
-    AV_CRASH + ("av_veto_junction", "av_veto_merge", "av_h_neg", "bikes", "bike_s")
+    AV_CRASH + ("av_veto_junction", "av_veto_merge", "av_h_neg", "bikes", "bike_s") + TAILS
 NM = len(METRICS)
 CAR, BUS, VAN, BIKE = 0, 1, 2, 3
 
@@ -58,6 +61,19 @@ class Behaviour(NamedTuple):
     friction: float = 1.0  # road friction: the hardest possible braking is 9 m/s^2 x friction (wet ~0.6, snow ~0.3)
     perception_noise: float = 0.0  # AVs see gaps x (1 + noise x N(0, 1)), clipped to +-3 sigma
     p_close_pass: float = 5e-4  # an aggressive or distracted human overtaking a cyclist clips them
+    p_dart: float = 0.0  # a pedestrian steps out from behind a stopped bus or van at a crosswalk without checking for traffic (0 = off)
+    # AV perception faults (0 = off): a blackout hides the leader and the stop target for 0.6-2 s; a ghost is a phantom
+    # obstacle 12 m ahead for 0.6-2 s (phantom braking). Per-second hazards per AV.
+    p_blind: float = 0.0
+    p_ghost: float = 0.0
+    # adversarial humans (1 = off), see xnet.adversary: multipliers on the hazard of a human mistake when it is aimed at an
+    # AV: distraction of the driver right behind an AV (adv_dist), a breakdown right in front of an AV (adv_brk), and
+    # squeezing into a gap in front of an AV (adv_cut: the gap a human accepts is divided by it). adv_budget 1 keeps the
+    # expected number of mistakes unchanged (the hazard of everyone else is lowered); 0 only adds.
+    adv_dist: float = 1.0
+    adv_brk: float = 1.0
+    adv_cut: float = 1.0
+    adv_budget: float = 1.0
 
 
 class Reward(NamedTuple):
@@ -134,6 +150,7 @@ class State(NamedTuple):
     t0: jnp.ndarray  # trip start
     acc: jnp.ndarray  # acceleration applied last step
     gsc: jnp.ndarray  # gap-acceptance scale (AVs: chosen by the policy; 1.25 = the rule-based AV)
+    blind_t: jnp.ndarray  # AV perception fault left [s]: > 0 blackout, < 0 phantom obstacle
     ped_t: jnp.ndarray  # [legs] crossing time left
     link_vs: jnp.ndarray  # [L] sum of speeds (routing)
     link_n: jnp.ndarray
@@ -159,7 +176,7 @@ def reset(key, net, n_slots):
     return State(key=key, t=jnp.zeros(()), alive=zb, trk=zi, s=z, v=z, dest=zi, nxt=zi, kind=zi, v0f=z + 1, T=z + 1.4,
                  amax=z + 1.5, b=z + 2.0, s0=z + 2.0, length=z + 4.6, runner=zb, nolook=zb, nosignal=zb, aggr=zb, av=zb,
                  react=z + 1.0, dist_t=z, stop_t=z, park_s=z - 1, broken=zb, wreck_t=z, stopped=zb, wait_t=z, red_t=z, ydec=zi,
-                 ran_red=zb, stuck_t=z, behind_t=z, lc_t=z, t0=z, acc=z, gsc=z + 1.25, ped_t=jnp.zeros(net["leg_node"].shape[0]),
+                 ran_red=zb, stuck_t=z, behind_t=z, lc_t=z, t0=z, acc=z, gsc=z + 1.25, blind_t=z, ped_t=jnp.zeros(net["leg_node"].shape[0]),
                  link_vs=jnp.zeros(L), link_n=jnp.zeros(L), m=jnp.zeros(NM))
 
 
@@ -358,8 +375,18 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
         enter = enter & ~veto_j
     line_stop = on_link & ~finishing & ~enter & (dist < 80)
 
+    # ---- adversarial aim (off at adv_* = 1): hazards of human mistakes, concentrated on the humans next to an AV
+    def aimed_hazard(elig, aim, mult):
+        """Per-vehicle factor on a hazard: `mult` where aimed; with adv_budget the others are lowered so that the expected
+        number of events stays the same."""
+        n_e, n_a = elig.sum(), (elig & aim).sum()
+        rest = jnp.where(beh.adv_budget > 0.5, jnp.clip((n_e - mult * n_a) / jnp.maximum(n_e - n_a, 1), 0.0, 1.0), 1.0)
+        return jnp.where(elig & aim, mult, rest)
+    lead_c0 = jnp.maximum(lead, 0)
+    behind_av = (lead >= 0) & st.av[lead_c0]
+    f_dist = aimed_hazard(~st.av & alive & (st.dist_t <= 0), behind_av, beh.adv_dist)
     # ---- distraction
-    start = (u_dist < beh.distract_rate * DT) & (st.dist_t <= 0) & ~st.av & alive
+    start = (u_dist < beh.distract_rate * DT * f_dist) & (st.dist_t <= 0) & ~st.av & alive
     dist_t = jnp.where(start, 1.5 + 1.5 * u_dur, jnp.maximum(st.dist_t - DT, 0.0))
     distracted = dist_t > 0
 
@@ -407,15 +434,27 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     # what AVs perceive: gaps with multiplicative sensor noise
     nz = 1.0 + beh.perception_noise * jnp.clip(jax.random.normal(k_n, (N,)), -3.0, 3.0)
 
+    kb = jax.random.fold_in(st.key, 7)  # a separate stream: switching the faults on does not change the rest of the run
+    u_b = jax.random.uniform(kb, (3, N))
+    p_f = beh.p_blind + beh.p_ghost
+    f_start = st.av & alive & (st.blind_t == 0) & (u_b[0] < p_f * DT)
+    f_dur = 0.6 + 1.4 * u_b[2]
+    f_new = jnp.where(u_b[1] * p_f < beh.p_ghost, -f_dur, f_dur)
+    blind_t = jnp.where(f_start, f_new, jnp.sign(st.blind_t) * jnp.maximum(jnp.abs(st.blind_t) - DT, 0.0))
+    blind, ghost = st.av & (st.blind_t > 0), st.av & (st.blind_t < 0)
+
     def seen(g):
-        return jnp.where(st.av & (g < 1e8), g * nz, g)
+        return jnp.where(blind, big, jnp.where(st.av & (g < 1e8), g * nz, g))
     g_eff = seen(g_eff)
+    vl_eff = jnp.where(ghost & (g_eff > 12.0), 0.0, vl_eff)
+    g_eff = jnp.where(ghost, jnp.minimum(g_eff, 12.0), g_eff)
     acc = jnp.where(g_eff < 1e8, idm(st.v, v0, g_eff, vl_eff, st.amax, st.b, st.T, st.s0), st.amax * (1 - (st.v / jnp.maximum(v0, 0.1)) ** 4))
     acc = jnp.clip(acc, a_min, st.amax)
     acc = jnp.where(distracted, 0.0, acc)  # no reaction
     halted = (st.stop_t > 0) | wreck
     # ---- the AV: the rule-based driver or a policy, under the safety filter
     g_stop = seen(jnp.minimum(stop_gap, park_gap))
+    g_stop = jnp.where(ghost, jnp.minimum(g_stop, 12.0), g_stop)
     gap_lead_c = seen(gap_lead_c)
     shield = jnp.minimum(jnp.minimum(jnp.where(g_stop < 1e8, idm(st.v, jnp.maximum(v0, 1.0), g_stop, 0.0, 2.0, 3.0, 0.5, st.s0), 99.0),
                                      jnp.where(gap_lead_c < 1e8, idm(st.v, jnp.maximum(v0, 1.0), gap_lead_c, jnp.maximum(v_lead, 0.0), 2.0, 3.0, 0.6, 2.0), 99.0)),
@@ -430,8 +469,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     av_ctl = alive & st.av & ~wreck
     gsc = st.gsc
     shield_cut = jnp.zeros(N)
-    if rl is not None:
-        policy_fn, pkey = rl[0], rl[1]  # rl[2] (optional): the policy also takes the mask of AV rows
+    if rl is not None or diag:  # the AV observation (28 features): the policy's input; with diag it is returned for risk models
         obs = jnp.stack([
             st.v / 15.0, st.acc / 3.0, vlim / 15.0, v0 / 15.0, jnp.clip(dist / 100.0, -0.1, 3.0), on_link.astype(jnp.float32),
             (g_stop < 1e8).astype(jnp.float32), jnp.clip(jnp.where(g_stop < 1e8, g_stop, 300.0) / 100.0, 0.0, 3.0),
@@ -447,6 +485,8 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
             jnp.clip(gap_lead_c / jnp.maximum(st.v, 1.0) / 3.0, 0.0, 2.0) * (gap_lead_c < 1e8),
             (st.gsc - 1.15) / 0.35,
         ], axis=1).astype(jnp.float32)
+    if rl is not None:
+        policy_fn, pkey = rl[0], rl[1]  # rl[2] (optional): the policy also takes the mask of AV rows
         a_rule = acc  # what the rule-based driver would do (for behaviour cloning)
         u_pol, aux = policy_fn(obs, pkey, av_ctl) if len(rl) > 2 and rl[2] else policy_fn(obs, pkey)
         u0 = jnp.clip(u_pol[:, 0], -1.0, 1.0)
@@ -473,7 +513,9 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     arrive_park = on_link & (st.park_s >= 0) & (s_new >= st.park_s - 1.5) & (v_new < 1.0)
     stop_t = jnp.where(arrive_park, jnp.where(st.kind == BUS, 15 + 20 * u_park, 60 + 120 * u_park), jnp.maximum(st.stop_t - DT, 0.0))
     park_s = jnp.where(arrive_park, -1.0, st.park_s)
-    brk = alive & on_link & (st.v > 1) & (u_brk < beh.breakdown_rate * DT) & (st.kind != BUS)
+    av_behind = jnp.zeros(N, bool).at[jnp.where(st.av & (lead >= 0), lead, N)].set(True, mode="drop")  # an AV right behind
+    f_brk = aimed_hazard(alive & on_link & (st.v > 1) & (st.kind != BUS), av_behind, beh.adv_brk)
+    brk = alive & on_link & (st.v > 1) & (u_brk < beh.breakdown_rate * DT * f_brk) & (st.kind != BUS)
     stop_t = jnp.where(brk, 300 + 600 * u_park2, stop_t)
     broken = (st.broken | brk) & (stop_t > 0)
 
@@ -496,7 +538,8 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     v_ahead = jnp.where(l_t >= 0, v_new[lt_], v_new)
     v_back = jnp.where(f_t >= 0, v_new[ft_], 0.0)
     zipper = jnp.where(must_lc & (dist < 40), 0.5, 1.0)  # near the end of a lane, drivers let one in
-    fac = jnp.where(st.nosignal, 0.5, 1.0) * zipper * jnp.where(st.aggr, 0.8, 1.0) * jnp.where(st.av, gsc / 1.25, 1.0)
+    squeeze = ~st.av & (f_t >= 0) & st.av[ft_]  # a human cutting in right in front of an AV
+    fac = jnp.where(st.nosignal, 0.5, 1.0) * zipper * jnp.where(st.aggr, 0.8, 1.0) * jnp.where(st.av, gsc / 1.25, 1.0) / jnp.where(squeeze, beh.adv_cut, 1.0)
     need_f = 2.0 + 0.3 * v_new + jnp.maximum(v_new - v_ahead, 0.0) ** 2 / 6.0
     need_b = 2.0 + 0.5 * v_back + jnp.maximum(v_back - v_new, 0.0) ** 2 / 6.0
     accept = ((gf > need_f * fac) & (gb > need_b * fac)) | (st.nolook & (gf > -1) )
@@ -529,6 +572,9 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     behind_t = jnp.where(do_pass, 0.0, behind_t)
 
     # ---- collisions
+    # crosswalks with a bus or van stopped just before them: a pedestrian can step out from behind it (p_dart)
+    screen = alive & on_link & (st.stop_t > 0) & ((st.kind == BUS) | (st.kind == VAN)) & (dist < 30.0) & (leg_in >= 0)
+    screen_leg = jnp.zeros(G + 1, bool).at[jnp.where(screen, leg_in, G)].set(True, mode="drop")[:G]
     disp = s_new - st.s
     la = jnp.maximum(lead_any, 0)
     rear = alive & ~wreck & (lead_any >= 0) & (disp > 0.02) & (gap_lead + disp[la] - disp < 0) & ~do_lc & ~do_pass & ~do_lc[la] & ~do_pass[la]
@@ -572,6 +618,11 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     counts = jnp.stack([n_ev(ev[c]) for c in CRASH_NAMES]).astype(jnp.float32)
     av_counts = jnp.stack([n_ev(ev[c], True) for c in CRASH_NAMES]).astype(jnp.float32)
     rlr = rlr_c.sum() + (rear & (st.ran_red | st.ran_red[la])).sum()
+    tail = dict(tail_stalled=(rear & (st.stop_t[la] > 0) & ~wreck[la]).sum(), tail_pileup=(rear & wreck[la]).sum(),
+                tail_distracted=(rear & (dist_t > 0)).sum(), tail_masked_ped=(ped_hit_in & screen_leg[jnp.maximum(leg_in, 0)]).sum(),
+                tail_phantom=(rear & ghost[la]).sum(), tail_blind=(crashed & blind & st.av).sum(),
+                tail_cutin=(rear_merge & lc_recent[la] & ~lc_recent).sum(), tail_squeeze=(do_lc & squeeze).sum(),
+                blackouts=(f_start & (f_new > 0)).sum(), ghosts=(f_start & (f_new < 0)).sum())
     new_wreck = crashed & ~wreck
     wreck_t = jnp.where(new_wreck, jnp.where(on_link, 300.0, 120.0), jnp.maximum(st.wreck_t - DT, 0.0))
     v_new = jnp.where(crashed, 0.0, v_new)
@@ -622,7 +673,8 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     leg_close = jnp.zeros(G + 1).at[jnp.where(close, leg_in, G)].add(1.0, mode="drop")[:G]
     leg_close = leg_close + jnp.zeros(G + 1).at[jnp.where(close & (mv >= 0), leg_out, G)].add(1.0, mode="drop")[:G]
     reckless = ~lawful & (u_ped[1] < beh.p_ped_violate) & (leg_box == 0) & (leg_close == 0)
-    ped_start = want_ped & (lawful | reckless)
+    dart = screen_leg & (jax.random.uniform(jax.random.fold_in(st.key, 8), (G,)) < beh.p_dart) & (leg_box == 0)  # ignores cars that are close
+    ped_start = want_ped & (lawful | reckless | dart)
     ped_t = jnp.where(ped_start, 8.0 + 6.0 * u_ped[2], jnp.maximum(ped_t - DT, 0.0))
 
     # ---- arrivals: 24 attempts per step, sampled from the sources by rate
@@ -670,12 +722,12 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
                          jnp.where(is_van & (rk0 >= 2) & (u_sp[14] < beh.p_park), (0.3 + 0.4 * u_sp[15]) * net["link_len"][src], -1.0)),
         broken=jnp.zeros(S, bool), wreck_t=jnp.zeros(S), stopped=jnp.zeros(S, bool), wait_t=jnp.zeros(S), red_t=jnp.zeros(S),
         ydec=jnp.zeros(S, jnp.int32), ran_red=jnp.zeros(S, bool), stuck_t=jnp.zeros(S), behind_t=jnp.zeros(S), lc_t=jnp.zeros(S),
-        t0=jnp.full(S, st.t), acc=jnp.zeros(S), gsc=jnp.full(S, 1.25))
+        t0=jnp.full(S, st.t), acc=jnp.zeros(S), gsc=jnp.full(S, 1.25), blind_t=jnp.zeros(S))
     cur = dict(alive=alive, trk=trk_new, s=s_new, v=v_new, dest=st.dest, nxt=nxt, kind=st.kind, v0f=st.v0f, T=st.T, amax=st.amax,
                b=st.b, s0=st.s0, length=st.length, runner=st.runner, nolook=st.nolook, nosignal=st.nosignal, aggr=st.aggr, av=st.av,
                react=st.react, dist_t=dist_t, stop_t=stop_t, park_s=park_s, broken=broken, wreck_t=wreck_t, stopped=stopped & alive,
                wait_t=wait_t, red_t=red_t, ydec=ydec, ran_red=ran_red, stuck_t=stuck_t, behind_t=behind_t, lc_t=lc_t, t0=st.t0,
-               acc=jnp.where(alive, acc, 0.0), gsc=gsc)
+               acc=jnp.where(alive, acc, 0.0), gsc=gsc, blind_t=jnp.where(alive, blind_t, 0.0))
     new = {k: cur[k].at[slots].set(jnp.where(ok_sp, vals[k], cur[k][slots])) for k in cur}
 
     lk = jnp.where(st.alive & on_link, link, L)
@@ -697,7 +749,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
                 av_crash=crash_av.sum(), av_red=red_av.sum(), av_near=near.sum(), av_shield=(av0 & (shield_cut > 0.5)).sum(),
                 **dict(zip(AV_CRASH, av_counts)), av_veto_junction=(veto_j & alive).sum() * DT, av_veto_merge=(veto_m & alive).sum() * DT,
                 av_h_neg=(av0 & (jnp.minimum(h_stop, h_lead) < 0) & (st.v > 1.0)).sum() * DT,  # outside the barrier's safe set
-                bikes=(ok_sp & is_bike).sum(), bike_s=(st.alive & bike).sum() * DT)
+                bikes=(ok_sp & is_bike).sum(), bike_s=(st.alive & bike).sum() * DT, **tail)
     m = st.m + jnp.stack([jnp.asarray(vals[k], jnp.float32) for k in METRICS])
     new["acc"] = new["acc"].at[slots].set(jnp.where(ok_sp, 0.0, new["acc"][slots]))
     new["gsc"] = new["gsc"].at[slots].set(jnp.where(ok_sp, 1.25, new["gsc"][slots]))
@@ -729,7 +781,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
         return out, dict(obs=obs, u=u_pol, aux=aux, reward=jnp.where(av0, reward, 0.0), valid=av0, done=ended, a_rule=a_rule,
                          margins=margins, crash=crash_av, near=near, red=red_av) | bar
     if diag:
-        return out, bar | dict(mv=mv, enter=enter, sig_ok=sig_ok, gap_ok=gap_ok, room_ok=room_ok, room=room, cw_busy=cw_busy, dist=dist,
+        return out, bar | dict(obs=obs, mv=mv, enter=enter, sig_ok=sig_ok, gap_ok=gap_ok, room_ok=room_ok, room=room, cw_busy=cw_busy, dist=dist,
                          lead=lead_any, gap_lead=gap_lead, s_state=s_state, must_lc=must_lc, crashed=crashed, rear=rear,
                          ped_hit=ped_hit, in_hit=in_hit, ss=ss_crash, occ=(valid & occ).any(1), arriving=(valid & arriving).any(1),
                          first_other=(valid & first_other).any(1), teleport=teleport, line_stop=line_stop, halted=halted,

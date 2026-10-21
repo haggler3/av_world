@@ -27,13 +27,14 @@ import numpy as np  # noqa: E402
 import optax  # noqa: E402
 from jax.sharding import Mesh, PartitionSpec as PS  # noqa: E402
 
+from av_world import data_path  # noqa: E402
 from xnet import network as NW  # noqa: E402
 from xnet import sim as X  # noqa: E402
 
 from . import ladder as LD  # noqa: E402
 from . import xppo as P  # noqa: E402
 
-START = "results/xnet3/policy.npz"
+START = data_path("policy.npz")
 REWARD = LD.REWARD | {"barrier": 0.3, "inside": 0.05, "veto": 1.0}
 PRESETS = {"cpu": dict(per_dev=8, updates=100), "gpu": dict(per_dev=128, updates=1000)}
 

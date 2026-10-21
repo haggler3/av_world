@@ -23,13 +23,14 @@ import time
 
 import jax.numpy as jnp
 
+from av_world import data_path
 from xnet import sim as X
 
 from . import ladder as LD
 from . import xppo as P
 
 OUT = "results/unaided"
-START = "results/xnet3/policy.npz"
+START = data_path("policy.npz")
 TEACH = LD.REWARD | {"barrier": 0.3, "inside": 0.05, "veto": 1.0}
 UPDATES = 100
 

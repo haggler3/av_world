@@ -26,6 +26,7 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 
+from av_world import data_path
 from xnet import network as NW
 from xnet import sim as X
 
@@ -288,7 +289,7 @@ def train(out="results/xnet", updates=200, seed=0, init=None, beh=None, ckpt_at=
     X.R = X.Reward(**cfg.reward)  # reward weights (read when the step is traced)
     os.makedirs(out, exist_ok=True)
     net, geo, info = NW.build(cfg.area)
-    knobs = json.load(open(os.path.join(os.path.dirname(NW.__file__), "..", "results", "calibration.json")))["calibrated"]
+    knobs = json.load(open(data_path("calibration.json")))["calibrated"]
     beh = behaviours(cfg.n_envs, seed, knobs) if beh is None else beh
     key = jax.random.PRNGKey(seed)
     params = init_params(key) if init is None else load(init)

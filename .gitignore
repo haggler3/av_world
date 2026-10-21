@@ -11,3 +11,4 @@ data/*
 !data/pgh_intersections.json
 results/wmplan/data*.npz
 results/avlab/*_warm.npz
+results/rare/pilot.npz

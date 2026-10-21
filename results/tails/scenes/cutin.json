@@ -1,0 +1,26 @@
+[
+ {
+  "scene": "cutin_0",
+  "ego": 1,
+  "objects": 50,
+  "detected": 0.24,
+  "occluded_share": 0.0,
+  "vru_detected": 0.32142857142857145,
+  "emerging_detected": NaN,
+  "far_detected": 0.06451612903225806,
+  "ghost_frames": 4,
+  "dropout_share": 0.14666666666666667
+ },
+ {
+  "scene": "cutin_1",
+  "ego": 12,
+  "objects": 831,
+  "detected": 0.3694344163658243,
+  "occluded_share": 0.5403128760529483,
+  "vru_detected": 0.0,
+  "emerging_detected": 0.9,
+  "far_detected": 0.029411764705882353,
+  "ghost_frames": 0,
+  "dropout_share": 0.0
+ }
+]
