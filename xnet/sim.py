@@ -32,7 +32,9 @@ CRASH_NAMES = ("rear-end", "angle", "left-turn", "sideswipe", "merge", "pedestri
 AV_CRASH = tuple("av_" + c for c in CRASH_NAMES)  # crashes of each type with an AV involved
 # long-tail signatures: a crash (or fault) with a named cause, counted per event
 TAILS = ("tail_stalled", "tail_pileup", "tail_distracted", "tail_masked_ped", "tail_phantom", "tail_blind", "tail_cutin",
-         "tail_squeeze", "blackouts", "ghosts")
+         "tail_squeeze", "blackouts", "ghosts",
+         # impact severity: how many vehicles struck a pedestrian / rear-ended another, and the sum of their speeds (strike) or closing speeds (m/s)
+         "imp_ped_n", "imp_ped_speed", "imp_rear_n", "imp_rear_closing", "imp_stalled_closing")
 METRICS = ("entered", "finished", "trip_s", "spawned", "blocked", "teleports") + CRASH_NAMES + (
     "red_runs", "lane_changes", "veh_s", "veh_m", "breakdowns", "stops", "passes", "peds", "rlr_crashes",
     "av_finished", "av_trip_s", "av_veh_s", "av_veh_m", "av_hard", "av_jerk2", "av_crash", "av_red", "av_near", "av_shield") + \
@@ -61,6 +63,7 @@ class Behaviour(NamedTuple):
     friction: float = 1.0  # road friction: the hardest possible braking is 9 m/s^2 x friction (wet ~0.6, snow ~0.3)
     perception_noise: float = 0.0  # AVs see gaps x (1 + noise x N(0, 1)), clipped to +-3 sigma
     p_close_pass: float = 5e-4  # an aggressive or distracted human overtaking a cyclist clips them
+    p_tailgate: float = 0.0  # share of human drivers who keep a time headway of 0.35-0.7 s instead of 1.0-1.8 s (0 = off)
     p_dart: float = 0.0  # a pedestrian steps out from behind a stopped bus or van at a crosswalk without checking for traffic (0 = off)
     # AV perception faults (0 = off): a blackout hides the leader and the stop target for 0.6-2 s; a ghost is a phantom
     # obstacle 12 m ahead for 0.6-2 s (phantom braking). Per-second hazards per AV.
@@ -622,7 +625,10 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
                 tail_distracted=(rear & (dist_t > 0)).sum(), tail_masked_ped=(ped_hit_in & screen_leg[jnp.maximum(leg_in, 0)]).sum(),
                 tail_phantom=(rear & ghost[la]).sum(), tail_blind=(crashed & blind & st.av).sum(),
                 tail_cutin=(rear_merge & lc_recent[la] & ~lc_recent).sum(), tail_squeeze=(do_lc & squeeze).sum(),
-                blackouts=(f_start & (f_new > 0)).sum(), ghosts=(f_start & (f_new < 0)).sum())
+                blackouts=(f_start & (f_new > 0)).sum(), ghosts=(f_start & (f_new < 0)).sum(),
+                imp_ped_n=ped_hit.sum(), imp_ped_speed=jnp.where(ped_hit, st.v, 0.0).sum(), imp_rear_n=rear.sum(),
+                imp_rear_closing=jnp.where(rear, jnp.maximum(st.v - st.v[la], 0.0), 0.0).sum(),
+                imp_stalled_closing=jnp.where(rear & (st.stop_t[la] > 0) & ~wreck[la], jnp.maximum(st.v - st.v[la], 0.0), 0.0).sum())
     new_wreck = crashed & ~wreck
     wreck_t = jnp.where(new_wreck, jnp.where(on_link, 300.0, 120.0), jnp.maximum(st.wreck_t - DT, 0.0))
     v_new = jnp.where(crashed, 0.0, v_new)
@@ -712,7 +718,7 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     vals = dict(
         alive=jnp.ones(S, bool), trk=strk, s=s_sp, v=v_sp, dest=dst,
         nxt=jnp.where(src == net["dest_link"][dst], -1, nh[src, dst]), kind=jnp.where(is_bus, BUS, jnp.where(is_van, VAN, jnp.where(is_bike, BIKE, CAR))),
-        v0f=jnp.where(is_bus, 0.85, jnp.where(is_av, 1.0, 0.9 + 0.3 * u_sp[7])), T=jnp.where(is_av, 1.3, jnp.where(is_bus, 1.6, 1.0 + 0.8 * u_sp[5])),
+        v0f=jnp.where(is_bus, 0.85, jnp.where(is_av, 1.0, 0.9 + 0.3 * u_sp[7])), T=jnp.where(is_av, 1.3, jnp.where(is_bus, 1.6, jnp.where(jnp.mod(u_sp[2] * 97.0, 1.0) < beh.p_tailgate, 0.35 + 0.35 * u_sp[5], 1.0 + 0.8 * u_sp[5]))),
         amax=jnp.where(is_bus | is_van | is_bike, 1.0, jnp.where(is_av, 1.6, 1.2 + 0.8 * u_sp[2])), b=jnp.where(is_av, 2.0, 1.5 + 1.0 * u_sp[4]),
         s0=1.5 + 1.0 * u_sp[8], length=length,
         runner=human & (u_sp[9] < beh.p_red), nolook=human & (u_sp[10] < beh.p_nolook),

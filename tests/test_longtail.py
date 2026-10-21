@@ -63,3 +63,13 @@ def test_dart_outs_create_the_masked_pedestrian_crash():
     dart, _ = run(X.Behaviour(**kw, p_dart=1.0), seconds=300, n=3)
     assert base["tail_masked_ped"] == 0
     assert dart["peds"] >= base["peds"] and dart["tail_masked_ped"] >= base["tail_masked_ped"]
+
+
+def test_tailgaters_keep_a_short_headway():
+    _, sim = run(X.Behaviour(**BASE, p_tailgate=1.0), seconds=120)
+    st = sim.st
+    human = np.asarray(st.alive & ~st.av)
+    assert human.sum() > 5 and float(np.asarray(st.T)[human].max()) < 0.71
+    _, base = run(X.Behaviour(**BASE), seconds=120)
+    hb = np.asarray(base.st.alive & ~base.st.av)
+    assert float(np.asarray(base.st.T)[hb].min()) >= 1.0

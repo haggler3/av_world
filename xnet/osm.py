@@ -43,25 +43,35 @@ def _speed(tag):
     return [{"max_speed": {"value": int(round(v)), "unit": "mph" if "mph" in tag else "km/h"}, "between": None, "when": None}]
 
 
-def parse(path_or_text):
-    """-> (nodes {id: (lon, lat)}, ways [(id, [node ids], tags)]) from OSM XML or Overpass JSON (a path or the text itself)."""
+def parse_full(path_or_text):
+    """-> (nodes {id: (lon, lat)}, ways [(id, [node ids], tags)], node_tags {id: tags}) from OSM XML or Overpass JSON (a path or the text)."""
     text = path_or_text
     if "\n" not in text and "<" not in text and "{" not in text:
         text = open(path_or_text, encoding="utf-8").read()
-    nodes, ways = {}, []
+    nodes, ways, ntags = {}, [], {}
     if text.lstrip().startswith("{"):
         for e in json.loads(text)["elements"]:
             if e["type"] == "node":
                 nodes[e["id"]] = (e["lon"], e["lat"])
+                if e.get("tags"):
+                    ntags[e["id"]] = e["tags"]
             elif e["type"] == "way":
                 ways.append((e["id"], e["nodes"], e.get("tags", {})))
-        return nodes, ways
+        return nodes, ways, ntags
     root = ET.fromstring(text)
     for e in root.iter("node"):
         nodes[int(e.get("id"))] = (float(e.get("lon")), float(e.get("lat")))
+        tg = {t.get("k"): t.get("v") for t in e.iter("tag")}
+        if tg:
+            ntags[int(e.get("id"))] = tg
     for w in root.iter("way"):
         ways.append((int(w.get("id")), [int(n.get("ref")) for n in w.iter("nd")], {t.get("k"): t.get("v") for t in w.iter("tag")}))
-    return nodes, ways
+    return nodes, ways, ntags
+
+
+def parse(path_or_text):
+    """-> (nodes {id: (lon, lat)}, ways [(id, [node ids], tags)])."""
+    return parse_full(path_or_text)[:2]
 
 
 def rows_from_osm(nodes, ways):
@@ -91,10 +101,19 @@ def rows_from_osm(nodes, ways):
     return rows
 
 
-def import_osm(source, bbox=None, seed=0, **kw):
-    """OSM file (or text) -> (net, geo, info), like xnet.network.build. `bbox` (west, south, east, north) crops the extract;
-    default: everything in the file."""
-    nodes, ways = parse(source)
+def import_osm(source, bbox=None, seed=0, detect=True, **kw):
+    """OSM file (or text) -> (net, geo, info), like xnet.network.build. `bbox` (west, south, east, north) crops the extract; default:
+    everything in the file. With `detect` (default) xnet.junctions cleans the map first (roundabouts become one junction, divided roads and
+    offset T's one junction, overpasses are not junctions) and the traffic-signal / stop-sign tags decide the junction control; info["junctions"]
+    holds the detected junctions."""
+    nodes, ways, ntags = parse_full(source)
+    hints = None
+    jres = None
+    if detect:
+        from . import junctions as JN
+        jres = JN.detect(nodes, ways, node_tags=ntags)
+        nodes, ways = jres["nodes"], jres["ways"]
+        hints = jres["hints"]
     used = {n for _, ns, t in ways if t.get("highway") in HIGHWAY for n in ns if n in nodes}
     if not used:
         raise ValueError("no drivable roads (highway=residential, primary, ...) in the extract")
@@ -105,10 +124,24 @@ def import_osm(source, bbox=None, seed=0, **kw):
     origin = ((bbox[1] + bbox[3]) / 2, (bbox[0] + bbox[2]) / 2)
     set_origin(*origin)
     try:
-        net, geo, info = NW.build(bbox, seed=seed, rows=rows_from_osm(nodes, ways), **kw)
+        if hints is not None:  # signal / stop positions in this grid's metres
+            h = {k: (np.stack(mine.to_m(*_ll(hints[k], hints["origin"])), 1) if len(hints[k]) else np.zeros((0, 2))) for k in ("signals", "stops")}
+        else:
+            h = None
+        net, geo, info = NW.build(bbox, seed=seed, rows=rows_from_osm(nodes, ways), hints=h, **kw)
     finally:
         set_origin(*old)  # the built-in Pittsburgh areas keep their grid
-    return net, geo, {**info, "origin_lat_lon": origin}
+    out = {**info, "origin_lat_lon": origin}
+    if jres:
+        out["junctions"], out["junction_stats"] = jres["junctions"], jres["stats"]
+    return net, geo, out
+
+
+def _ll(xy, origin):
+    """Local metres of junctions.detect (centred on its own origin) back to lon / lat."""
+    lat0, lon0 = origin
+    xy = np.asarray(xy)
+    return lon0 + xy[:, 0] / (111320.0 * math.cos(math.radians(lat0))), lat0 + xy[:, 1] / 110540.0
 
 
 def fetch(bbox, url="https://overpass-api.de/api/interpreter"):
