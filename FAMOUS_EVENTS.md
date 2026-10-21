@@ -30,7 +30,7 @@ riskier than the calibrated rates.
 
 ## 1. Does each scenario produce its event, and how hard is it?
 
-Eight copies of Oakland, two intensity draws per scenario, 250 s each after a 100 s warm-up (about 80 AV-hours per cell). Left:
+Eight copies of Oakland, two intensity draws per scenario, 250 s each after a 100 s warm-up (about 80-90 AV-hours per cell). Left:
 the rule-based AV under the IDM envelope. Right: the 234k-step PPO policy with no safety filter (the starting point of every run
 below). "x nominal x5" divides by the start policy's rate in the ordinary x5 world.
 
@@ -49,14 +49,14 @@ below). "x nominal x5" divides by the start policy's rate in the ordinary x5 wor
 | nominal x1 | - = 0 | 0.000 (0) | 0.495 (40) | 0.9 |
 | nominal x5 | - = 0 | 0.000 (0) | 0.546 (44) | 1.0 |
 
-* Every scenario produces its signature event (the counter column counts all vehicles, not only AVs). Dart-outs, stalled-car
+* Every scenario produces its signature counter (it counts all vehicles, not only AVs; for phantom braking it is the AVs' hard brakes, not compared with nominal here). Dart-outs, stalled-car
   rear-ends and sensor-blackout crashes appear only because of the knob; red-runner and left-turn crashes also occur at
   calibrated rates.
 * **Hardest for the start policy:** black ice (3.2x), the misclassified jaywalker (3.0x), the dart-out (2.2x), sun glare (1.8x).
-  The rule-based AV, which is bound to the IDM envelope, is nearly immune except to the jaywalker, glare and ice.
+  The rule-based AV, which is bound to the IDM envelope, is nearly immune except to the jaywalker, glare, ice and (through its sensor dropouts) the stalled vehicle.
 * **Not harder than ordinary traffic:** stalled vehicle, phantom braking, cut-in, red-light runner, unprotected left and
   cyclist close pass (0.5-1.1x). They are real patterns, but this policy is not more fragile to them than to everything else, and
-  the left-turn and cyclist scenarios are easier (lighter traffic mix). A scenario that does not raise the crash rate
+  the left-turn and cyclist scenarios are even easier than ordinary traffic. A scenario that does not raise the crash rate
   carries no training signal for crashes.
 
 ## 2. Does training on them help?
@@ -94,10 +94,10 @@ Scored on test draws of all ten scenarios and both nominal worlds, with no filte
 |---|---|---|---|---|
 | all conditions, seed 0 / seed 1 | 0.598 | 0.084 / 0.093 | 0.077 / **0.172** | 0.076 / 0.092 |
 
-* Every trained variant cuts crashes by about 7x against the start policy (0.60 to 0.08-0.17). Almost all of that is the barrier
+* Every trained variant cuts crashes 3.5-8x against the start policy (0.60 to 0.08-0.17). Almost all of that is the barrier
   teacher in 100 updates, whatever the mix.
 * **The famous mix did not beat nominal training.** Seed 0: 0.077 vs 0.084 (no difference). Seed 1: 0.172 vs 0.093, with the
-  mix clearly worse, and it was worse in 11 of 12 conditions, including the ordinary ones. The stress control sits with
+  mix clearly worse, and it was worse in all 12 conditions, including the ordinary ones. The stress control sits with
   nominal in both seeds. With two seeds the difference between seeds (B: 0.077 vs 0.172) is as large as any difference between
   variants, so the safest reading is "no benefit shown; the mix may make training less stable", the same pattern as the
   mid-training instability of the mutating-cities run.
@@ -106,10 +106,10 @@ Scored on test draws of all ten scenarios and both nominal worlds, with no filte
 ## 3. What they are good for
 
 * **Testing.** On ordinary x5 traffic the trained policies (A, C, A1) crash 0-0.02 times per AV-hour, which would pass most
-  nominal checks. The same policies crash 0.26-0.39 per AV-hour in the jaywalker scenario and 0.22-0.31 under sensor glare:
-  failures the ordinary test hides, found with ~80 AV-hours of simulation per cell. That, rather than training data, is where
+  nominal checks. The same policies crash 0.26-0.39 per AV-hour in the jaywalker scenario and 0.24-0.31 under sensor glare:
+  failures the ordinary test hides, found with ~80-90 AV-hours of simulation per cell. That, rather than training data, is where
   these scenarios earn their keep.
-* **Ranking policies.** The scenarios separate the start policy from every trained one by 4-30x, and the dart-out, jaywalker
+* **Ranking policies.** The scenarios separate the start policy from the trained ones by roughly 3-35x, and the dart-out, jaywalker
   and glare cells are where trained policies differ most.
 * **Not shown: training on them.** If they should help, it would take more than 100 updates, more seeds, a curriculum that
   raises intensity as the policy improves, or scenarios that are actually hard for the policy being trained (the six
@@ -117,7 +117,7 @@ Scored on test draws of all ten scenarios and both nominal worlds, with no filte
 
 ## Caveats
 
-* Two seeds per variant, about 80 AV-hours per cell: per-cell differences under about 2x are noise, and the totals are good to
+* Two seeds per variant, about 80-90 AV-hours per cell: per-cell differences under about 2x are noise, and the totals are good to
   roughly +-0.02.
 * The test draws share a map (Oakland) and a simulator with the training worlds. Nothing here says how a real fleet would behave.
 * Scenario strengths are chosen to produce the event, not calibrated to the real frequency of these events.
