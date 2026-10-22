@@ -7,10 +7,20 @@ honest account of what it can and cannot do.**
 
 ![learned AVs in Oakland](docs/img/xnet_learned_avs.gif)
 
-**Latest AVBench** (18 scenarios x 8 fixed-bar checks, [full results](docs/METRICS.md#results)):
-* The barrier-taught PPO policy passes **123 of 144** checks, the rule-based AV 104.
-* The rule-based AV still has the best core score (77.2 vs 56.8): unaided, the learned policies crash 1.3-1.6x as often.
-* Retraining one recipe moves scores by up to 10 points; the latent world-model planner is not competitive yet.
+**AVBench leaderboard**: 18 scenarios (11 core + 7 long-tail incidents) x 8 checks with fixed bars the rule-based AV can fail
+([full leaderboard](results/bench/leaderboard.md), [what the numbers mean](docs/METRICS.md)):
+
+| policy | checks passed (of 144) | av_world score: core | long-tail |
+|---|---|---|---|
+| PPO + barrier teacher, then no filter (phase 2) | **123** | 50.3 | 30.5 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 120 | 56.8 | **40.9** |
+| PPO + barrier teacher (phase 1) | 115 | 42.9 | 22.1 |
+| rule-based AV | 104 | **77.2** | 39.0 |
+| PPO, full world, 10x envelope penalty | 104 | 49.2 | 25.9 |
+| PPO, 234k steps (no barrier teacher) | 76 | 6.1 | 5.4 |
+
+The learned policies pass more checks, but the rule-based AV keeps the best core score: unaided, they crash 1.3-1.6x as often.
+Retraining one recipe moves scores by up to 10 points, and the latent world-model planner is not competitive yet.
 
 ## What it is
 
