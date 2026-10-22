@@ -1,0 +1,6 @@
+# pip install pre-commit && pre-commit install   (then every commit is scanned for secrets)
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks   # API keys, tokens, private keys in the staged changes; `pre-commit run gitleaks --all-files` for the whole tree

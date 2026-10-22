@@ -20,6 +20,9 @@ honest account of what it can and cannot do.**
 * **NVIDIA-ready export**: any simulated long-tail scene or real Argoverse 2 log as an OpenUSD stage (Omniverse) and a camera-view
   map-and-box control video of the kind driving world models such as Cosmos are conditioned on, set in the real city: buildings at their
   mapped heights, trees, lamps and signals fused from open map data (Overture / OpenStreetMap) ([NVIDIA.md](docs/NVIDIA.md)).
+  Every export also renders this side-by-side clip:
+
+  <img src="docs/img/nvidia3d_compare_small.gif" width="560" alt="The same Manhattan scene in av_world (left) and as the exported OpenUSD stage (right)">
 * **Long-tail tooling**: sensor faults, aimed human mistakes, dart-outs, famous-incident scenarios, a real-log importer, CARLA export, and
   five methods for teasing novel long-tail data out of the simulator ([report](docs/LONG_TAIL_METHODS.md)).
 
@@ -27,6 +30,8 @@ honest account of what it can and cannot do.**
 pip install .                       # data and a trained starting policy are bundled
 av-world info && av-world bench     # simulated seconds per wall-clock second on this machine
 ```
+Contributing: `pip install pre-commit && pre-commit install` turns on the [gitleaks](https://github.com/gitleaks/gitleaks) hook, which
+blocks commits that contain API keys, tokens or private keys.
 ```python
 import av_world
 env = av_world.make("oakland", n_envs=8)           # or an OpenStreetMap file, or "city.npz"
