@@ -507,7 +507,8 @@ class TopDown:
             wd = {"bus": 2.5, "van": 2.1, "bike": 0.7}.get(kind, 1.85)
             P.append(R.car_polys(np.array([v["x"][j]]), np.array([v["y"][j]]), np.array([v["yaw"][j]]), np.array([v.get("length", 4.5) - 0.3]), np.array([wd]))[0])
             C.append({"av": R.AVC, "bus": R.BUS, "van": R.VAN, "bike": R.BIKE}.get(kind, R.CARS[v["id"] % len(R.CARS)]))
-            E.append("white" if v["id"] == ego else (R.WRECK if v["crashed"] and j == len(v["x"]) - 1 else "none"))
+            wreck = v.get("wrecked") and (v.get("crash_frame") is None or j >= v["crash_frame"] * scene.get("sub", 1))
+            E.append("white" if v["id"] == ego else (R.WRECK if wreck else "none"))
             if v["id"] == ego:
                 pose = (v["x"][j], v["y"][j])
         if P:
@@ -556,11 +557,45 @@ def pick_clip(scene, n):
     return best[1], best[2]
 
 
-def compare_clip(net, geo, info, scene, world, ego_id, out, seconds=8.0, start=None, panel=(480, 360), fps=None, t0=None,
+def upsample(scene, m):
+    """The scene with m - 1 frames interpolated between each pair of simulator frames (positions linearly, headings the short way round),
+    so clips play at m / dt frames per second instead of 1 / dt."""
+    if m <= 1:
+        return scene
+
+    def interp(a, wrap=False):
+        a = np.unwrap(np.asarray(a, float)) if wrap else np.asarray(a, float)
+        t = np.arange((len(a) - 1) * m + 1) / m
+        return np.interp(t, np.arange(len(a)), a).tolist()
+    out = dict(scene, dt=scene["dt"] / m, frames=(scene["frames"] - 1) * m + 1, sub=scene.get("sub", 1) * m)
+    out["vehicles"] = [dict(v, start=v["start"] * m, x=interp(v["x"]), y=interp(v["y"]), yaw=interp(v["yaw"], True), v=interp(v["v"]))
+                       for v in scene["vehicles"]]
+    out["pedestrians"] = [dict(q, start=q.get("start", 0) * m, x=interp(q["x"]), y=interp(q["y"])) if "x" in q else q
+                          for q in scene.get("pedestrians", [])]
+    return out
+
+
+def _write_video(frames, out, fps):
+    """frames (PIL images) -> out: an animated GIF, or an H.264 MP4 if out ends in .mp4 (needs ffmpeg)."""
+    from PIL import Image
+    if out.endswith(".mp4"):
+        w, h = frames[0].size
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}", "-r", str(fps), "-i", "-",
+               "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "24", "-preset", "slow",
+               "-movflags", "+faststart", out]
+        subprocess.run(cmd, input=b"".join(f.convert("RGB").tobytes() for f in frames), check=True)
+        return out
+    pal = [f.convert("P", palette=Image.ADAPTIVE, colors=128) for f in frames]
+    pal[0].save(out, save_all=True, append_images=pal[1:], duration=round(1000 / fps), loop=0, optimize=True)
+    return out
+
+
+def compare_clip(net, geo, info, scene, world, ego_id, out, seconds=8.0, start=None, panel=(480, 360), smooth=4, t0=None,
                  labels=("av_world simulation", "OpenUSD stage for Omniverse")):
-    """A side-by-side GIF of one scene: the av_world view on the left, the 3-D stage (as exported) on the right, both following the ego
+    """A side-by-side clip of one scene: the av_world view on the left, the 3-D stage (as exported) on the right, both following the ego
     (ego_id None: the AV that makes the most watchable clip), with the simulator's signal states when the scene's start time t0 is known.
-    Returns the path, or None if pyvista cannot render here."""
+    `smooth` frames are interpolated per simulator step (4: 20 fps for dt = 0.2 s). `out`: a .gif or .mp4 path, or a list of them (rendered
+    once). Returns the path(s), or None if pyvista cannot render here."""
     from PIL import Image, ImageDraw
 
     from . import scene3d as S3
@@ -570,49 +605,82 @@ def compare_clip(net, geo, info, scene, world, ego_id, out, seconds=8.0, start=N
         ego_id, start = pick_clip(scene, n)
     ego = next(v for v in scene["vehicles"] if v["id"] == ego_id)
     n = min(n, len(ego["x"]))
+    if start is None and ego.get("crash_frame") is not None:  # a crash: about 70 % of the way into the clip
+        j = ego["crash_frame"]
+        start = ego["start"] + int(np.clip(j - int(0.7 * n), 0, max(len(ego["v"]) - n, 0)))
     if start is None:  # the stretch of the ego's life where it moves most
         sp = np.convolve(ego["v"], np.ones(n), "valid") if len(ego["v"]) >= n else np.array([0.0])
         start = ego["start"] + int(np.argmax(sp))
-    ks = [k for k in range(start, start + n) if 0 <= k - ego["start"] < len(ego["x"])]
-    xs = np.array([ego["x"][k - ego["start"]] for k in ks])
-    ys = np.array([ego["y"][k - ego["start"]] for k in ks])
+    ks0 = [k for k in range(start, start + n) if 0 <= k - ego["start"] < len(ego["x"])]
+    xs = np.array([ego["x"][k - ego["start"]] for k in ks0])
+    ys = np.array([ego["y"][k - ego["start"]] for k in ks0])
     focus = ((xs.min() + xs.max()) / 2, (ys.min() + ys.max()) / 2)
     radius = 220.0 + 0.5 * float(np.hypot(np.ptp(xs), np.ptp(ys)))
     try:
         r3 = S3.Renderer(world, focus, radius, size=panel)
     except Exception:  # no pyvista / offscreen OpenGL: the export is complete without the clip
         return None
+    m = max(int(smooth), 1)
+    sc = upsample(scene, m)
+    ks = list(range(ks0[0] * m, ks0[-1] * m + 1))
     td = TopDown(net, geo, info, size=panel)
     netn = {k: np.asarray(v) for k, v in net.items()} if t0 is not None else None
     bar = 30
     font = _font(15)
     frames = []
     for k in ks:
-        lights = np.asarray(X.signal_state(netn, t0 + k * scene["dt"])) if t0 is not None else None
-        a = td.frame(scene, k, ego_id, lights)
-        b = r3.frame(scene, k, ego_id, "street", lights)
+        lights = np.asarray(X.signal_state(netn, t0 + k * sc["dt"])) if t0 is not None else None
+        a = td.frame(sc, k, ego_id, lights)
+        b = r3.frame(sc, k, ego_id, "street", lights)
         img = Image.new("RGB", (2 * panel[0] + 4, panel[1] + bar), (13, 17, 23))
         img.paste(Image.fromarray(a).resize(panel), (0, bar))
         img.paste(Image.fromarray(b).resize(panel), (panel[0] + 4, bar))
         d = ImageDraw.Draw(img)
         for i, t in enumerate(labels):
             d.text((i * (panel[0] + 4) + 12, 7), t, fill=(230, 237, 243), font=font)
-        t = f"{(k - ks[0]) * scene['dt']:.1f} s"
+        t = f"{(k - ks[0]) * sc['dt']:.1f} s"
         d.text((img.width - 12 - d.textlength(t, font=font), 7), t, fill=(139, 148, 158), font=font)
         frames.append(img)
     td.close()
     r3.close()
-    pal = [f.convert("P", palette=Image.ADAPTIVE, colors=128) for f in frames]
-    pal[0].save(out, save_all=True, append_images=pal[1:], duration=int(1000 * (1 / fps if fps else scene["dt"])), loop=0, optimize=True)
+    fps = 1.0 / sc["dt"]
+    outs = [out] if isinstance(out, str) else list(out)
+    for o in outs:
+        _write_video(frames, o, fps)
     return out
 
 
-def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm=120.0, av2=None, seed=0, every=1, world3d=True, fetch=False, previews=True, clip=True):
+def _hunt_crash(net, geo, beh, seed, warm, seconds, every, budget, copies=8):
+    """Run `copies` of the city in `seconds` chunks until an AV crashes, then replay that copy's chunk from a snapshot with recording on
+    (the replay steps one at a time, so it is checked to contain the crash). -> (frames, copy, snapshot, sim) or (None, ...) if none."""
+    from . import carla_export as CE
+    from . import sim as X
+    i = X.METRICS.index("av_crash")
+    sim = X.Sim(net, n_envs=copies, beh=beh, seed=seed, reroute_s=0)
+    sim.run(warm)
+    for _ in range(max(int(budget / seconds), 1)):
+        snap = sim.st
+        sim.run(seconds)
+        hit = np.nonzero(np.asarray(sim.st.m)[:, i] > np.asarray(snap.m)[:, i])[0]
+        after = sim.st
+        for e in hit:
+            sim.st = snap
+            frames = sim.run(seconds, record=(int(e), every))
+            sc = CE.trajectories(net, geo, frames, step_s=X.DT * every)
+            if any(v["av"] and v["crashed"] for v in sc["vehicles"]):
+                return frames, int(e), snap, sim
+        sim.st = after
+    return None, 0, None, sim
+
+
+def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm=120.0, av2=None, seed=0, every=1, world3d=True, fetch=False, previews=True, clip=True,
+           find_crash=0.0):
     """A long-tail scene, ready for NVIDIA tools: out/scene.usda, out/scene.json, out/control/ (frames, camera.json, control.mp4), out/meta.json.
     From the simulator (`area`, optionally a famous-event `scenario` of avlab.famous at `intensity`) or from a real log (`av2`: an Argoverse 2
     scenario directory). With `world3d`, the city around the roads is fused in from Overture (xnet.scene3d; `fetch` downloads it first if it is
     not in data/scene3d); with `previews`, two offscreen renders are written if pyvista can render here, and with `clip` out/compare.gif: the
-    av_world view and the 3-D stage side by side, following the ego."""
+    av_world view and the 3-D stage side by side, following the ego. `find_crash` > 0: simulate up to that many seconds in 8 copies of
+    the city, and export the first `seconds` window in which an AV crashes."""
     import jax
 
     from . import carla_export as CE
@@ -635,19 +703,23 @@ def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm
             meta["knobs"] = kw
         else:
             beh = X.Behaviour(p_av=0.25)
-        sim = X.Sim(net, n_envs=1, beh=beh, seed=seed, reroute_s=0)
-        sim.run(warm)
-        meta["t0"] = float(np.asarray(sim.st.t).reshape(-1)[0])
-        m0 = np.asarray(sim.st.m)[0]
-        frames = sim.run(seconds, record=(0, every))
+        if find_crash:
+            frames, e, snap, sim = _hunt_crash(net, geo, beh, seed, warm, seconds, every, find_crash)
+            meta["crash_search"] = "found" if frames is not None else f"no AV crash in {find_crash:.0f} s x 8 copies: an ordinary run instead"
+        if not find_crash or frames is None:
+            sim = X.Sim(net, n_envs=1, beh=beh, seed=seed, reroute_s=0)
+            sim.run(warm)
+            e, snap = 0, sim.st
+            frames = sim.run(seconds, record=(0, every))
+        meta["t0"] = float(np.asarray(snap.t)[e])
         scene = CE.trajectories(net, geo, frames, step_s=X.DT * every)
-        d = dict(zip(X.METRICS, np.asarray(sim.st.m)[0] - m0))
+        d = dict(zip(X.METRICS, np.asarray(sim.st.m)[e] - np.asarray(snap.m)[e]))
         meta["events"] = {k: float(d[k]) for k in X.CRASH_NAMES + X.TAILS + ("av_crash", "red_runs") if d[k]}
         meta["source"] = "av_world simulation"
     avs = [v for v in scene["vehicles"] if v["av"]]
     if not avs:
         raise ValueError("no AV in the scene")
-    ego = max(avs, key=lambda v: (v["crashed"], len(v["x"])))  # the AV that crashed, else the one seen longest
+    ego = max(avs, key=lambda v: (v["crashed"], len(v["x"])))  # the AV that crashed on camera, else the one seen longest
     meta.update(ego=ego["id"], ego_crashed=ego["crashed"], frames=scene["frames"], dt=scene["dt"], vehicles=len(scene["vehicles"]))
     json.dump(scene, open(os.path.join(out, "scene.json"), "w"), separators=(",", ":"))
     world = None
@@ -671,8 +743,9 @@ def export(out, area="chicago", scenario=None, intensity=1.0, seconds=20.0, warm
             meta["previews"] = f"skipped ({type(e).__name__})"
     if world is not None and clip:  # the av_world view and the 3-D stage side by side
         try:
-            meta["clip"] = os.path.basename(compare_clip(net, geo, info, scene, world, ego["id"] if ego["crashed"] else None,
-                                                         os.path.join(out, "compare.gif"), t0=meta.get("t0")) or "")
+            outs = [os.path.join(out, "compare.gif")] + ([os.path.join(out, "compare.mp4")] if shutil.which("ffmpeg") else [])
+            r = compare_clip(net, geo, info, scene, world, ego["id"] if ego["crashed"] else None, outs, t0=meta.get("t0"))
+            meta["clip"] = [os.path.basename(o) for o in outs] if r else "skipped (no offscreen OpenGL)"
         except Exception as e:
             meta["clip"] = f"skipped ({type(e).__name__}: {e})"
     r = control_video(net, geo, scene, ego["id"], os.path.join(out, "control"))

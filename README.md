@@ -3,7 +3,7 @@
 **A city-scale driving world in pure JAX, calibrated to real crash statistics, with the research stack built on it and an unusually
 honest account of what it can and cannot do.**
 
-[**Website**](https://haggler3.github.io/av_world/) · [**Browser viewer**](https://haggler3.github.io/av_world/viewer/index.html) · [Docs index](#guides)
+[**Website**](https://haggler3.github.io/av_world/) · [**3-D scenes**](https://haggler3.github.io/av_world/scenes.html) · [**Browser viewer**](https://haggler3.github.io/av_world/viewer/index.html) · [What you can test](docs/TESTING.md) · [Docs index](#guides)
 
 ![learned AVs in Oakland](docs/img/xnet_learned_avs.gif)
 
@@ -20,9 +20,10 @@ honest account of what it can and cannot do.**
 * **NVIDIA-ready export**: any simulated long-tail scene or real Argoverse 2 log as an OpenUSD stage (Omniverse) and a camera-view
   map-and-box control video of the kind driving world models such as Cosmos are conditioned on, set in the real city: buildings at their
   mapped heights, trees, lamps and signals fused from open map data (Overture / OpenStreetMap) ([NVIDIA.md](docs/NVIDIA.md)).
-  Every export also renders this side-by-side clip:
+  Every export also renders this side-by-side clip, and `--find-crash` hunts down an AV crash to film
+  ([more scenes](https://haggler3.github.io/av_world/scenes.html)):
 
-  <img src="docs/img/nvidia3d_compare_small.gif" width="560" alt="The same Manhattan scene in av_world (left) and as the exported OpenUSD stage (right)">
+  <img src="docs/img/nvidia3d_compare_small.gif" width="724" alt="The same Manhattan scene in av_world (left) and as the exported OpenUSD stage (right)">
 * **Long-tail tooling**: sensor faults, aimed human mistakes, dart-outs, famous-incident scenarios, a real-log importer, CARLA export, and
   five methods for teasing novel long-tail data out of the simulator ([report](docs/LONG_TAIL_METHODS.md)).
 
@@ -57,7 +58,8 @@ print(env.metrics(state)["av_crash"])
 
 | | |
 |---|---|
-| [docs/NVIDIA.md](docs/NVIDIA.md) | OpenUSD stages and Cosmos-style control videos from long-tail scenes |
+| [docs/TESTING.md](docs/TESTING.md) | What AV behaviour you can test, the knobs, metrics and suites, how to plug in your stack, and the limits |
+| [docs/NVIDIA.md](docs/NVIDIA.md) | OpenUSD stages and Cosmos-style control videos from long-tail scenes, side-by-side clips, filming crashes |
 | [docs/SIL_HIL.md](docs/SIL_HIL.md) | software / hardware in the loop: protocol, modes, timing, measured latency |
 | [docs/CITIES.md](docs/CITIES.md) | New York, Chicago and Boston: what was built, what is real and what is inferred |
 | [docs/LONG_TAIL_METHODS.md](docs/LONG_TAIL_METHODS.md) | five methods for novel long-tail data, with pseudocode and results |

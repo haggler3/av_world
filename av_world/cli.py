@@ -122,11 +122,13 @@ def main(argv=None):
         ap.add_argument("--no-3d", action="store_true", help="roads and agents only, no buildings / furniture")
         ap.add_argument("--fetch", action="store_true", help="download the area's 3-D layers from Overture if missing")
         ap.add_argument("--no-clip", action="store_true", help="skip compare.gif (the av_world view and the 3-D stage side by side)")
+        ap.add_argument("--find-crash", type=float, default=0.0, metavar="S",
+                        help="simulate up to S seconds in 8 copies and export the first window in which an AV crashes")
         a = ap.parse_args(rest)
         import json
 
         from xnet import nvidia
-        print(json.dumps(nvidia.export(a.out, a.area, a.scenario, a.intensity, a.seconds, a.warm, a.av2, a.seed, world3d=not a.no_3d, fetch=a.fetch, clip=not a.no_clip),
+        print(json.dumps(nvidia.export(a.out, a.area, a.scenario, a.intensity, a.seconds, a.warm, a.av2, a.seed, world3d=not a.no_3d, fetch=a.fetch, clip=not a.no_clip, find_crash=a.find_crash),
                          indent=1, default=float))
         return 0
     if cmd == "sil":

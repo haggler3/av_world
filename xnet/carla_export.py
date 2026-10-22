@@ -107,8 +107,10 @@ def to_opendrive(net, geo, name="av_world"):
 
 
 def trajectories(net, geo, frames, step_s=X.DT):
-    """frames: list of per-step State (numpy, one env). -> {"dt", "vehicles": [{id, kind, av, crashed, t0, x, y, yaw, v}],
-    "pedestrians": [{t, duration, from, to}]}. A slot that is reused by a new trip is a new vehicle (told apart by t0)."""
+    """frames: list of per-step State (numpy, one env). -> {"dt", "vehicles": [{id, kind, av, crashed, crash_frame, wrecked, t0, x, y, yaw,
+    v}], "pedestrians": [{t, duration, from, to}]}. A slot that is reused by a new trip is a new vehicle (told apart by t0). `crashed`: the
+    crash happens in the recording, at index `crash_frame` of the vehicle's arrays; `wrecked`: it is a wreck at some point (perhaps from
+    a crash before the recording began)."""
     tracks = R.Tracks(net, geo)
     veh, ped = {}, []
     prev_ped = None
@@ -120,13 +122,16 @@ def trajectories(net, geo, frames, step_s=X.DT):
             for j, i in enumerate(alive):
                 key = (int(i), round(float(st.t0[i]), 3))
                 v = veh.setdefault(key, {"id": len(veh), "kind": "av" if st.av[i] else kinds[int(st.kind[i])], "av": bool(st.av[i]),
-                                         "crashed": False, "start": k, "length": round(float(st.length[i]), 2), "x": [], "y": [],
-                                         "yaw": [], "v": []})
+                                         "crashed": False, "crash_frame": None, "wrecked": False, "start": k,
+                                         "length": round(float(st.length[i]), 2), "x": [], "y": [], "yaw": [], "v": []})
                 v["x"].append(round(float(x[j]), 2))
                 v["y"].append(round(float(y[j]), 2))
                 v["yaw"].append(round(float(h[j]), 3))
                 v["v"].append(round(float(st.v[i]), 2))
-                v["crashed"] |= bool(st.wreck_t[i] > 0)
+                w = bool(st.wreck_t[i] > 0)
+                if w and v["x"][1:] and not v["wrecked"]:  # intact when first seen, a wreck now: the crash is on camera
+                    v["crashed"], v["crash_frame"] = True, len(v["x"]) - 1
+                v["wrecked"] |= w
         if prev_ped is not None:
             for g in np.nonzero((np.asarray(st.ped_t) > 0) & (prev_ped <= 0))[0]:
                 a, b = np.asarray(geo.leg_xy)[g]

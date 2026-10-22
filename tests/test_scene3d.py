@@ -99,4 +99,14 @@ def test_clip_picks_a_moving_av_and_renders_both_views(tmp_path):
         pytest.skip("no offscreen OpenGL here")
     from PIL import Image
     g = Image.open(out)
-    assert g.n_frames == 5 and g.size == (2 * 160 + 4, 120 + 30)
+    assert g.n_frames == (5 - 1) * 4 + 1 and g.size  # 3 frames interpolated per simulator step == (2 * 160 + 4, 120 + 30)
+
+
+def test_upsample_interpolates_between_frames():
+    sc = {"dt": 0.2, "frames": 3, "pedestrians": [], "vehicles": [
+        {"id": 0, "kind": "car", "av": False, "crashed": False, "start": 1, "x": [0.0, 2.0], "y": [0.0, 0.0], "yaw": [3.1, -3.1], "v": [10.0, 10.0]}]}
+    up = NV.upsample(sc, 4)
+    v = up["vehicles"][0]
+    assert up["dt"] == pytest.approx(0.05) and up["frames"] == 9 and v["start"] == 4
+    assert v["x"] == pytest.approx([0.0, 0.5, 1.0, 1.5, 2.0])
+    assert all(abs(abs(y) - 3.14) < 0.05 for y in v["yaw"])  # through pi, not through zero
