@@ -82,7 +82,38 @@ safety factor. `scorecard.SCALE` changes them.
 
 ## Results
 
-Pending: the long-tail and latent-planner runs are in progress. On the 11 core scenarios, the absolute tier already separates the policies: the rule-based AV passes 69 of 88 (it fails "comfortable" in all 11), the best learned policy (PPO with the barrier teacher, phase 2) 77, and no policy clears everything.
+All 18 scenarios (11 core + 7 long-tail), every policy, from one L4 GPU session (`scripts/gpu_session.sh`, 2026-10-22); the full
+tables are in `results/bench/leaderboard.md` and the chart in `docs/img/avbench.png`.
+
+**Absolute tier** (8 checks x 18 scenarios = 144). No policy clears every scenario, and the rule-based AV clears none: it fails
+"comfortable" in 16 of 18, and the long tail costs it most (35 of 56 there).
+
+| policy | checks passed (of 144) | core (of 88) | long-tail (of 56) | scenarios cleared | av_world score: core | long-tail | worst long-tail |
+|---|---|---|---|---|---|---|---|
+| PPO + barrier teacher, then no filter (phase 2) | **123** | 77 | **46** | 4 | 50.3 | 30.5 | 2.6 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 120 | 75 | 45 | **5** | 56.8 | **40.9** | 4.5 |
+| PPO + barrier teacher (phase 1) | 115 | 73 | 42 | 3 | 42.9 | 22.1 | 2.7 |
+| rule-based AV | 104 | 69 | 35 | 0 | **77.2** | 39.0 | 2.8 |
+| PPO, full world, 10x envelope penalty | 104 | 66 | 38 | 0 | 49.2 | 25.9 | **5.5** |
+| PPO, 234k steps (xnet3) | 76 | 48 | 28 | 0 | 6.1 | 5.4 | 0.8 |
+
+* **The best learned policies beat the rule-based AV on the absolute tier but not on the score.** Phase 2 passes 19 more checks,
+  mostly on comfort, yet the rule-based AV keeps the highest core av_world score (77.2): the score multiplies in unaided harm per
+  hour, and the barrier-teacher policies still crash 1.3-1.6x as often as it does with no filter (0.10-0.12 vs 0.08 per AV-hour).
+  "safer unaided" is their most failed check (12-13 of 18).
+* **The long tail is where the learned policies catch up.** Phase 3, trained with jaywalkers and a progress bonus, edges out the
+  rule-based AV on the long-tail score (40.9 vs 39.0). Every policy's worst long-tail scenario scores under 6: the perception
+  faults (missed stalled car, misclassified jaywalker) are unsolved.
+* **Retraining is noisy.** Phases 1-3 were retrained on the GPU with the same recipe (`results/unaided/gpu/`, listed as "GPU
+  retrain"). They pass 107-112 checks against the originals' 115-123, and score 7-10 points lower on the core scenarios, but higher
+  on the long tail for phases 1 and 2 (22.6 and 37.3 vs 22.1 and 30.5). A one-run comparison between policies within about 10
+  points of av_world score, or about 10 absolute checks, is within the spread of one recipe; the originals stay the reference
+  checkpoints.
+* **The latent world-model planner (wm-mpc) is not competitive yet.** On its 3 scenarios it passes 8 of 24 checks with an av_world
+  score of 0.8. With no filter it crashes 0.47 times per AV-hour, fewer than the PPO policy it uses as its proposal prior (0.64),
+  so planning in the latent space helps, but it is 15-60x the barrier-teacher policies' rate. The retrained model ranks crashes well
+  (held-out AUROC 0.958) but predicts the stop-line gap worse than holding it constant (2 s error 36 m vs 8.6 m) and the merge gaps
+  no better (`results/wmplan/model_eval.json`), and those are the margins the planner scores plans by.
 
 ## Limits
 
@@ -94,4 +125,7 @@ Pending: the long-tail and latent-planner runs are in progress. On the 11 core s
 * **The bars are borrowed.** The safety bar compares with simulated humans, whose crash rates are calibrated to published statistics
   but whose everyday driving is not realistic (see [INCIDENT_AUDIT.md](INCIDENT_AUDIT.md)). The comfort bar is nuPlan's. The harm
   weights and score scales are assumptions, stated so they can be changed.
-* **The latent planner ran on 3 of 18 scenarios** (about 10 minutes per run with every AV planned), unaided and with the envelope only.
+* **The latent planner ran on 3 of 18 scenarios** (about 10 minutes per run on CPU, under 2 on an L4, with every AV planned), unaided
+  and with the envelope only.
+* **One training run per policy.** The GPU retrains show the spread of one recipe is about as large as most gaps between
+  policies; ranking them properly needs several seeds each.

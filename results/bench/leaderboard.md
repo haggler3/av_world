@@ -1,36 +1,63 @@
-## Absolute tier: fixed bars, 11 scenarios (11 core + 0 long-tail) x 8 checks
+## Absolute tier: fixed bars, 18 scenarios (11 core + 7 long-tail) x 8 checks
 
-| policy | checks passed (of 88) | core | long-tail | scenarios cleared | most failed |
+| policy | checks passed (of 144) | core | long-tail | scenarios cleared | most failed |
 |---|---|---|---|---|---|
-| PPO + barrier teacher, then no filter (phase 2) | 77 | 77 | 0 | 3 | safer unaided (7), right of way (2), safer than people (1), inside the barrier (1) |
-| PPO + barrier teacher, speed + jaywalkers (phase 3) | 75 | 75 | 0 | 4 | safer unaided (7), right of way (4), safer than people (2) |
-| PPO + barrier teacher (phase 1) | 73 | 73 | 0 | 2 | safer unaided (7), right of way (5), safer than people (2), inside the barrier (1) |
-| rule-based AV | 69 | 69 | 0 | 0 | comfortable (11), right of way (3), safer than people (2), safer unaided (2), inside the b |
-| PPO, full world, 10x envelope penalty | 66 | 66 | 0 | 0 | keeps up (11), safer unaided (5), right of way (5), safer than people (1) |
-| PPO, 234k steps (xnet3) | 48 | 48 | 0 | 0 | safer unaided (11), inside the barrier (11), light touch (9), safer than people (6), right |
-| PPO, 130k steps (xnet) | 37 | 37 | 0 | 0 | safer unaided (11), inside the barrier (11), light touch (10), right of way (9), lawful (7 |
-| imitation (BC) | 32 | 32 | 0 | 0 | light touch (11), safer unaided (11), right of way (11), inside the barrier (11), lawful ( |
-| PPO, AVs-only world | 31 | 31 | 0 | 0 | light touch (11), safer unaided (11), lawful (11), right of way (11), inside the barrier ( |
-| PPO, full world | 31 | 31 | 0 | 0 | light touch (11), safer unaided (11), lawful (11), right of way (11), inside the barrier ( |
-| PPO, full world, no imitation | 29 | 29 | 0 | 0 | light touch (11), safer unaided (11), lawful (11), right of way (11), inside the barrier ( |
-| PPO, failure-focused replay | 29 | 29 | 0 | 0 | light touch (11), safer unaided (11), lawful (11), right of way (11), inside the barrier ( |
+| PPO + barrier teacher, then no filter (phase 2) | 123 | 77 | 46 | 4 | safer unaided (12), safer than people (5), right of way (2), inside the barrier (2) |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 120 | 75 | 45 | 5 | safer unaided (12), safer than people (6), right of way (5), inside the barrier (1) |
+| PPO + barrier teacher (phase 1) | 115 | 73 | 42 | 3 | safer unaided (13), safer than people (7), right of way (6), inside the barrier (2), lawfu |
+| PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 112 | 70 | 42 | 2 | safer unaided (13), safer than people (8), right of way (6), lawful (3), keeps up (1), ins |
+| PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 108 | 66 | 42 | 3 | safer unaided (12), safer than people (10), right of way (8), inside the barrier (3), lawf |
+| PPO + barrier teacher (phase 1, GPU retrain) | 107 | 66 | 41 | 1 | safer unaided (16), safer than people (10), right of way (7), inside the barrier (3), lawf |
+| rule-based AV | 104 | 69 | 35 | 0 | comfortable (16), right of way (8), safer than people (6), safer unaided (6), lawful (2),  |
+| PPO, full world, 10x envelope penalty | 104 | 66 | 38 | 0 | keeps up (18), safer unaided (10), right of way (8), safer than people (4) |
+| PPO, 234k steps (xnet3) | 76 | 48 | 28 | 0 | safer unaided (18), inside the barrier (18), light touch (15), safer than people (11), rig |
+| PPO, 130k steps (xnet) | 54 | 37 | 17 | 0 | safer unaided (18), inside the barrier (18), light touch (17), right of way (15), lawful ( |
+| imitation (BC) | 48 | 32 | 16 | 0 | light touch (18), safer unaided (18), right of way (18), inside the barrier (18), lawful ( |
+| PPO, AVs-only world | 48 | 31 | 17 | 0 | light touch (18), safer unaided (18), lawful (18), right of way (18), inside the barrier ( |
+| PPO, full world | 47 | 31 | 16 | 0 | light touch (18), safer unaided (18), lawful (18), right of way (18), inside the barrier ( |
+| PPO, full world, no imitation | 46 | 29 | 17 | 0 | light touch (18), safer unaided (18), lawful (18), right of way (18), inside the barrier ( |
+| PPO, failure-focused replay | 45 | 29 | 16 | 0 | light touch (18), safer unaided (18), lawful (18), right of way (18), inside the barrier ( |
+
+Latent world-model planner, on the scenarios it ran (nominal, red_runners, inattentive), against every policy on the same ones:
+
+| policy | absolute checks (of 24) | av_world score | crashes /AV-h unaided | harm /AV-h unaided | comfort pass | progress |
+|---|---|---|---|---|---|---|
+| rule-based AV | 18 | 78.2 | 0.008 | 0.008 | 0.903 | 1.059 |
+| PPO + barrier teacher, then no filter (phase 2) | 23 | 77.9 | 0.033 | 0.050 | 0.986 | 1.024 |
+| PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 21 | 72.0 | 0.008 | 0.080 | 0.983 | 1.049 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 22 | 63.8 | 0.025 | 0.099 | 0.988 | 1.005 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 21 | 63.6 | 0.024 | 0.096 | 0.983 | 1.035 |
+| PPO + barrier teacher (phase 1, GPU retrain) | 21 | 61.4 | 0.016 | 0.088 | 0.982 | 1.068 |
+| PPO, full world, 10x envelope penalty | 19 | 56.9 | 0.000 | 0.000 | 0.985 | 0.665 |
+| PPO + barrier teacher (phase 1) | 21 | 48.4 | 0.025 | 0.116 | 0.986 | 1.023 |
+| PPO, 234k steps (xnet3) | 13 | 7.9 | 0.640 | 1.092 | 0.981 | 1.065 |
+| latent world-model planner (wm-mpc) | 8 | 0.8 | 0.471 | 0.829 | 0.958 | 1.052 |
+| PPO, 130k steps (xnet) | 12 | 0.8 | 2.461 | 10.807 | 0.988 | 1.031 |
+| imitation (BC) | 8 | 0.5 | 1.832 | 3.848 | 0.964 | 1.066 |
+| PPO, full world, no imitation | 7 | 0.0 | 61.742 | 151.678 | 0.971 | 1.070 |
+| PPO, AVs-only world | 9 | 0.0 | 72.151 | 175.980 | 0.977 | 1.086 |
+| PPO, failure-focused replay | 8 | 0.0 | 71.186 | 172.749 | 0.974 | 1.072 |
+| PPO, full world | 8 | 0.0 | 80.175 | 192.377 | 0.973 | 1.069 |
 
 ## Scorecard: the numbers to optimise (means over scenarios; worst = the lowest long-tail scenario)
 
 | policy | av_world score: core | long-tail | worst | driving score | crashes /AV-h | unaided | crash UCB95 | harm unaided | comfort pass | jerk rms | progress | filter share | barrier exits | veto s /AV-h |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| rule-based AV | 77.2 | nan | nan | 99.6 | 0.006 | 0.006 | 0.094 | 0.029 | 0.908 | 2.71 | 1.116 | 0.0% | 0.12% | 15.2 |
-| PPO + barrier teacher, speed + jaywalkers (phase 3) | 56.8 | nan | nan | 99.8 | 0.005 | 0.026 | 0.091 | 0.159 | 0.986 | 1.86 | 1.060 | 0.9% | 0.11% | 15.4 |
-| PPO + barrier teacher, then no filter (phase 2) | 50.3 | nan | nan | 99.8 | 0.004 | 0.048 | 0.090 | 0.373 | 0.984 | 1.86 | 1.080 | 1.2% | 0.12% | 15.9 |
-| PPO, full world, 10x envelope penalty | 49.2 | nan | nan | 71.0 | 0.003 | 0.010 | 0.084 | 0.052 | 0.982 | 1.10 | 0.712 | 0.2% | 0.03% | 9.1 |
-| PPO + barrier teacher (phase 1) | 42.9 | nan | nan | 99.8 | 0.003 | 0.049 | 0.087 | 0.415 | 0.984 | 1.93 | 1.075 | 1.1% | 0.15% | 14.7 |
-| PPO, 234k steps (xnet3) | 6.1 | nan | nan | 99.3 | 0.018 | 0.642 | 0.114 | 2.002 | 0.979 | 1.87 | 1.123 | 2.4% | 1.14% | 15.3 |
-| PPO, 130k steps (xnet) | 0.5 | nan | nan | 99.6 | 0.009 | 2.680 | 0.098 | 13.997 | 0.987 | 1.48 | 1.084 | 2.6% | 1.49% | 15.4 |
-| imitation (BC) | 0.4 | nan | nan | 99.6 | 0.007 | 2.064 | 0.094 | 6.535 | 0.961 | 1.74 | 1.121 | 19.0% | 3.77% | 14.0 |
-| PPO, full world, no imitation | 0.0 | nan | nan | 99.4 | 0.015 | 62.243 | 0.108 | 163.352 | 0.971 | 1.66 | 1.121 | 15.6% | 5.67% | 15.3 |
-| PPO, failure-focused replay | 0.0 | nan | nan | 99.3 | 0.014 | 69.827 | 0.106 | 180.011 | 0.973 | 1.62 | 1.124 | 20.4% | 6.58% | 13.2 |
-| PPO, AVs-only world | 0.0 | nan | nan | 99.6 | 0.008 | 72.842 | 0.097 | 189.323 | 0.976 | 1.63 | 1.137 | 19.0% | 6.34% | 14.0 |
-| PPO, full world | 0.0 | nan | nan | 99.6 | 0.009 | 79.802 | 0.098 | 207.093 | 0.972 | 1.63 | 1.123 | 19.1% | 6.93% | 14.0 |
+| rule-based AV | 77.2 | 39.0 | 2.8 | 96.8 | 0.079 | 0.079 | 0.187 | 0.156 | 0.914 | 2.70 | 1.115 | 0.0% | 0.12% | 13.2 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 56.8 | 40.9 | 4.5 | 97.3 | 0.072 | 0.102 | 0.177 | 0.326 | 0.986 | 1.87 | 1.059 | 0.9% | 0.12% | 14.1 |
+| PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 48.7 | 37.3 | 4.0 | 96.8 | 0.079 | 0.102 | 0.189 | 0.404 | 0.982 | 2.00 | 1.083 | 1.7% | 0.14% | 13.4 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 46.6 | 36.7 | 4.8 | 96.6 | 0.081 | 0.100 | 0.192 | 0.348 | 0.982 | 1.98 | 1.071 | 1.5% | 0.12% | 14.7 |
+| PPO + barrier teacher, then no filter (phase 2) | 50.3 | 30.5 | 2.6 | 97.6 | 0.069 | 0.122 | 0.173 | 0.602 | 0.984 | 1.87 | 1.081 | 1.3% | 0.13% | 14.3 |
+| PPO, full world, 10x envelope penalty | 49.2 | 25.9 | 5.5 | 68.3 | 0.036 | 0.061 | 0.126 | 0.178 | 0.983 | 1.12 | 0.699 | 0.3% | 0.03% | 8.4 |
+| PPO + barrier teacher (phase 1) | 42.9 | 22.1 | 2.7 | 97.6 | 0.063 | 0.124 | 0.165 | 0.665 | 0.984 | 1.94 | 1.075 | 1.1% | 0.15% | 13.4 |
+| PPO + barrier teacher (phase 1, GPU retrain) | 35.7 | 22.6 | 1.8 | 97.1 | 0.080 | 0.151 | 0.191 | 0.793 | 0.982 | 1.98 | 1.106 | 1.6% | 0.15% | 13.0 |
+| PPO, 234k steps (xnet3) | 6.1 | 5.4 | 0.8 | 97.3 | 0.076 | 0.707 | 0.187 | 2.494 | 0.980 | 1.88 | 1.124 | 2.3% | 1.17% | 13.5 |
+| imitation (BC) | 0.4 | 0.4 | 0.1 | 98.0 | 0.048 | 2.065 | 0.150 | 6.895 | 0.964 | 1.73 | 1.118 | 19.0% | 3.75% | 12.6 |
+| PPO, 130k steps (xnet) | 0.5 | 0.2 | 0.0 | 98.3 | 0.043 | 2.949 | 0.144 | 16.355 | 0.987 | 1.49 | 1.084 | 2.6% | 1.50% | 12.7 |
+| PPO, full world, no imitation | 0.0 | 0.0 | 0.0 | 97.9 | 0.056 | 63.066 | 0.161 | 169.856 | 0.973 | 1.66 | 1.122 | 15.8% | 5.66% | 13.8 |
+| PPO, failure-focused replay | 0.0 | 0.0 | 0.0 | 97.7 | 0.063 | 70.522 | 0.170 | 185.648 | 0.974 | 1.62 | 1.124 | 20.6% | 6.55% | 11.9 |
+| PPO, AVs-only world | 0.0 | 0.0 | 0.0 | 97.5 | 0.068 | 73.362 | 0.173 | 197.957 | 0.977 | 1.63 | 1.136 | 19.3% | 6.34% | 12.6 |
+| PPO, full world | 0.0 | 0.0 | 0.0 | 97.9 | 0.057 | 80.336 | 0.161 | 213.051 | 0.974 | 1.64 | 1.123 | 19.4% | 6.92% | 12.0 |
 
 ## Relative tier: against the rule-based AV on the same traffic, 11 core scenarios x 8 checks
 
@@ -40,6 +67,9 @@
 | PPO, 234k steps (xnet3) | 67 | 0 | 7/8 | 5/8 | 5/8 | 6/8 | 7/8 | 7/8 | 5/8 | 6/8 | 7/8 | 6/8 | 6/8 |
 | PPO + barrier teacher, then no filter (phase 2) | 67 | 2 | 7/8 | 6/8 | 8/8 | 5/8 | 5/8 | 8/8 | 5/8 | 6/8 | 6/8 | 6/8 | 5/8 |
 | PPO + barrier teacher (phase 1) | 66 | 1 | 6/8 | 6/8 | 7/8 | 6/8 | 7/8 | 8/8 | 3/8 | 7/8 | 6/8 | 5/8 | 5/8 |
+| PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 66 | 1 | 8/8 | 6/8 | 5/8 | 7/8 | 6/8 | 6/8 | 7/8 | 6/8 | 5/8 | 5/8 | 5/8 |
+| PPO + barrier teacher (phase 1, GPU retrain) | 63 | 0 | 7/8 | 6/8 | 6/8 | 5/8 | 6/8 | 5/8 | 5/8 | 7/8 | 6/8 | 6/8 | 4/8 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 63 | 1 | 8/8 | 7/8 | 7/8 | 4/8 | 7/8 | 4/8 | 5/8 | 4/8 | 7/8 | 6/8 | 4/8 |
 | PPO + barrier teacher, speed + jaywalkers (phase 3) | 61 | 0 | 7/8 | 6/8 | 6/8 | 5/8 | 4/8 | 6/8 | 4/8 | 7/8 | 6/8 | 4/8 | 6/8 |
 | PPO, full world, 10x envelope penalty | 59 | 0 | 5/8 | 5/8 | 6/8 | 6/8 | 6/8 | 6/8 | 5/8 | 5/8 | 5/8 | 4/8 | 6/8 |
 | imitation (BC) | 45 | 0 | 4/8 | 4/8 | 3/8 | 4/8 | 5/8 | 4/8 | 4/8 | 4/8 | 4/8 | 5/8 | 4/8 |
@@ -64,6 +94,9 @@
 | nominal | PPO + barrier teacher (phase 1) | 0.000 | 0.000 | 0.02 | 2.5 | 16.7 | 16.3 | 1.1% |
 | nominal | PPO + barrier teacher, then no filter (phase 2) | 0.000 | 0.000 | 0.00 | 2.5 | 16.7 | 16.3 | 1.2% |
 | nominal | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.000 | 0.000 | 0.00 | 2.0 | 16.4 | 16.2 | 0.9% |
+| nominal | PPO + barrier teacher (phase 1, GPU retrain) | 0.000 | 0.000 | 0.02 | 3.4 | 17.7 | 16.4 | 1.6% |
+| nominal | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.000 | 0.000 | 0.00 | 3.3 | 17.3 | 16.4 | 1.7% |
+| nominal | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.000 | 0.000 | 0.00 | 3.1 | 17.1 | 16.4 | 1.6% |
 | rush_hour | rule-based AV | 0.000 | 0.000 | 0.03 | 15.9 | 14.3 | 13.6 | 0.0% |
 | rush_hour | imitation (BC) | 0.000 | 2.148 | 0.17 | 5.8 | 14.3 | 13.6 | 18.1% |
 | rush_hour | PPO, AVs-only world | 0.000 | 70.655 | 3.04 | 3.8 | 14.5 | 13.6 | 16.9% |
@@ -76,6 +109,9 @@
 | rush_hour | PPO + barrier teacher (phase 1) | 0.000 | 0.017 | 0.02 | 2.3 | 13.8 | 13.6 | 0.9% |
 | rush_hour | PPO + barrier teacher, then no filter (phase 2) | 0.000 | 0.017 | 0.00 | 2.4 | 13.9 | 13.6 | 1.1% |
 | rush_hour | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.000 | 0.017 | 0.02 | 2.6 | 13.7 | 13.5 | 0.8% |
+| rush_hour | PPO + barrier teacher (phase 1, GPU retrain) | 0.017 | 0.017 | 0.02 | 2.6 | 14.4 | 13.6 | 1.5% |
+| rush_hour | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.017 | 0.017 | 0.03 | 2.5 | 14.1 | 13.6 | 1.6% |
+| rush_hour | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.000 | 0.000 | 0.02 | 2.5 | 13.9 | 13.5 | 1.4% |
 | red_runners | rule-based AV | 0.000 | 0.000 | 0.00 | 18.4 | 17.2 | 16.2 | 0.0% |
 | red_runners | imitation (BC) | 0.050 | 1.744 | 0.18 | 6.2 | 17.2 | 16.2 | 18.0% |
 | red_runners | PPO, AVs-only world | 0.000 | 71.275 | 3.63 | 4.1 | 17.5 | 16.2 | 19.0% |
@@ -88,6 +124,9 @@
 | red_runners | PPO + barrier teacher (phase 1) | 0.000 | 0.025 | 0.00 | 2.7 | 16.7 | 16.3 | 1.1% |
 | red_runners | PPO + barrier teacher, then no filter (phase 2) | 0.000 | 0.000 | 0.00 | 2.5 | 16.7 | 16.2 | 1.2% |
 | red_runners | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.000 | 0.025 | 0.00 | 2.4 | 16.3 | 16.3 | 0.9% |
+| red_runners | PPO + barrier teacher (phase 1, GPU retrain) | 0.024 | 0.024 | 0.00 | 2.8 | 17.3 | 16.5 | 1.6% |
+| red_runners | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.024 | 0.024 | 0.02 | 2.8 | 16.9 | 16.4 | 1.7% |
+| red_runners | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.000 | 0.024 | 0.00 | 2.9 | 16.7 | 16.3 | 1.6% |
 | inattentive | rule-based AV | 0.000 | 0.000 | 0.03 | 18.4 | 17.2 | 16.3 | 0.0% |
 | inattentive | imitation (BC) | 0.000 | 1.847 | 0.18 | 6.7 | 17.4 | 16.3 | 17.7% |
 | inattentive | PPO, AVs-only world | 0.025 | 71.542 | 3.61 | 4.1 | 17.5 | 16.1 | 18.4% |
@@ -100,6 +139,9 @@
 | inattentive | PPO + barrier teacher (phase 1) | 0.000 | 0.050 | 0.03 | 2.4 | 16.5 | 16.1 | 1.1% |
 | inattentive | PPO + barrier teacher, then no filter (phase 2) | 0.025 | 0.100 | 0.00 | 2.5 | 16.5 | 16.1 | 1.2% |
 | inattentive | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.000 | 0.050 | 0.00 | 2.1 | 16.1 | 16.1 | 0.9% |
+| inattentive | PPO + barrier teacher (phase 1, GPU retrain) | 0.024 | 0.024 | 0.00 | 3.4 | 17.2 | 16.0 | 1.5% |
+| inattentive | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.000 | 0.000 | 0.00 | 3.1 | 16.8 | 15.8 | 1.6% |
+| inattentive | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.047 | 0.047 | 0.00 | 3.1 | 16.5 | 15.9 | 1.5% |
 | jaywalkers | rule-based AV | 0.045 | 0.045 | 0.00 | 11.0 | 12.2 | 11.5 | 0.0% |
 | jaywalkers | imitation (BC) | 0.022 | 3.352 | 0.05 | 3.7 | 12.3 | 11.5 | 20.7% |
 | jaywalkers | PPO, AVs-only world | 0.045 | 68.528 | 2.29 | 2.4 | 12.3 | 11.4 | 19.1% |
@@ -112,6 +154,9 @@
 | jaywalkers | PPO + barrier teacher (phase 1) | 0.022 | 0.245 | 0.00 | 1.4 | 11.9 | 11.5 | 1.0% |
 | jaywalkers | PPO + barrier teacher, then no filter (phase 2) | 0.022 | 0.268 | 0.02 | 1.6 | 11.8 | 11.4 | 1.2% |
 | jaywalkers | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.022 | 0.089 | 0.02 | 1.5 | 11.5 | 11.4 | 0.8% |
+| jaywalkers | PPO + barrier teacher (phase 1, GPU retrain) | 0.022 | 0.379 | 0.02 | 1.7 | 12.5 | 11.8 | 1.7% |
+| jaywalkers | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.044 | 0.088 | 0.02 | 1.8 | 12.2 | 11.7 | 1.5% |
+| jaywalkers | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.022 | 0.044 | 0.02 | 1.7 | 12.0 | 11.7 | 1.4% |
 | blockages | rule-based AV | 0.000 | 0.000 | 0.00 | 12.7 | 14.7 | 10.7 | 0.0% |
 | blockages | imitation (BC) | 0.000 | 3.075 | 0.07 | 5.3 | 14.8 | 10.7 | 20.6% |
 | blockages | PPO, AVs-only world | 0.000 | 81.283 | 2.13 | 3.2 | 15.1 | 10.7 | 21.5% |
@@ -124,6 +169,9 @@
 | blockages | PPO + barrier teacher (phase 1) | 0.000 | 0.000 | 0.00 | 1.9 | 14.4 | 10.7 | 1.2% |
 | blockages | PPO + barrier teacher, then no filter (phase 2) | 0.000 | 0.000 | 0.00 | 2.3 | 14.5 | 10.7 | 1.4% |
 | blockages | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.000 | 0.034 | 0.00 | 2.1 | 14.1 | 10.6 | 1.0% |
+| blockages | PPO + barrier teacher (phase 1, GPU retrain) | 0.032 | 0.032 | 0.00 | 2.7 | 14.5 | 10.4 | 1.7% |
+| blockages | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.000 | 0.032 | 0.00 | 2.4 | 14.3 | 10.4 | 1.8% |
+| blockages | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.000 | 0.063 | 0.03 | 2.6 | 14.2 | 10.4 | 1.6% |
 | av_majority | rule-based AV | 0.000 | 0.000 | 0.00 | 18.9 | 17.4 | 14.6 | 0.0% |
 | av_majority | imitation (BC) | 0.000 | 1.983 | 0.21 | 6.9 | 17.5 | 14.7 | 20.5% |
 | av_majority | PPO, AVs-only world | 0.016 | 76.484 | 4.66 | 3.9 | 17.6 | 14.5 | 19.9% |
@@ -136,6 +184,9 @@
 | av_majority | PPO + barrier teacher (phase 1) | 0.008 | 0.023 | 0.01 | 2.8 | 16.5 | 14.4 | 1.1% |
 | av_majority | PPO + barrier teacher, then no filter (phase 2) | 0.000 | 0.008 | 0.00 | 2.7 | 16.5 | 14.3 | 1.3% |
 | av_majority | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.000 | 0.030 | 0.01 | 2.5 | 16.1 | 14.1 | 0.9% |
+| av_majority | PPO + barrier teacher (phase 1, GPU retrain) | 0.008 | 0.016 | 0.01 | 3.3 | 17.7 | 14.6 | 1.6% |
+| av_majority | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.000 | 0.000 | 0.01 | 3.5 | 17.2 | 14.5 | 1.7% |
+| av_majority | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.000 | 0.000 | 0.01 | 3.6 | 16.8 | 14.3 | 1.6% |
 | cyclists | rule-based AV | 0.000 | 0.000 | 0.03 | 16.8 | 17.2 | 15.2 | 0.0% |
 | cyclists | imitation (BC) | 0.000 | 2.140 | 0.21 | 7.5 | 17.4 | 15.2 | 17.8% |
 | cyclists | PPO, AVs-only world | 0.000 | 72.668 | 3.29 | 4.8 | 17.6 | 15.2 | 18.5% |
@@ -148,6 +199,9 @@
 | cyclists | PPO + barrier teacher (phase 1) | 0.000 | 0.000 | 0.00 | 2.7 | 16.3 | 15.1 | 1.1% |
 | cyclists | PPO + barrier teacher, then no filter (phase 2) | 0.000 | 0.055 | 0.00 | 2.6 | 16.3 | 15.1 | 1.2% |
 | cyclists | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.000 | 0.000 | 0.00 | 2.5 | 16.2 | 15.2 | 0.9% |
+| cyclists | PPO + barrier teacher (phase 1, GPU retrain) | 0.000 | 0.027 | 0.00 | 3.0 | 17.1 | 15.4 | 1.6% |
+| cyclists | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.027 | 0.027 | 0.00 | 3.0 | 16.7 | 15.3 | 1.7% |
+| cyclists | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.027 | 0.055 | 0.05 | 3.5 | 16.4 | 15.2 | 1.5% |
 | wet_road | rule-based AV | 0.000 | 0.000 | 0.00 | 19.8 | 17.3 | 16.4 | 0.0% |
 | wet_road | imitation (BC) | 0.000 | 1.584 | 0.18 | 7.1 | 17.3 | 16.3 | 17.9% |
 | wet_road | PPO, AVs-only world | 0.000 | 70.679 | 4.05 | 4.4 | 17.6 | 16.4 | 18.3% |
@@ -160,6 +214,9 @@
 | wet_road | PPO + barrier teacher (phase 1) | 0.000 | 0.025 | 0.00 | 2.9 | 16.6 | 16.4 | 1.1% |
 | wet_road | PPO + barrier teacher, then no filter (phase 2) | 0.000 | 0.025 | 0.00 | 2.7 | 16.5 | 16.3 | 1.2% |
 | wet_road | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.000 | 0.000 | 0.00 | 2.4 | 16.2 | 16.2 | 0.9% |
+| wet_road | PPO + barrier teacher (phase 1, GPU retrain) | 0.000 | 0.024 | 0.02 | 2.9 | 17.7 | 16.6 | 1.6% |
+| wet_road | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.048 | 0.024 | 0.02 | 3.0 | 17.3 | 16.4 | 1.7% |
+| wet_road | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.000 | 0.024 | 0.00 | 3.1 | 16.9 | 16.4 | 1.6% |
 | squirrel_hill | rule-based AV | 0.000 | 0.000 | 0.00 | 14.3 | 18.8 | 16.7 | 0.0% |
 | squirrel_hill | imitation (BC) | 0.000 | 0.890 | 0.19 | 7.6 | 18.9 | 16.6 | 19.0% |
 | squirrel_hill | PPO, AVs-only world | 0.000 | 72.815 | 4.01 | 5.3 | 19.2 | 16.7 | 20.7% |
@@ -172,6 +229,9 @@
 | squirrel_hill | PPO + barrier teacher (phase 1) | 0.000 | 0.036 | 0.04 | 4.2 | 18.0 | 16.9 | 1.1% |
 | squirrel_hill | PPO + barrier teacher, then no filter (phase 2) | 0.000 | 0.000 | 0.04 | 3.9 | 18.0 | 16.7 | 1.4% |
 | squirrel_hill | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.036 | 0.036 | 0.04 | 3.4 | 17.7 | 16.7 | 1.0% |
+| squirrel_hill | PPO + barrier teacher (phase 1, GPU retrain) | 0.000 | 0.078 | 0.00 | 4.7 | 18.2 | 16.9 | 1.8% |
+| squirrel_hill | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.000 | 0.078 | 0.04 | 4.3 | 17.7 | 16.9 | 2.0% |
+| squirrel_hill | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.000 | 0.039 | 0.00 | 4.1 | 17.7 | 17.0 | 1.9% |
 | downtown | rule-based AV | 0.000 | 0.000 | 0.00 | 27.0 | 14.9 | 13.5 | 0.0% |
 | downtown | imitation (BC) | 0.000 | 2.039 | 0.25 | 14.5 | 14.8 | 13.5 | 21.1% |
 | downtown | PPO, AVs-only world | 0.000 | 71.693 | 3.20 | 8.4 | 14.5 | 13.3 | 17.9% |
@@ -184,3 +244,6 @@
 | downtown | PPO + barrier teacher (phase 1) | 0.000 | 0.116 | 0.00 | 6.8 | 13.9 | 13.2 | 0.9% |
 | downtown | PPO + barrier teacher, then no filter (phase 2) | 0.000 | 0.058 | 0.00 | 6.1 | 14.0 | 13.2 | 0.8% |
 | downtown | PPO + barrier teacher, speed + jaywalkers (phase 3) | 0.000 | 0.000 | 0.00 | 5.4 | 13.6 | 13.3 | 0.5% |
+| downtown | PPO + barrier teacher (phase 1, GPU retrain) | 0.061 | 0.061 | 0.00 | 7.6 | 13.3 | 13.2 | 1.3% |
+| downtown | PPO + barrier teacher, then no filter (phase 2, GPU retrain) | 0.060 | 0.000 | 0.00 | 7.6 | 12.9 | 13.2 | 1.1% |
+| downtown | PPO + barrier teacher, speed + jaywalkers (phase 3, GPU retrain) | 0.120 | 0.060 | 0.00 | 8.2 | 12.7 | 13.2 | 0.9% |
