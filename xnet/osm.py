@@ -131,7 +131,7 @@ def import_osm(source, bbox=None, seed=0, detect=True, **kw):
         net, geo, info = NW.build(bbox, seed=seed, rows=rows_from_osm(nodes, ways), hints=h, **kw)
     finally:
         set_origin(*old)  # the built-in Pittsburgh areas keep their grid
-    out = {**info, "origin_lat_lon": origin}
+    out = {**info, "origin_lat_lon": origin, "bbox_lon_lat": bbox}
     if jres:
         out["junctions"], out["junction_stats"] = jres["junctions"], jres["stats"]
     return net, geo, out

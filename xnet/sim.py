@@ -388,8 +388,9 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     # ---- adversarial aim (off at adv_* = 1): hazards of human mistakes, concentrated on the humans next to an AV
     def aimed_hazard(elig, aim, mult):
         """Per-vehicle factor on a hazard: `mult` where aimed; with adv_budget the others are lowered so that the expected
-        number of events stays the same."""
+        number of events stays the same (when the aimed alone would exceed it, their factor is capped too)."""
         n_e, n_a = elig.sum(), (elig & aim).sum()
+        mult = jnp.where(beh.adv_budget > 0.5, jnp.minimum(mult, n_e / jnp.maximum(n_a, 1)), mult)
         rest = jnp.where(beh.adv_budget > 0.5, jnp.clip((n_e - mult * n_a) / jnp.maximum(n_e - n_a, 1), 0.0, 1.0), 1.0)
         return jnp.where(elig & aim, mult, rest)
     lead_c0 = jnp.maximum(lead, 0)

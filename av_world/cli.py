@@ -119,11 +119,14 @@ def main(argv=None):
         ap.add_argument("--warm", type=float, default=120.0)
         ap.add_argument("--av2", help="an Argoverse 2 scenario directory instead of a simulation")
         ap.add_argument("--seed", type=int, default=0)
+        ap.add_argument("--no-3d", action="store_true", help="roads and agents only, no buildings / furniture")
+        ap.add_argument("--fetch", action="store_true", help="download the area's 3-D layers from Overture if missing")
         a = ap.parse_args(rest)
         import json
 
         from xnet import nvidia
-        print(json.dumps(nvidia.export(a.out, a.area, a.scenario, a.intensity, a.seconds, a.warm, a.av2, a.seed), indent=1, default=float))
+        print(json.dumps(nvidia.export(a.out, a.area, a.scenario, a.intensity, a.seconds, a.warm, a.av2, a.seed, world3d=not a.no_3d, fetch=a.fetch),
+                         indent=1, default=float))
         return 0
     if cmd == "sil":
         ap = argparse.ArgumentParser()
