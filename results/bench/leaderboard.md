@@ -30,6 +30,7 @@ Latent world-model planner, on the scenarios it ran (nominal, red_runners, inatt
 | PPO + barrier teacher (phase 1, GPU retrain) | 21 | 61.4 | 0.016 | 0.088 | 0.982 | 1.068 |
 | PPO, full world, 10x envelope penalty | 19 | 56.9 | 0.000 | 0.000 | 0.985 | 0.665 |
 | PPO + barrier teacher (phase 1) | 21 | 48.4 | 0.025 | 0.116 | 0.986 | 1.023 |
+| latent world-model planner v2 (wm-mpc) | 17 | 46.0 | 0.039 | 0.211 | 0.980 | 0.949 |
 | PPO, 234k steps (xnet3) | 13 | 7.9 | 0.640 | 1.092 | 0.981 | 1.065 |
 | latent world-model planner (wm-mpc) | 8 | 0.8 | 0.471 | 0.829 | 0.958 | 1.052 |
 | PPO, 130k steps (xnet) | 12 | 0.8 | 2.461 | 10.807 | 0.988 | 1.031 |

@@ -1,0 +1,96 @@
+{
+ "speed m/s @0s": {
+  "model": 0.6716001033782959,
+  "hold": 0.0
+ },
+ "speed m/s @1s": {
+  "model": 0.5797584727406502,
+  "hold": 1.0441958159208298
+ },
+ "speed m/s @2s": {
+  "model": 0.6338030844926834,
+  "hold": 1.5567880868911743
+ },
+ "speed m/s @3s": {
+  "model": 0.6980706006288528,
+  "hold": 1.9204118102788925
+ },
+ "speed m/s @4s": {
+  "model": 0.7607894763350487,
+  "hold": 2.2139617055654526
+ },
+ "leader gap m @0s": {
+  "model": 11.258235573768616,
+  "hold": 0.0
+ },
+ "leader gap m @1s": {
+  "model": 14.530615508556366,
+  "hold": 4.4565510004758835
+ },
+ "leader gap m @2s": {
+  "model": 14.980195462703705,
+  "hold": 8.087851107120514
+ },
+ "leader gap m @3s": {
+  "model": 15.80607146024704,
+  "hold": 11.555372923612595
+ },
+ "leader gap m @4s": {
+  "model": 16.81600958108902,
+  "hold": 14.64882493019104
+ },
+ "stop gap m @0s": {
+  "model": 5.7403262704610825,
+  "hold": 0.0
+ },
+ "stop gap m @1s": {
+  "model": 4.789920151233673,
+  "hold": 4.015149921178818
+ },
+ "stop gap m @2s": {
+  "model": 5.356665328145027,
+  "hold": 7.023591548204422
+ },
+ "stop gap m @3s": {
+  "model": 6.003013998270035,
+  "hold": 9.46376845240593
+ },
+ "stop gap m @4s": {
+  "model": 6.330644339323044,
+  "hold": 11.305837333202362
+ },
+ "stop margin @2s (RMS)": {
+  "model": 0.48192471265792847,
+  "hold": 0.6301254034042358
+ },
+ "leader margin @2s (RMS)": {
+  "model": 0.2695186138153076,
+  "hold": 0.2859632074832916
+ },
+ "junction margin @2s (RMS)": {
+  "model": 0.2535459101200104,
+  "hold": 0.2535324692726135
+ },
+ "merge gap behind @2s (RMS)": {
+  "model": 0.2862050235271454,
+  "hold": 0.2251252830028534
+ },
+ "merge gap ahead @2s (RMS)": {
+  "model": 0.30547070503234863,
+  "hold": 0.20695747435092926
+ },
+ "crash AUROC": 0.9469523630933632,
+ "held-out crash events": 543,
+ "near miss AUROC": 0.999347965611829,
+ "held-out near miss events": 16,
+ "red-light run AUROC": 0.9948575870717244,
+ "held-out red-light run events": 95,
+ "crash within 2 s AUROC": 0.9366750136139808,
+ "held-out crash within 2 s events": 5452,
+ "red-light run within 2 s AUROC": 0.9933169986267357,
+ "held-out red-light run within 2 s events": 863,
+ "train_s": 494,
+ "steps": 10000,
+ "batch": 1024,
+ "decisions": 1353855
+}

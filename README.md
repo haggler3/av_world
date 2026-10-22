@@ -20,7 +20,8 @@ honest account of what it can and cannot do.**
 | PPO, 234k steps (no barrier teacher) | 76 | 6.1 | 5.4 |
 
 The learned policies pass more checks, but the rule-based AV keeps the best core score: unaided, they crash 1.3-1.6x as often.
-Retraining one recipe moves scores by up to 10 points, and the latent world-model planner is not competitive yet.
+Retraining one recipe moves scores by up to 10 points. The latent world-model planner v2 went from 0.8 to 46 on its 3
+scenarios (0 red runs) but does not beat the policy it plans around ([wmplan](wmplan/README.md)).
 
 ## What it is
 
