@@ -82,6 +82,7 @@
   .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
   .tags span { font: 500 12px var(--mono); color: var(--ink-2); border: 1px solid var(--line); border-radius: 99px; padding: 2px 9px; }
   .viewer-cta { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; align-items: center; background: linear-gradient(135deg, rgba(57, 135, 229, 0.16), rgba(57, 135, 229, 0.02)); border: 1px solid var(--line); border-radius: 18px; padding: 30px; }
+  .viewer-cta.wide { grid-template-columns: 1fr 1.5fr; }
   .viewer-cta ul { margin: 12px 0 20px; padding-left: 18px; color: var(--ink-2); }
   ol.next { counter-reset: n; list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
   ol.next li { counter-increment: n; display: grid; grid-template-columns: 36px 1fr; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
@@ -93,7 +94,7 @@
   code { font: 13.5px var(--mono); background: var(--panel); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
   @media (max-width: 900px) {
     .stats { grid-template-columns: repeat(2, 1fr); }
-    .grid3, .grid2, .trends, .result .text, .project, .viewer-cta { grid-template-columns: 1fr; }
+    .grid3, .grid2, .trends, .result .text, .project, .viewer-cta, .viewer-cta.wide { grid-template-columns: 1fr; }
     nav.top .links a.opt { display: none; }
     header.hero { padding-top: 48px; }
     .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
@@ -138,6 +139,25 @@
     </div>
   </div>
 </header>
+
+<section id="usd">
+  <div class="wrap">
+    <div class="viewer-cta wide">
+      <div>
+        <h2 style="font-size:28px">From the simulator to a real city in 3-D</h2>
+        <p class="sub" style="margin:0">Any scene, simulated or from a real Argoverse 2 log, exports to an OpenUSD stage for NVIDIA Omniverse.
+          The stage is set in the real streets: buildings at their mapped heights, trees, lamps and signals, all from open map data.</p>
+        <ul>
+          <li>Same frames, same signal timing, same vehicles on both sides.</li>
+          <li>Midtown Manhattan, the Chicago Loop, Boston, or any OpenStreetMap city.</li>
+          <li>Every export renders this clip automatically.</li>
+        </ul>
+        <a class="btn" href="https://github.com/haggler3/av_world/blob/main/docs/NVIDIA.md">How the export works</a>
+      </div>
+      <img width="804" height="330" src="img/nvidia3d_compare_small.gif" alt="The same Manhattan scene in av_world (left) and as the exported OpenUSD stage (right)" style="width:100%;border-radius:12px;border:1px solid var(--line);display:block" loading="lazy">
+    </div>
+  </div>
+</section>
 
 <section id="unique">
   <div class="wrap">

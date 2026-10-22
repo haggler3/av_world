@@ -18,6 +18,7 @@ av-world export-nvidia out --area chicago --fetch                               
 ```
 out/scene.usda          the city (roads, sidewalks, markings, buildings, trees, furniture) and every agent as an animated prim
 out/preview_*.png       street-level and aerial renders of the stage (when pyvista can render offscreen)
+out/compare.gif         the av_world view and the 3-D stage side by side, following an AV (automatic; --no-clip to skip)
 out/scene.json          the trajectories (xnet.carla_export format; also replayable in CARLA)
 out/control/            frame_XXXX.png, control.mp4, camera.json (intrinsics, per-frame camera pose)
 out/meta.json           source, area, scenario and its knobs, the events in the run (crash types, tail tags), the ego
@@ -33,6 +34,21 @@ yellow, other agents as 3-D boxes coloured by class (blue cars, green AVs, yello
 The first version of the stage was lane strips and boxes: it looked like a test track. `xnet/scene3d.py` now fuses open map data with the
 simulator's road network into a 3-D city, so the same long-tail scene plays out between the buildings, trees and street furniture that are
 really there.
+
+![The same scene in av_world and as the exported 3-D stage](img/nvidia3d_compare_new_york.gif)
+
+*Midtown Manhattan, one simulated AV (white, roof lidar; blue with a white outline on the left) for 8 s. Left: the av_world view of
+the scene. Right: the exported OpenUSD stage from a chase camera. Same frames, same signal states (the lights turn on both sides at once),
+same vehicles.*
+
+**Every export makes this clip automatically.** `export-nvidia` writes `out/compare.gif` next to the stage. It follows the ego if the ego
+crashed (the long-tail moment is the point). Otherwise it picks the AV and 8 s window that make the most watchable clip: most distance
+covered, with traffic around. It needs pyvista with an offscreen OpenGL; without one, the clip is skipped and `meta.json` says so.
+`--no-clip` turns it off. From Python, `nvidia.compare_clip(net, geo, info, scene, world, ego_id, "clip.gif")` renders any scene.
+
+The clip renders in about 15 s. The static city is loaded into the renderer once, and only the agents and the signal lights are redrawn per
+frame (`scene3d.Renderer`). Without Overture layers for an area (or for an Argoverse 2 log, which has no geographic frame), the world is
+still built from the simulator's own network: road surface, sidewalks, markings, signals and stop signs, just no buildings or trees.
 
 ![Chicago, street level](img/nvidia3d_chicago_street.png)
 
