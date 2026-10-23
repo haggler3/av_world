@@ -1,0 +1,723 @@
+{
+ "summary": {
+  "events": 31,
+  "reproduced": 31,
+  "brake": {
+   "averted": 25,
+   "averted_share": 0.8064516129032258,
+   "other_crashes": 2,
+   "policy_other_crashes": 2
+  },
+  "planner": {
+   "averted": 5,
+   "averted_share": 0.16129032258064516,
+   "other_crashes": 2,
+   "policy_other_crashes": 2
+  },
+  "by_scenario": {
+   "red_runners": {
+    "crashes": 6,
+    "planner_averted": 1,
+    "brake_averted": 6
+   },
+   "cut_in": {
+    "crashes": 1,
+    "planner_averted": 0,
+    "brake_averted": 0
+   },
+   "inattentive": {
+    "crashes": 3,
+    "planner_averted": 1,
+    "brake_averted": 3
+   },
+   "dartout": {
+    "crashes": 9,
+    "planner_averted": 2,
+    "brake_averted": 7
+   },
+   "jaywalkers": {
+    "crashes": 10,
+    "planner_averted": 1,
+    "brake_averted": 8
+   },
+   "nominal": {
+    "crashes": 2,
+    "planner_averted": 0,
+    "brake_averted": 1
+   }
+  }
+ },
+ "events": [
+  {
+   "scenario": "red_runners",
+   "env": 4,
+   "slot": 51,
+   "t_crash": 11,
+   "policy": {
+    "crash": true,
+    "t": 11,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 9,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "red_runners",
+   "env": 3,
+   "slot": 196,
+   "t_crash": 18,
+   "policy": {
+    "crash": true,
+    "t": 18,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 13,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "red_runners",
+   "env": 6,
+   "slot": 278,
+   "t_crash": 13,
+   "policy": {
+    "crash": true,
+    "t": 13,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "red_runners",
+   "env": 10,
+   "slot": 437,
+   "t_crash": 10,
+   "policy": {
+    "crash": true,
+    "t": 10,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 9,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "red_runners",
+   "env": 9,
+   "slot": 321,
+   "t_crash": 19,
+   "policy": {
+    "crash": true,
+    "t": 19,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 19,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "red_runners",
+   "env": 8,
+   "slot": 326,
+   "t_crash": 16,
+   "policy": {
+    "crash": true,
+    "t": 16,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 18,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "cut_in",
+   "env": 15,
+   "slot": 172,
+   "t_crash": 15,
+   "policy": {
+    "crash": true,
+    "t": 15,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": true,
+    "t": 29,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 12,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "inattentive",
+   "env": 3,
+   "slot": 107,
+   "t_crash": 10,
+   "policy": {
+    "crash": true,
+    "t": 10,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 10,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "inattentive",
+   "env": 0,
+   "slot": 161,
+   "t_crash": 19,
+   "policy": {
+    "crash": true,
+    "t": 19,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "inattentive",
+   "env": 4,
+   "slot": 378,
+   "t_crash": 15,
+   "policy": {
+    "crash": true,
+    "t": 15,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 15,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "dartout",
+   "env": 7,
+   "slot": 142,
+   "t_crash": 17,
+   "policy": {
+    "crash": true,
+    "t": 17,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 18,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "dartout",
+   "env": 1,
+   "slot": 12,
+   "t_crash": 11,
+   "policy": {
+    "crash": true,
+    "t": 11,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": true,
+    "t": 24,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 22,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "dartout",
+   "env": 4,
+   "slot": 250,
+   "t_crash": 16,
+   "policy": {
+    "crash": true,
+    "t": 16,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 16,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "dartout",
+   "env": 15,
+   "slot": 239,
+   "t_crash": 13,
+   "policy": {
+    "crash": true,
+    "t": 13,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 13,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "dartout",
+   "env": 3,
+   "slot": 70,
+   "t_crash": 10,
+   "policy": {
+    "crash": true,
+    "t": 10,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": true,
+    "t": 23,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "dartout",
+   "env": 11,
+   "slot": 243,
+   "t_crash": 14,
+   "policy": {
+    "crash": true,
+    "t": 14,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 13,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "dartout",
+   "env": 0,
+   "slot": 481,
+   "t_crash": 13,
+   "policy": {
+    "crash": true,
+    "t": 13,
+    "other_crashes": 1
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 1
+   },
+   "planner": {
+    "crash": true,
+    "t": 4,
+    "other_crashes": 1
+   }
+  },
+  {
+   "scenario": "dartout",
+   "env": 0,
+   "slot": 177,
+   "t_crash": 15,
+   "policy": {
+    "crash": true,
+    "t": 15,
+    "other_crashes": 1
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 1
+   },
+   "planner": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 1
+   }
+  },
+  {
+   "scenario": "dartout",
+   "env": 13,
+   "slot": 325,
+   "t_crash": 13,
+   "policy": {
+    "crash": true,
+    "t": 13,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 12,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 4,
+   "slot": 0,
+   "t_crash": 18,
+   "policy": {
+    "crash": true,
+    "t": 18,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 14,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 13,
+   "slot": 202,
+   "t_crash": 14,
+   "policy": {
+    "crash": true,
+    "t": 14,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 12,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 0,
+   "slot": 217,
+   "t_crash": 13,
+   "policy": {
+    "crash": true,
+    "t": 13,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 9,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 6,
+   "slot": 298,
+   "t_crash": 17,
+   "policy": {
+    "crash": true,
+    "t": 17,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 10,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 10,
+   "slot": 276,
+   "t_crash": 18,
+   "policy": {
+    "crash": true,
+    "t": 18,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 12,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 12,
+   "slot": 329,
+   "t_crash": 11,
+   "policy": {
+    "crash": true,
+    "t": 11,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 10,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 14,
+   "slot": 313,
+   "t_crash": 12,
+   "policy": {
+    "crash": true,
+    "t": 12,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": true,
+    "t": 27,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 16,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 15,
+   "slot": 356,
+   "t_crash": 19,
+   "policy": {
+    "crash": true,
+    "t": 19,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 16,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 4,
+   "slot": 222,
+   "t_crash": 13,
+   "policy": {
+    "crash": true,
+    "t": 13,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": true,
+    "t": 26,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "jaywalkers",
+   "env": 8,
+   "slot": 461,
+   "t_crash": 16,
+   "policy": {
+    "crash": true,
+    "t": 16,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 12,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "nominal",
+   "env": 5,
+   "slot": 122,
+   "t_crash": 10,
+   "policy": {
+    "crash": true,
+    "t": 10,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": true,
+    "t": 18,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 8,
+    "other_crashes": 0
+   }
+  },
+  {
+   "scenario": "nominal",
+   "env": 10,
+   "slot": 205,
+   "t_crash": 10,
+   "policy": {
+    "crash": true,
+    "t": 10,
+    "other_crashes": 0
+   },
+   "brake": {
+    "crash": false,
+    "t": null,
+    "other_crashes": 0
+   },
+   "planner": {
+    "crash": true,
+    "t": 9,
+    "other_crashes": 0
+   }
+  }
+ ],
+ "planner": {
+  "K": 112,
+  "S": 256,
+  "ITERS": 5,
+  "HP": 20,
+  "ELITE": 24,
+  "KNOTS": 4,
+  "beta": 1.0,
+  "crash": 30.0,
+  "near": 3.0,
+  "red": 40.0,
+  "haz": 5.0,
+  "margin": 0.5,
+  "hard": 0.0,
+  "jerk": 0.002,
+  "prior": 0.05,
+  "sd0": 0.5,
+  "value": 1.0,
+  "gate": 0.0
+ }
+}
