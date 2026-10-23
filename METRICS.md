@@ -122,6 +122,9 @@ tables are in `results/bench/leaderboard.md` and the chart in `docs/img/avbench.
   best variant matched the phase 3 policy's crashes at 6 % lower speed. The actor-critic trained in imagination exploited the
   model and crashed 30-40 times per AV-hour. With these 28 features, braking less causes crashes but braking more does not
   prevent them ([wmplan/README.md](../wmplan/README.md)).
+* **Crash aversion**, a new metric: fork the simulator 2-4 s before each of the policy's crashes and replay it with a fix.
+  Over 91 crashes of the phase 3 policy, all reproduced exactly, naive harder braking averts 75 %. The v3 world model's plan
+  averts 18 %. Both are told when to act ([wmplan/README.md](../wmplan/README.md)).
 
 ## Limits
 

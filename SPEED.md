@@ -41,3 +41,25 @@ page from the build container, so the figures come from search summaries and sho
 | learner trains only on valid AV rows, packed (`Config.compact`) | PPO update 1.97 s -> 0.81 s (x2.4); 86 % of the old rows were padding |
 | copies sharded over devices with `shard_map` (`avrl/gpu_train.py`) | x2.1 on 4 host devices; the same line spreads copies across GPUs |
 | combined PPO throughput | ~210 -> ~1,100 area-steps/s (about x5) |
+
+## Measured on a GPU (one NVIDIA L4, Google Cloud g2-standard-8, 2026-10-22/23)
+
+Everything above the CPU line was projected; these were measured on one L4 (24 GB) with JAX 0.6.2 and CUDA 12.
+
+| what | L4 | for comparison |
+|---|---|---|
+| dense matmul 8192 x 8192 | 39.7 TFLOP/s float32 (TF32), 80.4 TFLOP/s bfloat16 | |
+| PPO, barrier-teacher phase (100 updates, 8 copies) | 93-100 s | 195-203 s on CPU (the same runs' logs) |
+| AVBench scenario: 3 policies x 3 modes, 8 copies x 180 s | 140-159 s | |
+| latent planner v1 benchmark run (every AV planned, 8 copies x 180 s) | 104-107 s | about 10 min on CPU |
+| latent planner v2 per step, 8 copies, 32 plans x 2 rounds x 20 steps x 3-member ensemble | 167 ms float32, **109 ms bfloat16** | 1.6 s with 128 plans x 3 rounds and a 256-wide model |
+| latent planner v2 benchmark run | 252 s, 173 s with one warm state for both modes | |
+| world-model training | v1 6 k steps 78 s; v2 10 k steps x 1024 windows 494 s; v3 fine-tune 5 k steps 398 s | |
+| logging decisions (wmplan.data, 8 copies, 250 simulated s) | 674 k decisions in 41 s | |
+| counterfactual branches (16 copies, 8 scenarios, 5 branches) | 9.5 M decisions in 975 s | |
+| scoring 2 M states x 5 actions x 15 imagined steps x 3 models | 45 s | |
+
+`av-world bench` reported 15 simulated seconds per second on the L4, but that includes compilation in a very short run.
+It is not a throughput figure. Raw numbers: `results/wmplan/v2/gpu_speed.txt`, `results/wmplan/v2/model_eval.json`,
+`results/wmplan/v3/`.
+

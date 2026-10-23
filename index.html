@@ -283,11 +283,11 @@
     </div>
 
     <div class="result">
-      <figure><img width="921" height="460" src="img/wm2_planner_busy_junction.gif" alt="The latent planner v2 at a busy junction with 13 road users within 35 m: candidate plans unfolded in latent space and decoded into speed, junction margin and crash risk" loading="lazy"></figure>
+      <figure><img width="921" height="460" src="img/wm_converge.gif" alt="256 imagined futures for one AV narrowing over 5 rounds of search, then the real replay: the policy alone crashes, the converged plan does not" loading="lazy"></figure>
       <div class="text">
         <div><h3>Planning in a latent world model</h3>
-          <p>An ensemble latent model of the AV's scene, trained on 1.35 M decisions, unrolls candidate plans of acceleration
-            and gap acceptance 4 s into the future, here at a junction with 13 road users within 35 m. The planner watches over
+          <p>An ensemble latent model of the AV's scene, trained on 1.35 M decisions and 9.5 M counterfactual ones, unrolls 256
+            candidate plans 4 s into the future and narrows them over 5 rounds, here before a crash the policy alone does not avoid. The planner watches over
             the learned policy and steps in only to brake harder or wait for a bigger gap when it foresees trouble.
             <a href="img/wm2_planner_merge.gif">In a merge</a> ·
             <a href="https://github.com/haggler3/av_world/blob/main/wmplan/README.md">how it works</a>.</p></div>
@@ -295,6 +295,7 @@
           <li>v1 ran red lights its own prior never runs. v2 fixes that: <b>0</b> red runs, and the av_world score on its 3 scenarios rises from <b>0.8</b> to <span class="big">46</span> (93 on nominal traffic).</li>
           <li>Predicts the distance to the stop line 2 s ahead to <b>5.4 m</b>, against v1's 36 m and 7.0 m for holding it still.</li>
           <li>It does not yet beat the policy it plans around (63.8): it sees the same 28 features, so lookahead is its only edge.</li>
+          <li>Forked at the policy's own crash moments (91, replayed exactly), the converged plan averts <b>18 %</b>; simply braking harder averts 75 %.</li>
         </ul>
       </div>
     </div>
