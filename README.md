@@ -20,10 +20,21 @@ honest account of what it can and cannot do.**
 | PPO, 234k steps (no barrier teacher) | 76 | 6.1 | 5.4 |
 
 The learned policies pass more checks, but the rule-based AV keeps the best core score: unaided, they crash 1.3-1.6x as often.
-Retraining one recipe moves scores by up to 10 points. The latent world-model planner v2 went from 0.8 to 46 on its 3
-scenarios (0 red runs) but does not beat the policy it plans around ([wmplan](wmplan/README.md)).
-Forked at the policy's own crash moments, the world model's converged plan averts 18 % of them, against 75 % for simply
-braking harder ([the GIF and the test](wmplan/README.md#many-futures-converging-and-where-it-really-helps-convergepy-2026-10-23)).
+Retraining one recipe moves scores by up to 10 points.
+
+**Latent world-model planners**, on the 3 junction-heavy scenarios they were benchmarked on (nominal, red runners, inattentive):
+
+| driver | checks passed (of 24) | av_world score | crashes /AV-h, no filter | red runs /100 km |
+|---|---|---|---|---|
+| PPO + barrier teacher, then no filter (phase 2) | **23** | 77.9 | 0.033 | 0 |
+| rule-based AV | 18 | **78.2** | **0.008** | 0 |
+| PPO + barrier teacher, speed + jaywalkers (phase 3) | 22 | 63.8 | 0.025 | 0 |
+| latent planner v2 (ensemble model, phase 3 as prior) | 17 | 46.0 | 0.039 | 0 |
+| latent planner v1 (234k-step PPO as prior) | 8 | 0.8 | 0.471 | 4.5-5.4 |
+
+v2 fixed v1's red-light runs but does not beat the policy it plans around. Training the policy inside the model (v3) did not
+either. Forked at the policy's own crash moments, the converged plan averts 18 % of them, against 75 % for simply braking
+harder ([GIFs, the test and why](wmplan/README.md)).
 
 ## What it is
 
@@ -90,7 +101,7 @@ print(env.metrics(state)["av_crash"])
 | [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) | dynamics ladder, scaling laws, active learning, AVBench, unaided training, mutating cities |
 | [docs/RL.md](docs/RL.md), [docs/WORLD_MODELS.md](docs/WORLD_MODELS.md), [docs/METHODS.md](docs/METHODS.md) | the RL stack, the world models, the methods |
 | [docs/SIMULATORS.md](docs/SIMULATORS.md) | simulator internals, calibration against crash data, running everything, limitations, code layout |
-| [docs/SPEED.md](docs/SPEED.md) | speed against CARLA, GPUDrive, Waymax and others (CPU measured, GPU projected) |
+| [docs/SPEED.md](docs/SPEED.md) | speed against CARLA, GPUDrive, Waymax and others (CPU and one NVIDIA L4 measured, larger GPUs projected) |
 | [docs/RESEARCH_CONTEXT.md](docs/RESEARCH_CONTEXT.md) | comparison with other simulators and current research |
 | [docs/ROADMAP.md](docs/ROADMAP.md), [docs/HISTORY.md](docs/HISTORY.md) | what is next; how the repository came about |
 

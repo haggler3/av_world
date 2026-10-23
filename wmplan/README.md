@@ -3,6 +3,23 @@
 An AV that plans merges and junctions by unrolling learned latent representations into the future, in the whole-area
 Pittsburgh simulator (`xnet`), among risky human drivers, pedestrians and cyclists.
 
+## Status (2026-10-23)
+
+![many imagined futures converging, then the real replay](../docs/img/wm_converge.gif)
+
+| version | what it is | AVBench, 3 scenarios (of 24 checks, av_world) | finding |
+|---|---|---|---|
+| v1 (`model.py`, `planner.py`) | 48-d latent, 2.4 s CEM plans, the 234k-step PPO as prior | 8, 0.8 | ran red lights its prior never runs |
+| v2 (`v2.py`) | ensemble, SimNorm latent, 4 s plans, masked targets, cautious trust region around phase 3 | 17, 46.0 | fixed; still trails phase 3 (22, 63.8) |
+| v3 (`v3.py`) | 9.5 M counterfactual decisions; the policy trained inside the model | screens only | matches phase 3 at best; the actor-critic exploited the model |
+| crash aversion (`converge.py`) | fork 2-4 s before each of phase 3's 91 crashes and replay | | the plan averts 18 %, braking harder 75 % |
+
+Every version sees the same 28 features as the policy, so lookahead is its only edge, and the barrier-taught policy already
+has most of it. The next step that can change that is giving the model information the policy lacks: the other road users
+as individual objects. The sections below go in order: v1, v2, v3, the crash-aversion test.
+
+## v1
+
 ![latent planning at a junction](../docs/img/wm_planner_junction.gif)
 
 *Left: the AV (white outline) and, along its route, where each of the 32 candidate plans of the last search round puts it
@@ -42,7 +59,7 @@ obs_t (28 features: own motion, leader, stop target, signal, right of way, confl
    The second action dimension is the AV's gap acceptance at the next junction and in a merge. So *whether to go* is
    chosen by imagining what the junction margin and the crash risk do a few seconds after going.
 
-## Results
+### v1 results
 
 ![results](../docs/img/wm_planner.png)
 
@@ -68,6 +85,8 @@ cyclists, 15 % AVs. 4 copies × 5 min per driver, about 23 AV-hours each, all fr
 
 - **Planning in the latent model halves the unaided crash rate of the policy it starts from**, at 3 % lower speed. The
   crashes it still has are spread across junction types, because it now makes the junction decisions itself.
+  *This did not hold on AVBench's calibrated scenarios.* There v1 scored 0.8 of 100: it ran about 5 red lights per 100 km, which
+  this harder test world's tally does not separate out. See v2.
 - **Under the barrier function every driver has 0 crashes.** Without it, the planner and PPO both spend about 1 % of AV
   time outside the barrier's safe set; with it, 0.1 %.
 - **Cost.** With the planner driving every AV, 4 copies of the area run at about 3× real time on 4 CPU cores, against
@@ -207,9 +226,10 @@ python -m wmplan.converge gif results/wmplan/v3/converge_event.pkl docs/img/wm_c
 
 ## Next
 
-- **Amortise the planner into the policy** (Dreamer / TD-MPC style). Train the PPO actor on imagined rollouts with
-  the planner's targets, so the deployed driver keeps the planner's foresight at the policy's speed.
-- **Scene-level latent.** Encode the AV's neighbourhood as a set of agents, not 28 hand-built features, so the model
-  can imagine the other drivers' choices: the merge partner who does not yield, the left turner who goes.
-- **Plan against the barrier.** Put the barrier's constraint inside the search (reject plans whose decoded margins go
-  negative), so the filter almost never has to step in.
+- **Information the policy does not have.** Encode the AV's neighbourhood as a set of agents (positions, speeds, headings,
+  who yields), not 28 hand-built features, so the model can see the left turner who goes or the merge partner who does not.
+  This needs a new simulator output and a set encoder.
+- **Better counterfactuals.** Fork at real near-crash moments, not a risk rule, and perturb for 4 s, not 2. The 2 s branches
+  taught the model that braking rarely helps, which is why its plan averts 18 % of crashes where braking harder averts 75 %.
+- **Amortise only what is supported.** Distil planner choices into the policy only for actions the counterfactual data
+  measured. Free gradients through the model (v3's actor-critic) exploit it.
