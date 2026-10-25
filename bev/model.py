@@ -44,6 +44,7 @@ class Config:
     stride: int = 8
     backbone: str = "scratch"  # or "bevformer_r50" (frozen, 512 channels)
     temporal: bool = True
+    feat_dims: int = 0  # 0: the backbone's own width; else cached features reduced to this many channels (bev.train: a fixed PCA)
 
     @property
     def cell(self):
@@ -51,7 +52,7 @@ class Config:
 
     @property
     def feat_in(self):
-        return 512 if self.backbone == "bevformer_r50" else 64
+        return self.feat_dims or (512 if self.backbone == "bevformer_r50" else 64)
 
 
 def grid_xy(cfg):
