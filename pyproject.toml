@@ -20,7 +20,7 @@ carla = ["carla"]
 av-world = "av_world.cli:main"
 
 [tool.setuptools]
-packages = ["av_world", "xworld", "xnet", "pgh", "avrl", "dwm", "avlab", "wmplan"]
+packages = ["av_world", "xworld", "xnet", "pgh", "avrl", "dwm", "avlab", "wmplan", "bev"]
 
 [tool.setuptools.package-data]
 av_world = ["_data/*"]

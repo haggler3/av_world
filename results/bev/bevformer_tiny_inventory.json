@@ -1,0 +1,4042 @@
+{
+"pts_bbox_head.code_weights": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.positional_encoding.row_embed.weight": [
+[
+50,
+128
+],
+"float32"
+],
+"pts_bbox_head.positional_encoding.col_embed.weight": [
+[
+50,
+128
+],
+"float32"
+],
+"pts_bbox_head.transformer.level_embeds": [
+[
+4,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.cams_embeds": [
+[
+6,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.0.sampling_offsets.weight": [
+[
+128,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.0.sampling_offsets.bias": [
+[
+128
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.0.attention_weights.weight": [
+[
+64,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.0.attention_weights.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.0.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.0.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.0.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.0.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.1.deformable_attention.sampling_offsets.weight": [
+[
+128,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.1.deformable_attention.sampling_offsets.bias": [
+[
+128
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.1.deformable_attention.attention_weights.weight": [
+[
+64,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.1.deformable_attention.attention_weights.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.1.deformable_attention.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.1.deformable_attention.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.1.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.attentions.1.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.ffns.0.layers.0.0.weight": [
+[
+512,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.ffns.0.layers.0.0.bias": [
+[
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.ffns.0.layers.1.weight": [
+[
+256,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.ffns.0.layers.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.norms.0.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.norms.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.norms.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.norms.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.norms.2.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.0.norms.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.0.sampling_offsets.weight": [
+[
+128,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.0.sampling_offsets.bias": [
+[
+128
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.0.attention_weights.weight": [
+[
+64,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.0.attention_weights.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.0.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.0.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.0.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.0.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.1.deformable_attention.sampling_offsets.weight": [
+[
+128,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.1.deformable_attention.sampling_offsets.bias": [
+[
+128
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.1.deformable_attention.attention_weights.weight": [
+[
+64,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.1.deformable_attention.attention_weights.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.1.deformable_attention.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.1.deformable_attention.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.1.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.attentions.1.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.ffns.0.layers.0.0.weight": [
+[
+512,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.ffns.0.layers.0.0.bias": [
+[
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.ffns.0.layers.1.weight": [
+[
+256,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.ffns.0.layers.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.norms.0.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.norms.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.norms.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.norms.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.norms.2.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.1.norms.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.0.sampling_offsets.weight": [
+[
+128,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.0.sampling_offsets.bias": [
+[
+128
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.0.attention_weights.weight": [
+[
+64,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.0.attention_weights.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.0.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.0.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.0.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.0.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.1.deformable_attention.sampling_offsets.weight": [
+[
+128,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.1.deformable_attention.sampling_offsets.bias": [
+[
+128
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.1.deformable_attention.attention_weights.weight": [
+[
+64,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.1.deformable_attention.attention_weights.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.1.deformable_attention.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.1.deformable_attention.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.1.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.attentions.1.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.ffns.0.layers.0.0.weight": [
+[
+512,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.ffns.0.layers.0.0.bias": [
+[
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.ffns.0.layers.1.weight": [
+[
+256,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.ffns.0.layers.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.norms.0.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.norms.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.norms.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.norms.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.norms.2.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.encoder.layers.2.norms.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.0.attn.in_proj_weight": [
+[
+768,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.0.attn.in_proj_bias": [
+[
+768
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.0.attn.out_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.0.attn.out_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.1.sampling_offsets.weight": [
+[
+64,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.1.sampling_offsets.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.1.attention_weights.weight": [
+[
+32,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.1.attention_weights.bias": [
+[
+32
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.1.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.1.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.1.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.attentions.1.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.ffns.0.layers.0.0.weight": [
+[
+512,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.ffns.0.layers.0.0.bias": [
+[
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.ffns.0.layers.1.weight": [
+[
+256,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.ffns.0.layers.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.norms.0.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.norms.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.norms.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.norms.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.norms.2.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.0.norms.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.0.attn.in_proj_weight": [
+[
+768,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.0.attn.in_proj_bias": [
+[
+768
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.0.attn.out_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.0.attn.out_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.1.sampling_offsets.weight": [
+[
+64,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.1.sampling_offsets.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.1.attention_weights.weight": [
+[
+32,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.1.attention_weights.bias": [
+[
+32
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.1.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.1.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.1.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.attentions.1.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.ffns.0.layers.0.0.weight": [
+[
+512,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.ffns.0.layers.0.0.bias": [
+[
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.ffns.0.layers.1.weight": [
+[
+256,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.ffns.0.layers.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.norms.0.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.norms.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.norms.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.norms.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.norms.2.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.1.norms.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.0.attn.in_proj_weight": [
+[
+768,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.0.attn.in_proj_bias": [
+[
+768
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.0.attn.out_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.0.attn.out_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.1.sampling_offsets.weight": [
+[
+64,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.1.sampling_offsets.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.1.attention_weights.weight": [
+[
+32,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.1.attention_weights.bias": [
+[
+32
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.1.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.1.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.1.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.attentions.1.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.ffns.0.layers.0.0.weight": [
+[
+512,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.ffns.0.layers.0.0.bias": [
+[
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.ffns.0.layers.1.weight": [
+[
+256,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.ffns.0.layers.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.norms.0.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.norms.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.norms.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.norms.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.norms.2.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.2.norms.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.0.attn.in_proj_weight": [
+[
+768,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.0.attn.in_proj_bias": [
+[
+768
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.0.attn.out_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.0.attn.out_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.1.sampling_offsets.weight": [
+[
+64,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.1.sampling_offsets.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.1.attention_weights.weight": [
+[
+32,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.1.attention_weights.bias": [
+[
+32
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.1.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.1.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.1.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.attentions.1.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.ffns.0.layers.0.0.weight": [
+[
+512,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.ffns.0.layers.0.0.bias": [
+[
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.ffns.0.layers.1.weight": [
+[
+256,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.ffns.0.layers.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.norms.0.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.norms.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.norms.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.norms.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.norms.2.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.3.norms.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.0.attn.in_proj_weight": [
+[
+768,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.0.attn.in_proj_bias": [
+[
+768
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.0.attn.out_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.0.attn.out_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.1.sampling_offsets.weight": [
+[
+64,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.1.sampling_offsets.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.1.attention_weights.weight": [
+[
+32,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.1.attention_weights.bias": [
+[
+32
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.1.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.1.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.1.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.attentions.1.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.ffns.0.layers.0.0.weight": [
+[
+512,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.ffns.0.layers.0.0.bias": [
+[
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.ffns.0.layers.1.weight": [
+[
+256,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.ffns.0.layers.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.norms.0.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.norms.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.norms.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.norms.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.norms.2.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.4.norms.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.0.attn.in_proj_weight": [
+[
+768,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.0.attn.in_proj_bias": [
+[
+768
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.0.attn.out_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.0.attn.out_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.1.sampling_offsets.weight": [
+[
+64,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.1.sampling_offsets.bias": [
+[
+64
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.1.attention_weights.weight": [
+[
+32,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.1.attention_weights.bias": [
+[
+32
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.1.value_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.1.value_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.1.output_proj.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.attentions.1.output_proj.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.ffns.0.layers.0.0.weight": [
+[
+512,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.ffns.0.layers.0.0.bias": [
+[
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.ffns.0.layers.1.weight": [
+[
+256,
+512
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.ffns.0.layers.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.norms.0.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.norms.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.norms.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.norms.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.norms.2.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.decoder.layers.5.norms.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.reference_points.weight": [
+[
+3,
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.reference_points.bias": [
+[
+3
+],
+"float32"
+],
+"pts_bbox_head.transformer.can_bus_mlp.0.weight": [
+[
+128,
+18
+],
+"float32"
+],
+"pts_bbox_head.transformer.can_bus_mlp.0.bias": [
+[
+128
+],
+"float32"
+],
+"pts_bbox_head.transformer.can_bus_mlp.2.weight": [
+[
+256,
+128
+],
+"float32"
+],
+"pts_bbox_head.transformer.can_bus_mlp.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.can_bus_mlp.norm.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.transformer.can_bus_mlp.norm.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.3.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.3.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.4.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.4.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.6.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.0.6.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.3.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.3.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.4.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.4.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.6.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.1.6.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.3.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.3.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.4.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.4.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.6.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.2.6.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.3.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.3.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.4.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.4.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.6.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.3.6.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.3.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.3.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.4.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.4.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.6.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.4.6.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.1.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.1.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.3.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.3.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.4.weight": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.4.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.6.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.cls_branches.5.6.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.0.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.0.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.0.2.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.0.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.0.4.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.0.4.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.1.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.1.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.1.2.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.1.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.1.4.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.1.4.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.2.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.2.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.2.2.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.2.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.2.4.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.2.4.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.3.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.3.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.3.2.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.3.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.3.4.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.3.4.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.4.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.4.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.4.2.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.4.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.4.4.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.4.4.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.5.0.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.5.0.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.5.2.weight": [
+[
+256,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.5.2.bias": [
+[
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.5.4.weight": [
+[
+10,
+256
+],
+"float32"
+],
+"pts_bbox_head.reg_branches.5.4.bias": [
+[
+10
+],
+"float32"
+],
+"pts_bbox_head.bev_embedding.weight": [
+[
+2500,
+256
+],
+"float32"
+],
+"pts_bbox_head.query_embedding.weight": [
+[
+900,
+512
+],
+"float32"
+],
+"img_backbone.conv1.weight": [
+[
+64,
+3,
+7,
+7
+],
+"float32"
+],
+"img_backbone.bn1.weight": [
+[
+64
+],
+"float32"
+],
+"img_backbone.bn1.bias": [
+[
+64
+],
+"float32"
+],
+"img_backbone.bn1.running_mean": [
+[
+64
+],
+"float32"
+],
+"img_backbone.bn1.running_var": [
+[
+64
+],
+"float32"
+],
+"img_backbone.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.0.conv1.weight": [
+[
+64,
+64,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer1.0.bn1.weight": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.0.bn1.bias": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.0.bn1.running_mean": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.0.bn1.running_var": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.0.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.0.conv2.weight": [
+[
+64,
+64,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer1.0.bn2.weight": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.0.bn2.bias": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.0.bn2.running_mean": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.0.bn2.running_var": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.0.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.0.conv3.weight": [
+[
+256,
+64,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer1.0.bn3.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.0.bn3.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.0.bn3.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.0.bn3.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.0.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.0.downsample.0.weight": [
+[
+256,
+64,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer1.0.downsample.1.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.0.downsample.1.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.0.downsample.1.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.0.downsample.1.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.0.downsample.1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.1.conv1.weight": [
+[
+64,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer1.1.bn1.weight": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.1.bn1.bias": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.1.bn1.running_mean": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.1.bn1.running_var": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.1.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.1.conv2.weight": [
+[
+64,
+64,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer1.1.bn2.weight": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.1.bn2.bias": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.1.bn2.running_mean": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.1.bn2.running_var": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.1.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.1.conv3.weight": [
+[
+256,
+64,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer1.1.bn3.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.1.bn3.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.1.bn3.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.1.bn3.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.1.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.2.conv1.weight": [
+[
+64,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer1.2.bn1.weight": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.2.bn1.bias": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.2.bn1.running_mean": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.2.bn1.running_var": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.2.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.2.conv2.weight": [
+[
+64,
+64,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer1.2.bn2.weight": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.2.bn2.bias": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.2.bn2.running_mean": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.2.bn2.running_var": [
+[
+64
+],
+"float32"
+],
+"img_backbone.layer1.2.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer1.2.conv3.weight": [
+[
+256,
+64,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer1.2.bn3.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.2.bn3.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.2.bn3.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.2.bn3.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer1.2.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.0.conv1.weight": [
+[
+128,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer2.0.bn1.weight": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.0.bn1.bias": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.0.bn1.running_mean": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.0.bn1.running_var": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.0.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.0.conv2.weight": [
+[
+128,
+128,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer2.0.bn2.weight": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.0.bn2.bias": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.0.bn2.running_mean": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.0.bn2.running_var": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.0.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.0.conv3.weight": [
+[
+512,
+128,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer2.0.bn3.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.0.bn3.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.0.bn3.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.0.bn3.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.0.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.0.downsample.0.weight": [
+[
+512,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer2.0.downsample.1.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.0.downsample.1.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.0.downsample.1.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.0.downsample.1.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.0.downsample.1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.1.conv1.weight": [
+[
+128,
+512,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer2.1.bn1.weight": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.1.bn1.bias": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.1.bn1.running_mean": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.1.bn1.running_var": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.1.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.1.conv2.weight": [
+[
+128,
+128,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer2.1.bn2.weight": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.1.bn2.bias": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.1.bn2.running_mean": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.1.bn2.running_var": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.1.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.1.conv3.weight": [
+[
+512,
+128,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer2.1.bn3.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.1.bn3.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.1.bn3.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.1.bn3.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.1.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.2.conv1.weight": [
+[
+128,
+512,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer2.2.bn1.weight": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.2.bn1.bias": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.2.bn1.running_mean": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.2.bn1.running_var": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.2.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.2.conv2.weight": [
+[
+128,
+128,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer2.2.bn2.weight": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.2.bn2.bias": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.2.bn2.running_mean": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.2.bn2.running_var": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.2.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.2.conv3.weight": [
+[
+512,
+128,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer2.2.bn3.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.2.bn3.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.2.bn3.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.2.bn3.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.2.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.3.conv1.weight": [
+[
+128,
+512,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer2.3.bn1.weight": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.3.bn1.bias": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.3.bn1.running_mean": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.3.bn1.running_var": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.3.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.3.conv2.weight": [
+[
+128,
+128,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer2.3.bn2.weight": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.3.bn2.bias": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.3.bn2.running_mean": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.3.bn2.running_var": [
+[
+128
+],
+"float32"
+],
+"img_backbone.layer2.3.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer2.3.conv3.weight": [
+[
+512,
+128,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer2.3.bn3.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.3.bn3.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.3.bn3.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.3.bn3.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer2.3.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.0.conv1.weight": [
+[
+256,
+512,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.0.bn1.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.0.bn1.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.0.bn1.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.0.bn1.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.0.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.0.conv2.weight": [
+[
+256,
+256,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer3.0.bn2.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.0.bn2.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.0.bn2.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.0.bn2.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.0.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.0.conv3.weight": [
+[
+1024,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.0.bn3.weight": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.0.bn3.bias": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.0.bn3.running_mean": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.0.bn3.running_var": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.0.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.0.downsample.0.weight": [
+[
+1024,
+512,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.0.downsample.1.weight": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.0.downsample.1.bias": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.0.downsample.1.running_mean": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.0.downsample.1.running_var": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.0.downsample.1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.1.conv1.weight": [
+[
+256,
+1024,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.1.bn1.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.1.bn1.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.1.bn1.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.1.bn1.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.1.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.1.conv2.weight": [
+[
+256,
+256,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer3.1.bn2.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.1.bn2.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.1.bn2.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.1.bn2.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.1.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.1.conv3.weight": [
+[
+1024,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.1.bn3.weight": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.1.bn3.bias": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.1.bn3.running_mean": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.1.bn3.running_var": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.1.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.2.conv1.weight": [
+[
+256,
+1024,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.2.bn1.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.2.bn1.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.2.bn1.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.2.bn1.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.2.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.2.conv2.weight": [
+[
+256,
+256,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer3.2.bn2.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.2.bn2.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.2.bn2.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.2.bn2.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.2.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.2.conv3.weight": [
+[
+1024,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.2.bn3.weight": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.2.bn3.bias": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.2.bn3.running_mean": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.2.bn3.running_var": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.2.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.3.conv1.weight": [
+[
+256,
+1024,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.3.bn1.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.3.bn1.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.3.bn1.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.3.bn1.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.3.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.3.conv2.weight": [
+[
+256,
+256,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer3.3.bn2.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.3.bn2.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.3.bn2.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.3.bn2.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.3.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.3.conv3.weight": [
+[
+1024,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.3.bn3.weight": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.3.bn3.bias": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.3.bn3.running_mean": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.3.bn3.running_var": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.3.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.4.conv1.weight": [
+[
+256,
+1024,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.4.bn1.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.4.bn1.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.4.bn1.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.4.bn1.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.4.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.4.conv2.weight": [
+[
+256,
+256,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer3.4.bn2.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.4.bn2.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.4.bn2.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.4.bn2.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.4.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.4.conv3.weight": [
+[
+1024,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.4.bn3.weight": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.4.bn3.bias": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.4.bn3.running_mean": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.4.bn3.running_var": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.4.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.5.conv1.weight": [
+[
+256,
+1024,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.5.bn1.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.5.bn1.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.5.bn1.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.5.bn1.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.5.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.5.conv2.weight": [
+[
+256,
+256,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer3.5.bn2.weight": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.5.bn2.bias": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.5.bn2.running_mean": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.5.bn2.running_var": [
+[
+256
+],
+"float32"
+],
+"img_backbone.layer3.5.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer3.5.conv3.weight": [
+[
+1024,
+256,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer3.5.bn3.weight": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.5.bn3.bias": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.5.bn3.running_mean": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.5.bn3.running_var": [
+[
+1024
+],
+"float32"
+],
+"img_backbone.layer3.5.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.0.conv1.weight": [
+[
+512,
+1024,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer4.0.bn1.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.0.bn1.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.0.bn1.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.0.bn1.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.0.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.0.conv2.weight": [
+[
+512,
+512,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer4.0.bn2.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.0.bn2.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.0.bn2.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.0.bn2.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.0.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.0.conv3.weight": [
+[
+2048,
+512,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer4.0.bn3.weight": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.0.bn3.bias": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.0.bn3.running_mean": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.0.bn3.running_var": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.0.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.0.downsample.0.weight": [
+[
+2048,
+1024,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer4.0.downsample.1.weight": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.0.downsample.1.bias": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.0.downsample.1.running_mean": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.0.downsample.1.running_var": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.0.downsample.1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.1.conv1.weight": [
+[
+512,
+2048,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer4.1.bn1.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.1.bn1.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.1.bn1.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.1.bn1.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.1.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.1.conv2.weight": [
+[
+512,
+512,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer4.1.bn2.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.1.bn2.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.1.bn2.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.1.bn2.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.1.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.1.conv3.weight": [
+[
+2048,
+512,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer4.1.bn3.weight": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.1.bn3.bias": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.1.bn3.running_mean": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.1.bn3.running_var": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.1.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.2.conv1.weight": [
+[
+512,
+2048,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer4.2.bn1.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.2.bn1.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.2.bn1.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.2.bn1.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.2.bn1.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.2.conv2.weight": [
+[
+512,
+512,
+3,
+3
+],
+"float32"
+],
+"img_backbone.layer4.2.bn2.weight": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.2.bn2.bias": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.2.bn2.running_mean": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.2.bn2.running_var": [
+[
+512
+],
+"float32"
+],
+"img_backbone.layer4.2.bn2.num_batches_tracked": [
+[],
+"int64"
+],
+"img_backbone.layer4.2.conv3.weight": [
+[
+2048,
+512,
+1,
+1
+],
+"float32"
+],
+"img_backbone.layer4.2.bn3.weight": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.2.bn3.bias": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.2.bn3.running_mean": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.2.bn3.running_var": [
+[
+2048
+],
+"float32"
+],
+"img_backbone.layer4.2.bn3.num_batches_tracked": [
+[],
+"int64"
+],
+"img_neck.lateral_convs.0.conv.weight": [
+[
+256,
+2048,
+1,
+1
+],
+"float32"
+],
+"img_neck.lateral_convs.0.conv.bias": [
+[
+256
+],
+"float32"
+],
+"img_neck.fpn_convs.0.conv.weight": [
+[
+256,
+256,
+3,
+3
+],
+"float32"
+],
+"img_neck.fpn_convs.0.conv.bias": [
+[
+256
+],
+"float32"
+]
+}
