@@ -3,7 +3,7 @@
 **A city-scale driving world in pure JAX, calibrated to real crash statistics, with the research stack built on it and an unusually
 honest account of what it can and cannot do.**
 
-[**Website**](https://haggler3.github.io/av_world/) · [**3-D scenes**](https://haggler3.github.io/av_world/scenes.html) · [**Browser viewer**](https://haggler3.github.io/av_world/viewer/index.html) · [What you can test](docs/TESTING.md) · [Docs index](#guides)
+[**Website**](https://haggler3.github.io/av_world/) · [**Start here: notebook**](notebooks/01_start_here.ipynb) · [**Notebooks**](https://haggler3.github.io/av_world/notebooks.html) · [**3-D scenes**](https://haggler3.github.io/av_world/scenes.html) · [**Browser viewer**](https://haggler3.github.io/av_world/viewer/index.html) · [What you can test](docs/TESTING.md) · [Docs index](#guides)
 
 ![learned AVs in Oakland](docs/img/xnet_learned_avs.gif)
 
@@ -44,7 +44,17 @@ python examples/av_share_sweep.py           # how many AVs until crashes halve? 
 python examples/gridlock.py                 # the fundamental diagram of a whole city (~6 min)
 python examples/my_policy.py                # your own driver in 15 lines, scored on AVBench
 ```
-Or read the executed [tour notebook](examples/tour.ipynb). Results and figures: [examples/](examples/README.md).
+Results and figures: [examples/](examples/README.md).
+
+**Notebooks** ([notebooks/](notebooks/README.md), committed executed, a few minutes each on a CPU or in Colab):
+
+| | notebook | what you do | |
+|---|---|---|---|
+| 01 | [Start here](notebooks/01_start_here.ipynb) | a five-minute tour of the whole repository | [Colab](https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/01_start_here.ipynb) |
+| 02 | [The RL environment](notebooks/02_rl_environment.ipynb) | observations, actions, rewards, custom reward weights | [Colab](https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/02_rl_environment.ipynb) |
+| 03 | [Training with PPO](notebooks/03_ppo_training.ipynb) | train, plot the curves, fine-tune with your reward, score on AVBench | [Colab](https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/03_ppo_training.ipynb) |
+| 04 | [Perception export](notebooks/04_perception_export.ipynb) | cameras, 3-D boxes and sensor detections for any scenario | [Colab](https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/04_perception_export.ipynb) |
+| 05 | [AVBench and metrics](notebooks/05_avbench_and_metrics.ipynb) | the leaderboard, the checks, tuning a driver against them | [Colab](https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/05_avbench_and_metrics.ipynb) |
 
 <img src="docs/img/example_av_share.png" width="900" alt="Crashes per 1,000 vehicle-hours against the share of AVs in Oakland: they halve at about 55 % AVs">
 

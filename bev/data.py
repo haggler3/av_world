@@ -93,7 +93,8 @@ def pick_egos(scene, n, stride, min_frames=40):
     return [v for v in scene["vehicles"] if v["id"] in best]
 
 
-def generate(area="new_york", seconds=20.0, warm=200.0, egos=3, stride=2, seed=0, rig=None, knobs=None, out=OUT, scenario=None):
+def generate(area="new_york", seconds=20.0, warm=200.0, egos=3, stride=2, seed=0, rig=None, knobs=None, out=OUT, scenario=None,
+             keep_scene=False):
     """Simulate, render and label. -> path of the .npz (all egos' sequences concatenated, with `seq` marking each one)."""
     from xnet import carla_export as CE
     from xnet import cities
@@ -145,7 +146,9 @@ def generate(area="new_york", seconds=20.0, warm=200.0, egos=3, stride=2, seed=0
     arrays = {k: np.asarray(v) for k, v in acc.items()}
     arrays["pose"] = arrays["pose"].astype(np.float32)
     np.savez_compressed(path, ego2img=E2I, dt=np.float32(scene["dt"] * stride), **arrays)
-    meta = {"area": area, "scenario": scenario, "seed": seed, "samples": len(acc["seq"]), "egos": len(avs), "rig": {"width": rig.width, "height": rig.height,
+    if keep_scene:  # the full trajectories (for the sensor model, CARLA or NVIDIA exports of the same run)
+        json.dump(scene, open(path.replace(".npz", "_scene.json"), "w"), separators=(",", ":"))
+    meta = {"ego_ids": [int(v["id"]) for v in avs], "area": area, "scenario": scenario, "seed": seed, "samples": len(acc["seq"]), "egos": len(avs), "rig": {"width": rig.width, "height": rig.height,
             "cams": rig.cams}, "classes": CLASSES, "bev_range": BEV_RANGE, "render_s": round(t_render, 1),
             "render_s_per_sample": round(t_render / max(len(acc["seq"]), 1), 3), "total_s": round(time.time() - t_start, 1)}
     json.dump(meta, open(path.replace(".npz", ".json"), "w"), indent=1)

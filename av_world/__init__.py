@@ -33,7 +33,7 @@ def make(area="oakland", **kw):
 
 
 def __getattr__(name):  # lazy: importing av_world must not import jax
-    if name in ("rule_policy", "Env"):
+    if name in ("rule_policy", "Env", "load_policy"):
         from . import env
         return getattr(env, name)
     raise AttributeError(name)
