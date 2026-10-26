@@ -38,6 +38,24 @@ harder ([GIFs, the test and why](wmplan/README.md)).
 
 ## Try it in five minutes
 
+**Easy mode** ([docs/EASY.md](docs/EASY.md)): the common jobs in one line each, plus bridges to Gymnasium, PettingZoo,
+Stable-Baselines3, PyTorch, ONNX and pandas.
+
+```python
+from av_world import easy, compat
+run = easy.simulate("oakland", minutes=5, av_share=0.3); run.summary(); run.show()
+
+@easy.driver                                     # your own driver, in metres, seconds and m/s^2
+def two_second_rule(car):
+    jnp = easy.jnp
+    follow = jnp.where(car.has_lead & (car.lead_gap < 2 * car.speed + 4), -2 * car.brake_needed_for_lead - 1, 3.0)
+    stop = jnp.where(car.has_stop & (car.stop_gap < 2 * car.speed + 8), -2 * car.brake_needed_for_stop - 1, 3.0)
+    return jnp.minimum(jnp.minimum(follow, stop), jnp.where(car.speed < car.desired_speed, 1.2, -0.5))
+
+easy.compare({"mine": two_second_rule, "IDM": easy.drivers.idm()})   # scored on AVBench next to the leaderboard
+policy = easy.train(updates=25)                  # PPO;  env = compat.GymEnv("oakland") for SB3 / CleanRL
+```
+
 ```bash
 av-world watch oakland                      # the city driving live in your terminal
 python examples/av_share_sweep.py           # how many AVs until crashes halve? (~7 min)
@@ -55,6 +73,7 @@ Results and figures: [examples/](examples/README.md).
 | 03 | [Training with PPO](notebooks/03_ppo_training.ipynb) | train, plot the curves, fine-tune with your reward, score on AVBench | [Colab](https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/03_ppo_training.ipynb) |
 | 04 | [Perception export](notebooks/04_perception_export.ipynb) | cameras, 3-D boxes and sensor detections for any scenario | [Colab](https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/04_perception_export.ipynb) |
 | 05 | [AVBench and metrics](notebooks/05_avbench_and_metrics.ipynb) | the leaderboard, the checks, tuning a driver against them | [Colab](https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/05_avbench_and_metrics.ipynb) |
+| 06 | [Easy mode](notebooks/06_easy_mode.ipynb) | `av_world.easy` and `compat`: simulate, drivers, compare, train, Gymnasium + SB3, PyTorch, ONNX | [Colab](https://colab.research.google.com/github/haggler3/av_world/blob/main/notebooks/06_easy_mode.ipynb) |
 
 <img src="docs/img/example_av_share.png" width="900" alt="Crashes per 1,000 vehicle-hours against the share of AVs in Oakland: they halve at about 55 % AVs">
 
@@ -92,6 +111,11 @@ print(env.metrics(state)["av_crash"])
 
 ## What we found, including what did not work
 
+**Eleven plausible claims, tested to fail** ([docs/HYPOTHESES.md](docs/HYPOTHESES.md)): 30x the human mistakes gives only 1.6x the crashes
+(elasticity 0.16), denser traffic is *less* dangerous per vehicle-hour but not per km, one RL training run does not reproduce
+(per-scenario SD 36 points), and how often the safety filter steps in predicts unaided risk (rho = 0.86). Each claim is ranked by
+impact over the effort of a follow-up.
+
 | question | answer | where |
 |---|---|---|
 | Can a policy drive with no safety filter if the barrier function teaches it? | Yes, mostly: unaided AV crashes fell 15-23x (0.64 to 0.03-0.04 per AV-hour). On AVBench's fixed bars (18 scenarios, 7 of them long-tail incidents) the best passes 123 of 144 checks against the rule-based AV's 104, but the rule-based AV keeps the best core score (77.2 vs 56.8): unaided, the learned policies still crash 1.3-1.6x as often. | [Metrics](docs/METRICS.md#results), [Experiments](docs/EXPERIMENTS.md#training-the-driver-to-need-no-filter-avrlunaidedpy) |
@@ -109,6 +133,8 @@ print(env.metrics(state)["av_crash"])
 
 | | |
 |---|---|
+| [docs/EASY.md](docs/EASY.md) | easy mode for beginners (`av_world.easy`) and compatibility with Gymnasium, PettingZoo, SB3, PyTorch, ONNX, pandas, CARLA, OpenUSD |
+| [docs/HYPOTHESES.md](docs/HYPOTHESES.md) | eleven plausible claims about driving and AV research, each tested to fail, with the statistics and an impact-per-effort ranking |
 | [docs/BEV.md](docs/BEV.md) | camera BEV perception: a CPU-sized BEVFormer on rendered av_world cities, traced front to back |
 | [docs/TESTING.md](docs/TESTING.md) | What AV behaviour you can test, the knobs, metrics and suites, how to plug in your stack, and the limits |
 | [docs/METRICS.md](docs/METRICS.md) | AVBench: fixed bars the rule-based AV can fail, the scorecard and av_world score, results on 18 scenarios ([leaderboard](results/bench/leaderboard.md)) |

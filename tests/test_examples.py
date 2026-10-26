@@ -46,3 +46,16 @@ def test_watch_renders_frames():
     img, status = v.frame(1.0)
     assert img.shape == (24, 40, 3) and "vehicles" in status
     assert len(W.to_ansi(img).split("\n")) == 12
+
+
+def test_hypothesis_statistics_recover_known_answers():
+    from examples import hypotheses as H
+    rng = np.random.default_rng(1)
+    x = np.repeat(np.log([1.0, 2.0, 4.0, 8.0]), 200)
+    t = np.full(len(x), 50.0)
+    y = rng.poisson(t * 0.02 * np.exp(0.5 * x))  # elasticity 0.5
+    b, cov, _, phi = H.poisson_glm(y, np.c_[np.ones(len(x)), x], np.log(t))
+    assert abs(b[1] - 0.5) < 3 * np.sqrt(cov[1, 1]) and 0.7 < phi < 1.3
+    rr, (lo, hi), p = H.rate_ratio(40, 1000.0, 20, 1000.0)
+    assert np.isclose(rr, 2.0) and lo < 2.0 < hi and p < 0.05
+    assert list(H.holm([0.01, 0.04, 0.03])) == [0.03, 0.06, 0.06]
