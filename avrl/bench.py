@@ -182,14 +182,21 @@ def runner(area, beh, chunks=1, planner=None):
 
 
 def evaluate(policy, scenarios=("nominal",)):
-    """The scorecard of one policy (a checkpoint path, PPO parameters, or None for the rule-based AV) on bench scenarios, from the
-    same warm states and random numbers as the leaderboard: {"av_score": mean, "scenarios": {name: scorecard}}. An objective for
-    model selection or a hyperparameter search (~1 min per scenario)."""
+    """The scorecard of one policy on bench scenarios, from the same warm states and random numbers as the leaderboard:
+    {"av_score": mean, "scenarios": {name: scorecard}}. `policy`: a checkpoint path, PPO parameters, None for the rule-based AV, or
+    any function f(obs [N, 28], key) -> (u [N, 2], aux) (see av_world.sil.OBS_NAMES). An objective for model selection or a
+    hyperparameter search (~1 min per scenario)."""
     from . import scorecard as SC
-    params = P.load(policy) if isinstance(policy, str) else policy
+    fn = policy if callable(policy) else None
+    params = None if fn else (P.load(policy) if isinstance(policy, str) else policy)
     out = {}
     for n in scenarios:
         area, over = SCENARIOS[n]
+        if fn is not None:  # a plain function: run it through the planner hook (obs, key, mask)
+            r = runner(area, behaviour(over), planner=lambda o, k, m: fn(o, k))
+            raw = r["raw"](None)
+            out[n] = SC.scorecard(raw, r["shielded"](None))
+            continue
         r = runner(area, behaviour(over))
         raw = r["raw"](params)
         out[n] = SC.scorecard(raw, r["shielded"](params) if params is not None else raw)

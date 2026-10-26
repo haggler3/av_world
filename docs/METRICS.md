@@ -151,3 +151,7 @@ inattentive), unaided and with the envelope:
   and under 2 on an L4, v2 about 3 on an L4.
 * **One training run per policy.** The GPU retrains show the spread of one recipe is about as large as most gaps between
   policies; ranking them properly needs several seeds each.
+* **The city is still filling while AVBench measures.** With fixed routes (as AVBench runs, for paired comparisons) Oakland at
+  calibrated demand accumulates vehicles: ~280 after 3 minutes, ~1,000 after 30, speed 22 -> 6 km/h. AVBench's window (minutes
+  5-8) is in the flowing part; long fixed-route runs are not. With the simulator's re-routing the city settles at ~830 vehicles and
+  ~10 km/h (found while building `examples/av_share_sweep.py`).
