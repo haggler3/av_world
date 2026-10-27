@@ -3,6 +3,7 @@
   av-world info                              versions, devices, areas
   av-world watch [oakland] [--follow]        the city driving live in the terminal (truecolor), or --gif out.gif
   av-world export-perception OUT [--scenario bus_dartout --area chicago]   camera images + 3-D labels + sensor detections
+  av-world blackbox [--area oakland --scenario bus_dartout --av]   find a crash, write the incident report and a zoomed GIF
   av-world bench [--area oakland]            simulated seconds per wall-clock second on this machine
   av-world import-osm map.osm city.npz       OpenStreetMap extract -> road network (then av_world.make("city.npz"))
   av-world export-carla OUT [--area oakland] [--seconds 60] [--osm map.osm]    OpenDRIVE map + trajectories + replay script for CARLA
@@ -31,6 +32,9 @@ def main(argv=None):
     if cmd == "export-perception":
         from bev import export
         return export.main(rest)
+    if cmd == "blackbox":
+        from avlab import blackbox
+        return blackbox.main(rest)
     if cmd == "watch":
         from av_world import watch
         return watch.main(rest)

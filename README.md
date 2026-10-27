@@ -58,6 +58,7 @@ policy = easy.train(updates=25)                  # PPO;  env = compat.GymEnv("oa
 
 ```bash
 av-world watch oakland                      # the city driving live in your terminal
+av-world blackbox --area oakland            # find a crash, write the incident report and a zoomed GIF
 python examples/av_share_sweep.py           # how many AVs until crashes halve? (~7 min)
 python examples/gridlock.py                 # the fundamental diagram of a whole city (~6 min)
 python examples/my_policy.py                # your own driver in 15 lines, scored on AVBench
@@ -134,6 +135,7 @@ impact over the effort of a follow-up.
 | | |
 |---|---|
 | [docs/EASY.md](docs/EASY.md) | easy mode for beginners (`av_world.easy`) and compatibility with Gymnasium, PettingZoo, SB3, PyTorch, ONNX, pandas, CARLA, OpenUSD |
+| [docs/IDEAS.md](docs/IDEAS.md) | five tools with pseudocode: crash attribution (Shapley), a black box that writes incident reports, an AV Turing test, empirical-Bayes hotspots, a green-wave signal optimiser |
 | [docs/HYPOTHESES.md](docs/HYPOTHESES.md) | eleven plausible claims about driving and AV research, each tested to fail, with the statistics and an impact-per-effort ranking |
 | [docs/BEV.md](docs/BEV.md) | camera BEV perception: a CPU-sized BEVFormer on rendered av_world cities, traced front to back |
 | [docs/TESTING.md](docs/TESTING.md) | What AV behaviour you can test, the knobs, metrics and suites, how to plug in your stack, and the limits |
