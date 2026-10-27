@@ -14,6 +14,14 @@
     -86.2
    ],
    "light_on_approach": "green",
+   "came_through": {
+    "junction": 140,
+    "turn": "left",
+    "light_at_entry": "no signal",
+    "s_before_impact": 3.0,
+    "ran_red_there": false
+   },
+   "node": 131,
    "speed_at_impact_kmh": 41.5,
    "speed_3s_before_kmh": 45.6,
    "peak_braking_mps2": -9.0,
@@ -29,6 +37,14 @@
     -90.2
    ],
    "light_on_approach": "green",
+   "came_through": {
+    "junction": 140,
+    "turn": "right",
+    "light_at_entry": "no signal",
+    "s_before_impact": 8.6,
+    "ran_red_there": false
+   },
+   "node": 131,
    "speed_at_impact_kmh": 15.0,
    "speed_3s_before_kmh": 20.0,
    "peak_braking_mps2": -1.7,
@@ -47,5 +63,5 @@
  "scenario": null,
  "copy": 0,
  "seed": 0,
- "search_s": 32.8
+ "search_s": 34.8
 }

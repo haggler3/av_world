@@ -1,0 +1,46 @@
+{
+ "t_s": 105.0,
+ "frame": 74,
+ "types": [
+  "pedestrian"
+ ],
+ "vehicles": [
+  {
+   "slot": 40,
+   "kind": "car",
+   "where": "on link 127 (14 m long, 14 m along)",
+   "xy": [
+    -326.2,
+    -773.8
+   ],
+   "light_on_approach": "green",
+   "came_through": {
+    "junction": 97,
+    "light_at_entry": "no signal",
+    "s_before_impact": 3.2,
+    "ran_red_there": false
+   },
+   "node": 94,
+   "speed_at_impact_kmh": 41.1,
+   "speed_3s_before_kmh": 45.4,
+   "peak_braking_mps2": -9.0,
+   "braked_hard_s_before_impact": 1.0,
+   "contributing": [
+    "aggressive driver (accepts short gaps)",
+    "struck a pedestrian who started crossing without the WALK signal"
+   ]
+  }
+ ],
+ "closing_speed_kmh": null,
+ "pedestrians_crossing_nearby_city_wide": 432,
+ "centre_xy": [
+  -326.2,
+  -773.8
+ ],
+ "summary": "Pedestrian crash: a car (41 km/h). Contributing: aggressive driver (accepts short gaps); struck a pedestrian who started crossing without the WALK signal.",
+ "area": "chicago",
+ "scenario": "jaywalker_misclassified",
+ "copy": 7,
+ "seed": 0,
+ "search_s": 20.3
+}

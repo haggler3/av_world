@@ -1,0 +1,95 @@
+{
+ "no smoothness reward": {
+  "reward": {
+   "jerk": 0.0,
+   "comfort": 0.0
+  },
+  "auc": 0.9152110361529148,
+  "ci": [
+   0.9021158539607561,
+   0.9279445859803184
+  ],
+  "coef": {
+   "mean speed": -1.15,
+   "speed SD": -0.48,
+   "accel SD": -1.784,
+   "accel p5": -1.846,
+   "accel p95": 1.291,
+   "RMS jerk": -1.426,
+   "share stopped": -1.624,
+   "share braking > 2 m/s2": 1.185
+  },
+  "av_mean": {
+   "mean speed": 5.473,
+   "speed SD": 3.991,
+   "accel SD": 1.051,
+   "accel p5": -1.905,
+   "accel p95": 1.689,
+   "RMS jerk": 2.069,
+   "share stopped": 0.226,
+   "share braking > 2 m/s2": 0.059
+  },
+  "human_mean": {
+   "mean speed": 5.555,
+   "speed SD": 4.37,
+   "accel SD": 0.983,
+   "accel p5": -1.504,
+   "accel p95": 1.561,
+   "RMS jerk": 2.842,
+   "share stopped": 0.254,
+   "share braking > 2 m/s2": 0.016
+  },
+  "av_score": 15.871942981478938,
+  "crash_per_h_unaided": 0.3163676135001128,
+  "comfort": 0.9811626785905005,
+  "progress": 1.084299129563606,
+  "policy": "results/turing/humanize_0/policy.npz"
+ },
+ "no smoothness reward, 3x hard-brake penalty": {
+  "reward": {
+   "jerk": 0.0,
+   "comfort": 0.0,
+   "hard": 0.6
+  },
+  "auc": 0.9081602622672567,
+  "ci": [
+   0.8952388655007221,
+   0.9200116492797591
+  ],
+  "coef": {
+   "mean speed": -1.836,
+   "speed SD": -0.524,
+   "accel SD": -1.704,
+   "accel p5": -1.277,
+   "accel p95": 0.992,
+   "RMS jerk": -1.171,
+   "share stopped": -2.258,
+   "share braking > 2 m/s2": 1.919
+  },
+  "av_mean": {
+   "mean speed": 5.084,
+   "speed SD": 3.792,
+   "accel SD": 0.984,
+   "accel p5": -1.789,
+   "accel p95": 1.557,
+   "RMS jerk": 2.045,
+   "share stopped": 0.225,
+   "share braking > 2 m/s2": 0.054
+  },
+  "human_mean": {
+   "mean speed": 5.479,
+   "speed SD": 4.356,
+   "accel SD": 0.972,
+   "accel p5": -1.486,
+   "accel p95": 1.556,
+   "RMS jerk": 2.8,
+   "share stopped": 0.257,
+   "share braking > 2 m/s2": 0.016
+  },
+  "av_score": 53.23330752801806,
+  "crash_per_h_unaided": 0.07188214370320267,
+  "comfort": 0.9854840706829228,
+  "progress": 1.0290839173285427,
+  "policy": "results/turing/humanize_1/policy.npz"
+ }
+}

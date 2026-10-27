@@ -151,50 +151,56 @@
    "id": "H3",
    "claim": "Wet roads (friction 0.6) raise the crash rate by at least 50 %",
    "prediction": "rate ratio wet/dry >= 1.5",
-   "test": "exact conditional rate ratio; one-sided test of RR >= 1.5",
-   "effect": "RR = 1.44 [0.87, 2.42]; icy (0.3): 24.56 [16.85, 37.24]",
-   "estimate": 1.438370976361908,
+   "test": "192 + 192 copies; exact conditional rate ratio; one-sided test of RR >= 1.5",
+   "effect": "RR = 1.88 [1.47, 2.42]; icy (0.3): 26.83 [21.77, 33.36]",
+   "estimate": 1.8807017866192624,
    "ci": [
-    0.8655568706945701,
-    2.420921750251447
+    1.471617078865682,
+    2.415323045016392
    ],
-   "p": 0.4781966141217463,
+   "p": 0.9726815222282564,
    "refutes_if": "RR < 1.5 at the corrected level",
-   "mde": 1.9943497965242718,
+   "mde": 1.409539171055277,
    "icy": [
-    24.562071712343542,
+    26.834764610562,
     [
-     16.845196568999693,
-     37.23624981814082
+     21.774137671420927,
+     33.36394412530319
     ],
-    7.951644848499024e-167
+    0.0
    ],
-   "impact_pct": 43.83709763619079,
+   "impact_pct": 88.07017866192624,
    "p_holm": 1.0,
    "verdict": "UNDECIDED",
-   "magnitude": 0.8767419527238158,
+   "magnitude": 1.0,
    "evidence": 0.5,
    "reach": 0.6,
-   "impact_score_pct": 26.302258581714472,
+   "impact_score_pct": 30.0,
    "effort_days": 2,
-   "impact_per_day": 13.151129290857236,
+   "impact_per_day": 15.0,
    "follow_up": "a friction dose-response (1.0 .. 0.3) with 4x the copies: where does the cliff between wet and icy start?"
   },
   {
    "id": "H4",
    "claim": "Crashes fall in a straight line as the AV share grows",
    "prediction": "no curvature: the quadratic term adds nothing (log-linear model fits)",
-   "test": "LRT of a quadratic term in a Poisson regression on 0-100 % AVs",
-   "effect": "LRT chi2 = 0.89; 100 % vs 0 % AVs RR = 0.46 [0.21, 0.95]",
-   "estimate": 0.894648469915172,
+   "test": "LRT of a quadratic term in a Poisson regression on 9 AV shares, 0-100 %",
+   "effect": "LRT chi2 = 0.19; 100 % vs 0 % AVs RR = 0.35 [0.14, 0.77]",
+   "estimate": 0.19272169283175272,
    "ci": [
-    0.21256655397290483,
-    0.9493449477233258
+    0.14346259605891393,
+    0.7662707674225654
    ],
-   "p": 0.3442207176543235,
+   "p": 0.6606609645544737,
    "refutes_if": "the quadratic term is significant",
-   "rr_full": 0.4624262853131997,
-   "impact_pct": 53.75737146868003,
+   "rr_full": 0.3479581754888868,
+   "impact_pct": 65.20418245111132,
+   "curvature": 0.482690391894562,
+   "curvature_ci": [
+    -1.663987909552831,
+    2.629368693341955
+   ],
+   "shares": 9,
    "p_holm": 1.0,
    "verdict": "UNDECIDED",
    "magnitude": 1.0,
@@ -351,25 +357,25 @@
    "id": "H11",
    "claim": "Fog hurts the detection of pedestrians and cyclists more than of vehicles",
    "prediction": "relative drop in detection rate (fog 0.7 vs clear) larger for VRUs",
-   "test": "sensor model on 12 AVs' trips, cluster bootstrap over AVs",
-   "effect": "relative drop VRU 38% vs vehicles 35%; difference +3% [-3%, +8%] (2858 VRU object-frames)",
-   "estimate": 0.028248538900618847,
+   "test": "sensor model on 60 AVs' trips, cluster bootstrap over AVs",
+   "effect": "relative drop VRU 35% vs vehicles 37%; difference -2% [-4%, +1%] (17190 VRU object-frames)",
+   "estimate": -0.01741826516290157,
    "ci": [
-    -0.026600034132061023,
-    0.07794564052680494
+    -0.0426703867283398,
+    0.007580455078028927
    ],
-   "p": 0.329,
-   "impact_pct": 2.8248538900618847,
-   "p_holm": 1.0,
+   "p": 0.18,
+   "impact_pct": 1.741826516290157,
+   "p_holm": 0.8999999999999999,
    "verdict": "UNDECIDED",
-   "magnitude": 0.056497077801237694,
+   "magnitude": 0.03483653032580314,
    "evidence": 0.5,
    "reach": 0.5,
-   "impact_score_pct": 1.4124269450309423,
+   "impact_score_pct": 0.8709132581450785,
    "effort_days": 2,
-   "impact_per_day": 0.7062134725154712,
+   "impact_per_day": 0.43545662907253924,
    "follow_up": "per-class sensor curves under fog, rain and night, with 10x the egos to resolve a few-point difference"
   }
  ],
- "wall_s": 41.89945363998413
+ "wall_s": 4.590302228927612
 }

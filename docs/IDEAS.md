@@ -16,6 +16,9 @@ including where it did not come out the way I expected.
 
 ## 1. Crash attribution: which human mistakes make the crashes?
 
+> **Fix round** ([FIXES.md](FIXES.md#6-is-distractions-negative-shapley-value-real-or-an-exposure-effect)): the negative value for distraction below was a fluke. Its ~80 episodes took part in 3 crashes, not the 59 the value implies, and with robust (overdispersion-aware) errors and a Holm correction it is not significant. Only pedestrians crossing against the light survive.
+
+
 The hypotheses page found that 30x the human mistakes gives only 1.6x the crashes (H1). This asks the follow-up: of the crash rate,
 how much does each mistake mechanism cause, and how much is left when every one of them is switched off?
 
@@ -59,6 +62,9 @@ have caused.
 
 ## 2. Black box: the incident report, written automatically
 
+> **Fix round:** a car that just crossed a junction now shows the light it came through (and its turn), not the light at the far end of its link; pedestrian crashes say whether WALK was shown when the pedestrian started.
+
+
 ```
 run 8 copies in 20 s chunks; after each chunk compare the crash counters with the snapshot before it
 on the first copy that crashed: rewind to the snapshot, replay that chunk + 8 s one step at a time, recording every state
@@ -90,6 +96,9 @@ Oakland with the `red_light_runner` scenario, seed 2 (`results/blackbox/`, with 
 
 ## 3. The AV Turing test
 
+> **Fix round** ([FIXES.md](FIXES.md#9-driving-like-people-the-av-turing-test-attempted-twice)): re-weighting the reward made the PPO policy *more* recognisable; an adversarial human-likeness reward (`python -m avlab.humanlike`) brought its AUC to 0.875 against 0.911 for a no-bonus control and, unexpectedly, made it much safer (nominal 97.4 vs 17.2; fewer unaided crashes in 10 of 11 scenarios).
+
+
 People predict each other. An AV that is safe but moves unlike anyone else is a surprise to the drivers around it, and AV fleets
 report being rear-ended for exactly that. This measures how recognisable a driver is from its motion alone.
 
@@ -114,6 +123,9 @@ The learned policy is safe on the benchmark and yet trivially recognisable: smoo
 target (an imitation term on these eight statistics), and a metric the leaderboard does not have yet.
 
 ## 4. Hotspots: rank the dangerous junctions, and test the ranking
+
+> **Fix round** ([FIXES.md](FIXES.md#8-hotspots-a-calibrated-empirical-bayes)): with conflict-point covariates, a ridge fit and maximum-likelihood dispersion, judged on 200 paired splits, empirical Bayes is calibrated (prediction bias +2.3 ± 2.9 % against +19.7 % for raw counts) but still does not pick a better top 10 than the counts. The numbers below are the first version's.
+
 
 ```
 site(track) = the junction a track is in, or the junction at the end of the link it is on
@@ -148,6 +160,9 @@ more than it saves. In real crash data, with more random noise per site, the bal
 reports both, so the choice is visible.
 
 ## 5. Green wave: retime every light in the city
+
+> **Fix round** ([FIXES.md](FIXES.md#7-a-green-wave-that-cannot-buy-speed-with-clearance)): with 64 validation copies the crash increase below disappears (29 → 28, ×0.98) and the speed gain holds (+3.1 %, 56 of 64 copies). An offsets-only search (no green changes length) gives +1.1 % with crashes 29 → 24.
+
 
 ```
 parameters  = for each of Oakland's 34 signals: offset in [0, 70) s and split (first axis green) in [15, 50] s     -> 68 numbers

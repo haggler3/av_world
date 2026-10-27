@@ -1,5 +1,7 @@
 # Eleven claims, tested to fail
 
+*Updated in the fix round ([FIXES.md](FIXES.md)): H3 with 4x the data, H4 with 9 AV shares, H11 with 5x the egos.*
+
 Plausible claims about driving, AVs and AV research, each written down *before* its test with a prediction that could fail, then
 tested on av_world's data. Four were refuted, three survived and four are undecided. The findings are about **this simulator** and
 its calibrated drivers. Where a result says something about the real world, that is a hypothesis for real data, not a conclusion.
@@ -17,15 +19,15 @@ python examples/hypotheses.py        # every test below (~45 s) -> results/examp
 |---|---|---|---|---|---|
 | H1 | Crash rate is proportional to how often humans make mistakes | elasticity $b = 1$ in $\log\lambda = a + b\log r$ | mistake rates (red-light running, not looking, distraction) x1, 3, 10, 30; 192 copies, 14,976 vehicle-hours; Poisson regression, Wald test of $b=1$ | $b = 0.16\ [0.01, 0.30]$: **30x the mistakes, 1.6x the crashes** | **refuted** ($p_{Holm} < 10^{-28}$) |
 | H2 | Denser traffic is more dangerous per vehicle-hour | $b > 0$ in $\log\lambda = a + b \log(\text{demand})$ | demand x0.5-2; 192 copies, 18,960 vehicle-hours; one-sided Wald | $b = -0.39\ [-0.79, 0.01]$ per vehicle-hour; per vehicle-km $b = 0.07\ [-0.34, 0.47]$ | **refuted**: per hour the rate *falls* (7.7 to 4.7 per 1,000 h) as speed falls (19.6 to 10.6 km/h) |
-| H3 | Wet roads (friction 0.6) raise the crash rate by at least 50 % | rate ratio $\ge 1.5$ | 48 + 48 copies; exact conditional rate ratio; minimum detectable ratio at 80 % power 1.99 | $RR = 1.44\ [0.87, 2.42]$; icy (0.3): $24.6\ [16.8, 37.2]$ | undecided: underpowered for a 1.5x effect, while icy roads are a cliff |
-| H4 | Crashes fall in a straight line as the AV share grows | no curvature: a quadratic term adds nothing | AV-share sweep (0-100 %, 80 copies each, 11,934 vehicle-hours); LRT | $\chi^2_1 = 0.89$; 100 % vs 0 % AVs $RR = 0.46\ [0.21, 0.95]$ | undecided: 5 points can reject a shape but not confirm one |
+| H3 | Wet roads (friction 0.6) raise the crash rate by at least 50 % | rate ratio $\ge 1.5$ | 192 + 192 copies (4x the first run, which could only detect 2x); exact conditional rate ratio | $RR = 1.88\ [1.47, 2.42]$; icy (0.3): $26.8\ [21.8, 33.4]$ | undecided by the pre-set rule (the interval's lower end, 1.47, sits just under 1.5), but the data favour it: wet roads ~1.9x |
+| H4 | Crashes fall in a straight line as the AV share grows | no curvature; *survives* if the quadratic coefficient's interval lies in (−1, 1) (rule set before the 9-share data) | 9 shares x 80 copies (21,500 vehicle-hours); LRT with dispersion | $\chi^2_1 = 0.19$, curvature $0.48\ [-1.66, 2.63]$; 100 % vs 0 % $RR = 0.35\ [0.14, 0.77]$ | undecided: no bend detected, but a bend of the size that matters cannot be excluded without ~18x the data |
 | H5 | Doing well on everyday traffic and on long-tail incidents is the same skill | Spearman $\rho \ge 0.8$, core vs long-tail score | 15 drivers x 18 AVBench scenarios; permutation p, bootstrap CI | $\rho = 0.96\ [0.82, 1.00]$ | **survives** |
 | H6 | A driver that passes more safety checks gets a higher overall score | $\rho > 0$ *and* the top scorer passes the most checks | 15 drivers | $\rho = 0.82\ [0.45, 0.96]$, but the top scorer (rule-based, 77.2) passes 104 checks against the best 123 | **refuted** by a counterexample: the score rewards comfort and progress that the checks do not |
 | H7 | Retraining the same RL recipe reproduces its score within 5 points | most scenario scores within ±5 points | 3 recipes trained twice (CPU, GPU) x 18 scenarios; paired differences | mean $-3.4\ [-13.1, 6.2]$, but per-scenario SD 36 points and only 41 % within ±5 | **refuted**: one training run is not a result |
 | H8 | Policies trained in Oakland transfer to other neighbourhoods unchanged | score(Squirrel Hill, Downtown) − score(Oakland) = 0 | 15 drivers; Wilcoxon signed-rank, bootstrap CI | $-18.8\ [-33.6, -5.4]$ points | undecided after the Holm correction ($p = 0.0125$, $p_{Holm} = 0.075$); the interval excludes 0 |
 | H9 | Faster AVs crash more (a speed-safety trade-off) | $\rho > 0$, progress vs unaided crash rate | 165 driver-scenario pairs | $\rho = 0.38\ [0.23, 0.50]$ | **survives** |
 | H10 | How often the safety filter steps in predicts how unsafe the policy is without it | $\rho > 0.5$, filter share vs unaided crash rate | 165 driver-scenario pairs | $\rho = 0.86\ [0.81, 0.90]$ | **survives** |
-| H11 | Fog hurts the detection of pedestrians and cyclists more than of vehicles | larger relative drop in detection rate for VRUs | sensor model on 12 AVs' trips (2,858 VRU object-frames), fog 0.7 vs clear; cluster bootstrap over AVs | VRU −38 % vs vehicles −35 %: $+3\ [-3, +8]$ points | undecided: at most an 8-point difference |
+| H11 | Fog hurts the detection of pedestrians and cyclists more than of vehicles | larger relative drop in detection rate for VRUs | sensor model on 60 AVs' trips in 5 runs (17,190 VRU object-frames, 5x the first run); cluster bootstrap over AVs | VRU −35 % vs vehicles −37 %: $-2\ [-4, +1]$ points | undecided by the rule, and no support: fog hurts both about equally (any VRU excess is under 1 point) |
 
 ## The math
 
@@ -46,7 +48,7 @@ without its exposure is not a result.
 **Two rates (H3).** Conditional on $n = k_1 + k_2$, $k_1 \sim \text{Binomial}(n, \frac{t_1 RR}{t_1 RR + t_2})$, so a Clopper-Pearson interval
 for the binomial share maps to an exact interval for $RR$. The one-sided test of $RR \ge 1.5$ uses the same binomial. The minimum
 detectable ratio at 80 % power is $\exp\left((z_{.975} + z_{.80})\sqrt{1/k_1 + 1/k_2}\right) = 1.99$ with 40 and 28 crashes. That is
-why a true 1.44x effect cannot be confirmed here: it needs about 4x the copies.
+why a true 1.44x effect cannot be confirmed here: it needs about 4x the copies. The fix round ran 4x the copies: $RR = 1.88\ [1.47, 2.42]$.
 
 **Shape (H4).** This is a likelihood-ratio test of $\log\lambda = a + b s$ against $a + b s + c s^2$: $D_0 - D_1 \sim \chi^2_1$.
 
@@ -77,14 +79,14 @@ $$\text{Impact \%} = 100 \times M \times E \times R, \qquad \text{priority} = \f
 | 1 | H1 mistakes vs crashes | refuted | 1.00 | 1 | 1.0 | **100** | 3 | **33** | attribute crashes to mechanisms (Shapley values over the Behaviour knobs): which mistakes actually make crashes? |
 | 2 | H10 filter use predicts unaided risk | survives | 1.00 | 1 | 0.9 | 90 | 3 | **30** | filter dependence as a deployment metric: when does a filtered policy's record overstate its own safety? |
 | 3 | H5 everyday = long-tail skill | survives | 1.00 | 1 | 0.8 | 80 | 3 | 27 | a 3-scenario core subset that predicts the 18-scenario score: a cheaper benchmark |
-| 4 | H4 AV-share curve shape | undecided | 1.00 | 0.5 | 0.9 | 45 | 2 | 23 | 9 shares x 3x the copies: is there a threshold, or diminishing returns? |
+| 4 | H4 AV-share curve shape | undecided | 1.00 | 0.5 | 0.9 | 45 | 2 | 23 | done with 9 shares (still undecided); next: ~18x the copies, a GPU job |
 | 5 | H7 RL reproducibility | refuted | 1.00 | 1 | 1.0 | **100** | 5 | 20 | 10 seeds per recipe on a GPU, with confidence intervals on every leaderboard row |
 | 6 | H2 density and exposure | refuted | 0.48 | 1 | 0.8 | 38 | 2 | 19 | report every crash rate per hour, per km and per junction entry, and show where they disagree |
 | 7 | H9 speed-safety trade-off | survives | 0.75 | 1 | 0.7 | 53 | 3 | 18 | a policy family indexed by one speed knob: the frontier's slope and its kinks |
-| 8 | H3 wet roads | undecided | 0.88 | 0.5 | 0.6 | 26 | 2 | 13 | a friction dose-response (1.0 to 0.3) with 4x the copies: where does the cliff start? |
+| 8 | H3 wet roads | undecided | 1.00 | 0.5 | 0.6 | 30 | 2 | 15 | 4x copies done (RR 1.88); next: a friction dose-response (1.0 to 0.3): where does the cliff start? |
 | 9 | H6 checks vs score | refuted | 0.31 | 1 | 0.7 | 22 | 2 | 11 | a Pareto view of score against checks: what the rule-based AV does that learned policies do not |
 | 10 | H8 transfer across neighbourhoods | undecided | 0.38 | 0.5 | 0.9 | 17 | 4 | 4 | train on a mix of three neighbourhoods: does the gap close, and at what cost at home? |
-| 11 | H11 fog and pedestrians | undecided | 0.06 | 0.5 | 0.5 | 1 | 2 | 0.7 | per-class sensor curves under fog, rain and night with 10x the egos |
+| 11 | H11 fog and pedestrians | undecided | 0.04 | 0.5 | 0.5 | 1 | 2 | 0.4 | 5x egos done: no class difference; drop it |
 
 **What to do first:** H1 and H10. Both are decided, both bear on every safety number in the repository, and both take about three
 days. H7 has the same impact but costs more. Its message is already actionable: every leaderboard row should carry a seed interval.

@@ -192,12 +192,40 @@ def main(quick=False):
     return res
 
 
+def humanize(variants=None, updates=40, out="results/turing"):
+    """The fix the test suggests: the bundled policy is recognisable because it is too smooth (low jerk) yet brakes moderately hard
+    often. Fine-tune it with reward weights that stop rewarding smoothness (jerk, comfort -> 0), optionally penalising hard braking
+    more, then re-run the Turing test and AVBench's nominal scenario on each. -> {variant: {auc, ci, av_score, crash unaided}}."""
+    from av_world import data_path
+    from avrl import bench
+    from avrl import xppo as P
+    variants = variants or {"no smoothness reward": {"jerk": 0.0, "comfort": 0.0},
+                            "no smoothness reward, 3x hard-brake penalty": {"jerk": 0.0, "comfort": 0.0, "hard": 0.6}}
+    res = {}
+    for name, rw in variants.items():
+        path = f"{out}/humanize_{len(res)}"
+        P.train(out=path, updates=updates, init=data_path("policy.npz"), reward=rw, n_envs=8, warm=60.0)
+        F, y, g = trips(record(policy=P.deterministic(P.load(f"{path}/policy.npz"))))
+        t = test(F, y, g)
+        sc = bench.evaluate(f"{path}/policy.npz", ["nominal"])["scenarios"]["nominal"]
+        res[name] = {"reward": rw, "auc": t["auc"], "ci": t["ci"], "coef": t["coef"], "av_mean": t["av_mean"], "human_mean": t["human_mean"],
+                     "av_score": sc["av_score"], "crash_per_h_unaided": sc["metrics"]["crash_per_h_unaided"], "comfort": sc["metrics"]["comfort_pass"],
+                     "progress": sc["metrics"]["progress"], "policy": f"{path}/policy.npz"}
+        print(f"{name}: AUC {t['auc']:.3f} [{t['ci'][0]:.3f}, {t['ci'][1]:.3f}], av_world score {sc['av_score']:.1f}, "
+              f"unaided crashes/AV-h {sc['metrics']['crash_per_h_unaided']:.3f}", flush=True)
+        json.dump(res, open(f"{out}/humanize.json", "w"), indent=1)
+    return res
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
+    ap.add_argument("--humanize", action="store_true", help="fine-tune the bundled policy toward human-like motion and re-test it")
     ap.add_argument("--replot", action="store_true", help="redraw the figure from results/turing/turing.json")
     a = ap.parse_args()
-    if a.replot:
+    if a.humanize:
+        humanize()
+    elif a.replot:
         plot(json.load(open(f"{OUT}/turing.json")), "docs/img/turing.png")
     else:
         main(a.quick)

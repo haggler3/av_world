@@ -66,34 +66,58 @@ def world(names, on, amplify=1.0):
 
 
 def run(names=tuple(MECHANISMS), copies=24, warm_s=120.0, seconds=300.0, area="oakland", seed=0, batch=192, amplify=1.0):
-    """-> {coalition (tuple of mechanism indices): counters summed over its copies}."""
+    """-> {coalition (frozenset of mechanism indices): per-copy counters [copies, NM]}."""
     from examples import _common as C
     n = len(names)
     cs = coalitions(n)
     jobs = [(S, world(names, S, amplify)) for S in cs for _ in range(copies)]
-    out = {S: np.zeros(X.NM) for S in cs}
+    out = {S: [] for S in cs}
     t0 = time.time()
     for b in range(0, len(jobs), batch):
         part = jobs[b:b + batch]
         m = C.run_copies(area, [w for _, w in part], warm_s=warm_s, seconds=seconds, seed=seed + b)
         for (S, _), row in zip(part, np.asarray(m)):
-            out[S] += row
+            out[S].append(row)
         print(f"  {min(b + batch, len(jobs))}/{len(jobs)} copies ({time.time() - t0:.0f} s)", flush=True)
-    return out
+    return {S: np.asarray(v) for S, v in out.items()}
 
 
-def shapley(counters, names, types=None):
-    """Shapley values (crashes per 1,000 vehicle-hours) with exact standard errors."""
+def shapley(per_copy, names, types=None):
+    """Shapley values with exact standard errors of three outcomes: crashes per 1,000 vehicle-hours (the headline), crashes per
+    million vehicle-km, and the network's mean speed. The last two tell an exposure effect (a mechanism that slows traffic lowers
+    crashes per hour without making anyone safer per km) from a real one."""
     n = len(names)
     c = coefficients(n)
     col = {k: i for i, k in enumerate(X.METRICS)}
     types = types or X.CRASH_NAMES
+    counters = {S: np.asarray(v).sum(0) if np.ndim(v) == 2 else np.asarray(v) for S, v in per_copy.items()}
+
+    def per_km(S):
+        m = counters[S]
+        k = sum(m[col[t]] for t in types)
+        km = m[col["veh_m"]] / 1e9  # million vehicle-km
+        return k / km, k / km ** 2
+
+    def speed(S):
+        v = np.asarray(per_copy[S])
+        if v.ndim < 2:
+            m = counters[S]
+            return 3.6 * m[col["veh_m"]] / max(m[col["veh_s"]], 1), 0.0
+        sp = 3.6 * v[:, col["veh_m"]] / np.maximum(v[:, col["veh_s"]], 1)
+        return float(sp.mean()), float(sp.var(ddof=1) / len(sp))
 
     def rate(S, ty=None):
         m = counters[S]
         k = sum(m[col[t]] for t in (ty or types))
         t = m[col["veh_s"]] / 3600 / 1000
-        return k / t, k / t ** 2  # rate per 1,000 vehicle-hours and its Poisson variance
+        r, var = k / t, k / t ** 2  # rate per 1,000 vehicle-hours and its Poisson variance
+        v = np.asarray(per_copy[S])
+        if v.ndim == 2 and len(v) > 2:  # robust (sandwich) variance from the copies: crashes cluster (pile-ups, jams), so the
+            ki = sum(v[:, col[x]] for x in (ty or types))  # Poisson variance understates it when the counts are overdispersed
+            ti = v[:, col["veh_s"]] / 3600 / 1000
+            n = len(ki)
+            var = max(var, float(n / (n - 1) * np.sum((ki - r * ti) ** 2) / t ** 2))
+        return r, var
 
     res = {"names": list(names), "v_none": rate(frozenset())[0], "v_all": rate(frozenset(range(n)))[0], "phi": {}, "se": {}, "by_type": {}}
     for i, name in enumerate(names):
@@ -101,9 +125,37 @@ def shapley(counters, names, types=None):
         res["se"][name] = math.sqrt(sum(w * w * rate(S)[1] for S, w in c[i].items()))
         res["by_type"][name] = {ty: sum(w * rate(S, (ty,))[0] for S, w in c[i].items()) for ty in X.CRASH_NAMES}
     res["v_none_by_type"] = {ty: rate(frozenset(), (ty,))[0] for ty in X.CRASH_NAMES}
+    # Holm-corrected p-values of the five headline values (a 2.6-sigma result among five is not rare), and a plausibility budget:
+    # how many crashes a value implies over the hours its mechanism was on, against how many crashes that mechanism took part in
+    from scipy.stats import norm
+    from examples.hypotheses import holm
+    p = [float(2 * norm.sf(abs(res["phi"][nm]) / max(res["se"][nm], 1e-12))) for nm in names]
+    res["p"], res["p_holm"] = dict(zip(names, p)), dict(zip(names, holm(np.asarray(p)).tolist()))
+    for key, f in (("per_vkm", per_km), ("speed_kmh", speed)):
+        res[key] = {"v_none": f(frozenset())[0], "v_all": f(frozenset(range(n)))[0],
+                    "phi": {nm: sum(w * f(S)[0] for S, w in c[i].items()) for i, nm in enumerate(names)},
+                    "se": {nm: math.sqrt(sum(w * w * f(S)[1] for S, w in c[i].items())) for i, nm in enumerate(names)}}
     res["coalitions"] = {",".join(names[j] for j in sorted(S)) or "(none)": {"rate": rate(S)[0], "crashes": float(sum(counters[S][col[t]] for t in types)),
                                                                              "vehicle_hours": float(counters[S][col["veh_s"]] / 3600)}
                          for S in counters}
+    return res
+
+
+def reanalyse(name="shapley_x10"):
+    """Recompute every statistic from the saved per-copy counters (no simulation)."""
+    z = np.load(f"{OUT}/{name}_counters.npz")
+    names = tuple(json.load(open(f"{OUT}/{name}.json"))["names"])
+    per_copy = {frozenset(int(x) for x in str(c).split(",") if x != ""): z["counters"][i] for i, c in enumerate(z["coalitions"])}
+    old = json.load(open(f"{OUT}/{name}.json"))
+    res = shapley(per_copy, names)
+    res.update({k: old[k] for k in ("wall_s", "amplify", "settings") if k in old})
+    col = {k: i for i, k in enumerate(X.METRICS)}
+    on = {nm: [S for S in per_copy if j in S] for j, nm in enumerate(names)}
+    res["involvement_check"] = {"distraction": {
+        "crashes_with_a_distracted_driver": float(sum(per_copy[S][:, col["tail_distracted"]].sum() for S in on.get("distraction", []))),
+        "crashes_its_shapley_value_implies": float(abs(res["phi"]["distraction"]) * sum(per_copy[S][:, col["veh_s"]].sum() for S in on["distraction"]) / 3600 / 1000)}} \
+        if "distraction" in names else {}
+    json.dump(res, open(f"{OUT}/{name}.json", "w"), indent=1, default=float)
     return res
 
 
@@ -149,16 +201,20 @@ def main(quick=False, amplify=1.0):
     names = tuple(MECHANISMS)[:3] if quick else tuple(MECHANISMS)
     kw = dict(copies=2, warm_s=30.0, seconds=60.0) if quick else {}
     t0 = time.time()
-    counters = run(names, amplify=amplify, **kw)
-    res = shapley(counters, names)
-    res.update(wall_s=time.time() - t0, amplify=amplify, settings=kw or dict(copies=24, warm_s=120.0, seconds=300.0))
+    per_copy = run(names, amplify=amplify, **kw)
     name = "quick" if quick else ("shapley" if amplify == 1 else f"shapley_x{amplify:g}")
+    cs = coalitions(len(names))
+    np.savez_compressed(f"{OUT}/{name}_counters.npz", counters=np.stack([per_copy[S] for S in cs]),
+                        coalitions=np.array([",".join(map(str, sorted(S))) for S in cs]))
+    res = shapley(per_copy, names)
+    res.update(wall_s=time.time() - t0, amplify=amplify, settings=kw or dict(copies=24, warm_s=120.0, seconds=300.0))
     json.dump(res, open(f"{OUT}/{name}.json", "w"), indent=1, default=float)
     if not quick:
         plot(res, f"docs/img/attribution{'' if amplify == 1 else f'_x{amplify:g}'}.png")
     print(f"v(all) = {res['v_all']:.2f}, v(none) = {res['v_none']:.2f} per 1,000 vehicle-hours")
     for n in names:
-        print(f"  {n:42s} {res['phi'][n]:+6.2f} +- {1.96 * res['se'][n]:.2f}")
+        print(f"  {n:42s} {res['phi'][n]:+6.2f} +- {1.96 * res['se'][n]:.2f} /1000 vh   {res['per_vkm']['phi'][n]:+6.2f} +- "
+              f"{1.96 * res['per_vkm']['se'][n]:.2f} /M vkm   speed {res['speed_kmh']['phi'][n]:+.2f} +- {1.96 * res['speed_kmh']['se'][n]:.2f} km/h")
     return res
 
 
@@ -167,8 +223,14 @@ if __name__ == "__main__":
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--amplify", type=float, default=1.0, help="mechanisms that are on run at their calibrated rate x this")
     ap.add_argument("--replot", action="store_true")
+    ap.add_argument("--reanalyse", action="store_true", help="recompute the statistics from the saved counters")
     a = ap.parse_args()
-    if a.replot:
+    if a.reanalyse:
+        r = reanalyse("shapley" if a.amplify == 1 else f"shapley_x{a.amplify:g}")
+        for nm in r["names"]:
+            print(f"  {nm:42s} {r['phi'][nm]:+6.2f} +- {1.96 * r['se'][nm]:.2f}  p {r['p'][nm]:.3f}  Holm {r['p_holm'][nm]:.3f}")
+        print(r.get("involvement_check"))
+    elif a.replot:
         for f, img in (("shapley", "attribution"), ("shapley_x10", "attribution_x10")):
             if os.path.exists(f"{OUT}/{f}.json"):
                 plot(json.load(open(f"{OUT}/{f}.json")), f"docs/img/{img}.png")

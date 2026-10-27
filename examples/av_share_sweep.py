@@ -69,13 +69,17 @@ def plot(res, area, risk, copies, seconds, headline, out):
     plt.close(fig)
 
 
-def main(shares=(0.0, 0.25, 0.5, 0.75, 1.0), copies=80, warm_s=120.0, seconds=300.0, area="oakland", risk=1.0, out=None, name=None):
+def main(shares=(0.0, 0.25, 0.5, 0.75, 1.0), copies=80, warm_s=120.0, seconds=300.0, area="oakland", risk=1.0, out=None, name=None,
+         seed=None):
     t0 = time.time()
     name = name or ("av_share" if risk == 1 else f"av_share_risk{risk:g}")
     out = out or f"docs/img/example_{name}.png"
     rows = []
     for i, s in enumerate(shares):  # one compiled run per share keeps memory bounded; every copy has its own random traffic
-        rows += C.per_copy(C.run_copies(area, [humans(risk, s)] * copies, warm_s=warm_s, seconds=seconds, seed=1000 * i))
+        # seed=None keeps the published results reproducible (seeded by position). Give a seed for a new, independent sweep: then
+        # each share's seed depends on its value and the seed, so sweeps over different grids never silently reuse random numbers
+        sd = 1000 * i if seed is None else 100_000 * (seed + 1) + int(round(1000 * s))
+        rows += C.per_copy(C.run_copies(area, [humans(risk, s)] * copies, warm_s=warm_s, seconds=seconds, seed=sd))
         print(f"  share {s:.0%} done ({time.time() - t0:.0f} s)", flush=True)
     res = []
     for i, s in enumerate(shares):

@@ -40,9 +40,14 @@ GROUPS = {  # name: (behaviour, vehicle slots)
     "friction_0.6": (lambda: C.calibrated(p_av=0.0, friction=0.6), 1024),
     "friction_0.3": (lambda: C.calibrated(p_av=0.0, friction=0.3), 1024),
 }
+# H3 needed ~4x the data (minimum detectable rate ratio 1.99 with 48 copies): three more independent batches of dry and wet
+for _x in "bcd":
+    GROUPS[f"base_{_x}"] = GROUPS["base"]
+    GROUPS[f"friction_0.6_{_x}"] = GROUPS["friction_0.6"]
 
 SEEDS = {g: 7000 + 100 * i for i, g in enumerate(("base", "risk_x2", "risk_x4", "demand_x0.5", "demand_x1.5", "demand_x2", "friction_0.6",
                                                   "friction_0.3", "mistakes_x3", "mistakes_x10", "mistakes_x30"))}
+SEEDS.update({f"{g}_{x}": 9000 + 100 * i + 10 * j for i, g in enumerate(("base", "friction_0.6")) for j, x in enumerate("bcd")})
 
 
 def main(copies=48, warm_s=120.0, seconds=600.0, area="oakland", name="hypotheses_sims", only=None):

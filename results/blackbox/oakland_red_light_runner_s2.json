@@ -14,6 +14,14 @@
     917.5
    ],
    "light_on_approach": "green",
+   "came_through": {
+    "junction": 217,
+    "turn": "right",
+    "light_at_entry": "red",
+    "s_before_impact": 2.2,
+    "ran_red_there": false
+   },
+   "node": 262,
    "speed_at_impact_kmh": 12.4,
    "speed_3s_before_kmh": 0.8,
    "peak_braking_mps2": -0.6,
@@ -29,6 +37,8 @@
     923.3
    ],
    "light_on_approach": "red",
+   "came_through": null,
+   "node": 217,
    "speed_at_impact_kmh": 40.3,
    "speed_3s_before_kmh": 36.4,
    "peak_braking_mps2": -7.4,
@@ -49,5 +59,5 @@
  "scenario": "red_light_runner",
  "copy": 5,
  "seed": 2,
- "search_s": 28.6
+ "search_s": 18.9
 }
