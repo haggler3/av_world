@@ -1,6 +1,7 @@
 """`av-world`: command line for the simulator.
 
   av-world info                              versions, devices, areas
+  av-world doctor [--smoke] [--fix]          are the dependencies installed and new enough? a 15 s end-to-end check
   av-world watch [oakland] [--follow]        the city driving live in the terminal (truecolor), or --gif out.gif
   av-world export-perception OUT [--scenario bus_dartout --area chicago]   camera images + 3-D labels + sensor detections
   av-world blackbox [--area oakland --scenario bus_dartout --av]   find a crash, write the incident report and a zoomed GIF
@@ -32,6 +33,9 @@ def main(argv=None):
     if cmd == "export-perception":
         from bev import export
         return export.main(rest)
+    if cmd == "doctor":
+        from av_world import doctor
+        return doctor.main(rest)
     if cmd == "blackbox":
         from avlab import blackbox
         return blackbox.main(rest)

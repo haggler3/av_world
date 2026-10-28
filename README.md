@@ -36,6 +36,28 @@ v2 fixed v1's red-light runs but does not beat the policy it plans around. Train
 either. Forked at the policy's own crash moments, the converged plan averts 18 % of them, against 75 % for simply braking
 harder ([GIFs, the test and why](wmplan/README.md)).
 
+## Install
+
+```bash
+pip install -e .                 # the simulator, PPO, AVBench, figures (jax, numpy, scipy, matplotlib, shapely, pyarrow, optax)
+pip install -e ".[all]"          # everything below; or pick: dev, easy, torch, perception, notebooks, usd, web
+av-world doctor --smoke          # checks every package against its minimum version, then runs a 15 s end-to-end simulation
+av-world doctor --fix            # installs what is missing or too old (add --extras easy,torch to include optional groups)
+```
+
+| extra | adds | needed for |
+|---|---|---|
+| `dev` | pytest | the tests |
+| `easy` | pandas, gymnasium, pettingzoo | `av_world.easy` tables, Gymnasium and PettingZoo environments |
+| `torch` | torch, onnx, stable-baselines3 | PyTorch / ONNX export, Stable-Baselines3 |
+| `perception` | pyvista, vtk | `av-world export-perception`, 3-D previews (renders on a CPU) |
+| `notebooks` | jupyterlab, nbformat, nbclient, ipykernel | the notebooks |
+| `usd` | usd-core | OpenUSD export |
+| `web` | playwright | screenshots of the website |
+
+The versions the tests were last run with are in `requirements-lock.txt` (Python 3.13); `pyproject.toml` has conservative minimums,
+not each one tested. GPU: `pip install "jax[cuda12]"`.
+
 ## Try it in five minutes
 
 **Easy mode** ([docs/EASY.md](docs/EASY.md)): the common jobs in one line each, plus bridges to Gymnasium, PettingZoo,
