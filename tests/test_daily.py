@@ -67,3 +67,15 @@ def test_exposure_rollout_and_losses():
     g_sf = jax.grad(E.loss_fn)(p, b, "SF", key)
     g_stop = jax.grad(E.loss_fn)(p, b, "SF-stop", key)
     assert float(jnp.abs(g_sf[0]["w"] - g_stop[0]["w"]).max()) > 0
+
+
+def test_exposure_sfk_uses_first_k_steps():
+    import jax
+    from wmplan import exposure as E
+    p = E.init(jax.random.PRNGKey(0), 7, 5)
+    x = jax.random.normal(jax.random.PRNGKey(2), (3, 6, 5))
+    b = {"x": x, "u": jnp.ones((3, 5, 2)), "valid": jnp.ones((3, 6))}
+    full = float(E.loss_fn(p, b, "SF", jax.random.PRNGKey(0)))
+    assert abs(float(E.loss_fn(p, b, "SFK5", jax.random.PRNGKey(0))) - full) < 1e-6
+    b2 = {**b, "x": x.at[:, 4:].set(99.0)}  # steps 4+ changed: SFK3 must not see it
+    assert abs(float(E.loss_fn(p, b, "SFK3", jax.random.PRNGKey(0))) - float(E.loss_fn(p, b2, "SFK3", jax.random.PRNGKey(0)))) < 1e-6
