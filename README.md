@@ -158,7 +158,7 @@ impact over the effort of a follow-up.
 | | |
 |---|---|
 | [docs/EASY.md](docs/EASY.md) | easy mode for beginners (`av_world.easy`) and compatibility with Gymnasium, PettingZoo, SB3, PyTorch, ONNX, pandas, CARLA, OpenUSD |
-| [docs/DAILY.md](docs/DAILY.md) | the daily log: 2026-11-02 the butterfly effect (a nudge of 1 mm vanishes, 10 cm changes the day) and how long you must watch a car to tell it is an AV (3 s: AUC 0.63, 60 s: 0.80) |
+| [docs/DAILY.md](docs/DAILY.md) | the daily log: 2026-11-02 world-model exposure bias (training on its own rollouts cuts 3 s drift by 24 %), the butterfly effect (a nudge of 1 mm vanishes, 10 cm changes the day) and how long you must watch a car to tell it is an AV (3 s: AUC 0.63, 60 s: 0.80) |
 | [docs/FIXES.md](docs/FIXES.md) | the fix round: every open question and weak result from the last rounds, what was changed, and what happened (two fixes failed) |
 | [docs/IDEAS.md](docs/IDEAS.md) | five tools with pseudocode: crash attribution (Shapley), a black box that writes incident reports, an AV Turing test, empirical-Bayes hotspots, a green-wave signal optimiser |
 | [docs/HYPOTHESES.md](docs/HYPOTHESES.md) | eleven plausible claims about driving and AV research, each tested to fail, with the statistics and an impact-per-effort ranking |
