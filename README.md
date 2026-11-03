@@ -146,6 +146,7 @@ impact over the effort of a follow-up.
 | Does planning in a latent world model beat the policy it starts from? | Partly: 0.47 unaided crashes per AV-hour against 0.64 for its PPO prior, but 15-60x the barrier-taught policies. Its model ranks crashes well (AUROC 0.96) but predicts the stop-line gap worse than holding it constant. | [Metrics](docs/METRICS.md#results) |
 | Does a more varied world teach better? | Mutating cities did: 8 of 8 (seed, world) pairs had fewer crashes, 17-63 % fewer. Fork-at-danger and world-model crash shaping did not help. | [Experiments](docs/EXPERIMENTS.md) |
 | Does a GPU-style trainer help? | Packing the learner's rows and sharding copies: PPO ~5x faster on CPU. On one NVIDIA L4: a PPO phase 2x faster than on CPU (95 s vs 195 s), a latent-planner benchmark run about 5x (under 2 min vs ~10). | [Speed](docs/SPEED.md) |
+| Does the leaderboard drift because of rounding? | **Probably not.** Nudging every car by 1 mm/s changes no AVBench score (0.01 points on average) and no twin city drifts in 10 minutes; a different random stream moves the rule-based AV's score by 15 points on average. Per-scenario scores are samples, not constants. | [Daily log](docs/DAILY.md) |
 | Can it estimate a 1-in-a-million crash probability? | **No.** The estimator is unbiased (checked on a random walk) but the learned guide predicts too weakly to beat plain Monte Carlo. | [Long tail](docs/LONG_TAIL.md) |
 | Do famous incidents come out of the simulator? | **Mechanisms yes, incidents no**: fidelity 0.2-0.6 by feature count; pedestrian impacts 24 mph against Tempe's 43; everyday near-misses 4-6x thinner than real Argoverse 2 traffic. | [Incident audit](docs/INCIDENT_AUDIT.md) |
 | Does training on famous-event scenarios help? | Not shown: two seeds, 0.077 / 0.172 for the mix against 0.084 / 0.093 for ordinary training. They are good *tests*: ~0 crashes in ordinary traffic, 0.25-0.4 per AV-hour in the jaywalker and glare scenarios. | [Famous events](docs/FAMOUS_EVENTS.md) |
@@ -157,6 +158,7 @@ impact over the effort of a follow-up.
 | | |
 |---|---|
 | [docs/EASY.md](docs/EASY.md) | easy mode for beginners (`av_world.easy`) and compatibility with Gymnasium, PettingZoo, SB3, PyTorch, ONNX, pandas, CARLA, OpenUSD |
+| [docs/DAILY.md](docs/DAILY.md) | the daily research log: each day's ideas, pseudocode, results and a running what-to-try-next list (today: twin cities, is the simulator chaotic?) |
 | [docs/FIXES.md](docs/FIXES.md) | the fix round: every open question and weak result from the last rounds, what was changed, and what happened (two fixes failed) |
 | [docs/IDEAS.md](docs/IDEAS.md) | five tools with pseudocode: crash attribution (Shapley), a black box that writes incident reports, an AV Turing test, empirical-Bayes hotspots, a green-wave signal optimiser |
 | [docs/HYPOTHESES.md](docs/HYPOTHESES.md) | eleven plausible claims about driving and AV research, each tested to fail, with the statistics and an impact-per-effort ranking |
@@ -189,8 +191,8 @@ impact over the effort of a follow-up.
 | `avrl/` | PPO, AVBench, ladder, unaided training, famous-event training, multi-device trainer |
 | `bev/` | camera BEV perception: 6-camera rig, rendered data, BEVFormer-tiny's backbone ported to JAX, MiniBEVFormer, nuScenes-style metrics |
 | `dwm/`, `wmplan/` | diffusion / flow world models with scaling laws; latent world model and planner |
-| `avlab/` | stress lab, tail scenarios, incident audit, adversary, rare events, the five long-tail methods |
-| `tests/` | 80 tests: dynamics, safety, importers, junctions, sensor model, estimators |
+| `avlab/` | stress lab, twin-run chaos test, tail scenarios, incident audit, adversary, rare events, the five long-tail methods |
+| `tests/` | 80+ tests: dynamics, safety, importers, junctions, sensor model, estimators |
 | `docs/` | guides, the GitHub Pages site and the browser viewer |
 | `results/` | the JSON behind every number in the docs |
 

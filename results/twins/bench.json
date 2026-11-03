@@ -1,0 +1,26 @@
+{
+ "nominal": {
+  "as published": 72.4550438189914,
+  "every car + 1 mm/s": 72.4550438189914,
+  "every car + 1 m/s": 60.12161980738706,
+  "new random stream": 90.3174861291802
+ },
+ "rush_hour": {
+  "as published": 91.99738802223372,
+  "every car + 1 mm/s": 91.97985026055011,
+  "every car + 1 m/s": 91.86285684934113,
+  "new random stream": 78.84047348823415
+ },
+ "red_runners": {
+  "as published": 90.9844735600043,
+  "every car + 1 mm/s": 90.9844735600043,
+  "every car + 1 m/s": 90.38398087805075,
+  "new random stream": 61.2387033016456
+ },
+ "wet_road": {
+  "as published": 26.189971729763933,
+  "every car + 1 mm/s": 26.18289867487467,
+  "every car + 1 m/s": 26.125074434428637,
+  "new random stream": 26.454511104218387
+ }
+}
