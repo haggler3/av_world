@@ -286,6 +286,21 @@
     </div>
 
     <div class="result">
+      <figure><img width="700" height="392" src="img/twins.gif" alt="Two copies of Oakland, one nudged: a single car given +3 m/s leaves its twin in step, a new random stream puts almost every vehicle somewhere else within two minutes" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Twin cities: is the simulator chaotic?</h3>
+          <p>Run the same warmed-up Oakland twice, nudge one copy, and count the vehicles that end up more than a metre from where
+            their twin is. This tests the explanation offered for the leaderboard's CPU-versus-GPU drift: rounding differences flipping rare events.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the test and its numbers</a>.</p></div>
+        <ul>
+          <li>Rounding-sized nudges (1&nbsp;mm/s on one car, or on every car) leave <b>0</b> of 16 twins displaced after 10 minutes; AVBench scores do not move (0.01 points on average over 4 scenarios).</li>
+          <li>A 3&nbsp;m/s kick to one car decorrelates the city in <b>1 of 16</b> twins (79 % of vehicles displaced); the other 15 stay in step.</li>
+          <li>A different random stream moves the rule-based AV's score by <span class="big">15</span> points on average (+17.9, −13.2, −29.7, +0.3): the size of the CPU-versus-GPU drift, so a different random stream is a likelier cause than rounding.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="921" height="460" src="img/wm_converge.gif" alt="256 imagined futures for one AV narrowing over 5 rounds of search, then the real replay: the policy alone crashes, the converged plan does not" loading="lazy"></figure>
       <div class="text">
         <div><h3>Planning in a latent world model</h3>
