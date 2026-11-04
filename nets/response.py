@@ -29,7 +29,6 @@ import optax
 from . import common as CM
 
 OUT = "results/nets"
-DATA = f"{OUT}/forks.npz"
 HARD = -3.0
 
 
@@ -52,19 +51,22 @@ def pred(ps, x):
     return np.asarray(jnp.mean(jnp.stack([CM.mlp(p, jnp.asarray(x)) for p in ps]), 0))
 
 
-def main():
-    d = np.load(DATA)
+def main(out_dir=OUT, quick=False):
+    steps = 1000 if quick else 4000
+    d = np.load(f"{out_dir}/forks.npz")
     deltas = d["deltas"]
     K = len(deltas)
     keep = d["has_fol"].astype(bool) & (d["fol_state"][:, 3] < 0.5)          # a human directly behind
     obs, up, fs, fa, env = d["obs"][keep], d["u_prior"][keep], d["fol_state"][keep], d["fol_acc"][keep].astype(np.float32), d["env"][keep]
     base = fa[:, K]                                                             # [M, 19] the follower in the unperturbed world
     eff = fa[:, :K] - base[:, None]                                             # [M, K, 19] paired effect of each action
-    test, tr = env >= 24, env < 24
+    test = env >= CM.split_env(env)
+    tr = ~test
     xi = np.concatenate([x_of(obs[tr], fs[tr], up[tr] + deltas[k]) for k in range(K)])
     yi = np.concatenate([eff[tr, k] for k in range(K)])
-    R, cr = train(xi, yi)
-    F, cf = train(x_of(obs[tr], fs[tr], up[tr]), base[tr])
+    R, cr = train(xi, yi, steps=steps)
+    F, cf = train(x_of(obs[tr], fs[tr], up[tr]), base[tr], steps=steps)
+    CM.save_params(f"{out_dir}/response_params.pkl", {"interventional": R, "observational": F}, deltas=deltas)
     res = {"n_train": int(tr.sum()), "n_test": int(test.sum()), "actions": deltas.tolist(), "per_action": {}}
     p0 = pred(F, x_of(obs[test], fs[test], up[test]))
     for k in range(K):
@@ -85,10 +87,10 @@ def main():
         print(k, {n: {a: (round(b[0], 4) if isinstance(b, tuple) else round(b, 3)) for a, b in v.items()} for n, v in row.items() if isinstance(v, dict)},
               "true effect", round(row["true_mean_effect_on_hardest_braking"], 3), "new hard brakes", row["new_hard_brakes"], flush=True)
     res["curves"] = {"interventional": cr[::40].tolist(), "observational": cf[::40].tolist()}
-    with open(f"{OUT}/response.json", "w") as f:
+    with open(f"{out_dir}/response.json", "w") as f:
         json.dump(res, f)
     k = 1
-    np.savez_compressed(f"{OUT}/response_preds.npz", true=eff[test, k], p_int=pred(R, x_of(obs[test], fs[test], up[test] + deltas[k])),
+    np.savez_compressed(f"{out_dir}/response_preds.npz", true=eff[test, k], p_int=pred(R, x_of(obs[test], fs[test], up[test] + deltas[k])),
                         p_obs=pred(F, x_of(obs[test], fs[test], up[test] + deltas[k])) - p0, gap=fs[test, 0])
 
 

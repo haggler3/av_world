@@ -16,6 +16,7 @@
   av-world sil [--area A] [--egos 1] [--mode lockstep|realtime] [--port 5555] [--seconds 60]   drive AVs from an external controller (docs/SIL_HIL.md)
   av-world sil-example [--port 5555] [--delay-ms 0]                                       the example controller
   av-world train [gpu_train options]         PPO on every device (python -m avrl.gpu_train)
+  av-world nets list | info NAME | train NAME [--quick] | figures | gifs    the simulator-only networks and world-model upgrades (docs/TRAINING_NETS.md)
   av-world survey | adversary | rare ...     the long-tail tools (python -m avlab.tails / adversary / rare)
 """
 import argparse
@@ -33,6 +34,9 @@ def main(argv=None):
     if cmd == "export-perception":
         from bev import export
         return export.main(rest)
+    if cmd == "nets":
+        from nets import api
+        return api.cli(rest)
     if cmd == "doctor":
         from av_world import doctor
         return doctor.main(rest)

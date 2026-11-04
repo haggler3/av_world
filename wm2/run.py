@@ -20,7 +20,7 @@ from . import data as D
 from . import model as M
 
 OUT = "results/wm2"
-ROOT = "/tmp/claude-0/-home-user/55bcdaf2-8ef3-51cf-9658-ec3ffd940c9e/scratchpad/av2"
+ROOT = os.environ.get("AV2_ROOT", "data/av2")  # Argoverse 2 scenarios: av-world fetch-av2 data/av2 --n 400
 SC = np.array([3.0, 0.2])
 
 

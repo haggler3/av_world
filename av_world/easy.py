@@ -17,7 +17,8 @@
 
     easy.score(two_second_rule)                                       # AVBench: the same traffic as the leaderboard (43.4)
     easy.compare({"mine": two_second_rule, "IDM": easy.drivers.idm(), "rule-based": None})
-    policy = easy.train(updates=25)                                   # PPO, every AV driven by one policy
+    policy = easy.train(updates=25)
+    easy.nets.list(); easy.nets.train("occlusion", quick=True); easy.nets.load("occlusion")   # the simulator-only networks                                   # PPO, every AV driven by one policy
     easy.export_perception("data/bus", scenario="bus_dartout")        # cameras + 3-D boxes + sensor detections
 
 Everything here is a thin layer over the research code (xnet.sim, avrl.xppo, avrl.bench, bev.export), so results are the same
@@ -489,3 +490,19 @@ def _print_table(rows):
     print("  ".join(k.ljust(w[k]) for k in keys))
     for r in rows:
         print("  ".join(str(r[k]).ljust(w[k]) for k in keys))
+
+
+class _Nets:
+    """easy.nets: the networks and world-model upgrades only this simulator can train (docs/TRAINING_NETS.md).
+    list(), info(name), train(name, quick=False), load(name, quick=False)."""
+
+    def __getattr__(self, name):
+        from nets import api
+        return getattr(api, name)
+
+    def __repr__(self):
+        return "easy.nets: list() | info(name) | train(name, quick=False) | load(name, quick=False)   (docs/TRAINING_NETS.md)"
+
+
+nets = _Nets()
+

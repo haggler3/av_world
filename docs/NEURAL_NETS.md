@@ -10,6 +10,8 @@ design has:
 
 Every number below comes from a run in this repository (`results/nets/`). Every network has a baseline; intervals are 95 % bootstrap over held-out copies or rows.
 
+**Train and use them:** `av-world nets list`, `av-world nets train NAME --quick`, `easy.nets.load(NAME)`. The step-by-step guide is [TRAINING_NETS.md](TRAINING_NETS.md).
+
 | | network | the question | result |
 |---|---|---|---|
 | N2 | interventional risk critic | which action makes this moment safe? | at a 10 % intervention budget, bad outcomes −71 % (0.186 % → 0.054 %); the same network trained on the log makes them **worse** (0.314 %) |

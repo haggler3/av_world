@@ -209,10 +209,11 @@ def evaluate(score, y, mask, any_cause):
     return {"top1": CM.boot(t1), "auroc": CM.auroc(score[mask], y[mask].astype(bool))}
 
 
-def main(minutes=20):
-    os.makedirs(OUT, exist_ok=True)
+def main(minutes=20, out_dir=OUT, quick=False):
+    os.makedirs(out_dir, exist_ok=True)
+    minutes, steps = (3, 800) if quick else (minutes, 3000)
     t0 = time.time()
-    cache = f"{OUT}/blame_data.npz"
+    cache = f"{out_dir}/blame_data.npz"
     if os.path.exists(cache) and "y2" in np.load(cache).files:
         z = np.load(cache)
         x, mask, ys, mk, env = z["x"], z["mask"], {"mistake": z["y"], "careful": z["y2"]}, z["mistake"], z["env"]
@@ -223,7 +224,8 @@ def main(minutes=20):
         env = np.array([e["env"] for e in ev])
         np.savez_compressed(cache, x=x, mask=mask, y=ys["mistake"], y2=ys["careful"], mistake=mk, env=env)
     res = {"n_crashes": int(len(x)), "questions": {}}
-    te, tr = env >= 24, env < 24
+    te = env >= CM.split_env(env)
+    tr = ~te
     for q, y in ys.items():
         any_cause = y.any(1)
         r = {"n_test": int(te.sum()), "share_with_cause": float(any_cause.mean()), "causes_per_crash": float(y.sum(1).mean()),
@@ -232,7 +234,8 @@ def main(minutes=20):
         print(f"{q}: {len(x)} crashes, {any_cause.mean():.3f} with a cause, {r['involved_is_cause']:.3f} of the collided pair and "
               f"{r['bystander_is_cause']:.3f} of bystanders are causes", flush=True)
         p = init(jax.random.PRNGKey(0))
-        p, curve = CM.fit(loss, p, {"x": x[tr], "mask": mask[tr], "y": y[tr]}, steps=3000, batch=256)
+        p, curve = CM.fit(loss, p, {"x": x[tr], "mask": mask[tr], "y": y[tr]}, steps=steps, batch=256)
+        CM.save_params(f"{out_dir}/blame_{q}_params.pkl", p)
         score = np.asarray(apply(p, jnp.asarray(x[te]), jnp.asarray(mask[te])))
         xt, yt, mt, ac = x[te], y[te], mask[te], any_cause[te]
         striker = np.where(np.arange(M)[None] < 2, xt[..., 11] * 15.0, -1.0)            # final speed of the two that collided
@@ -244,7 +247,7 @@ def main(minutes=20):
             print(" ", k, {a: (np.round(b, 3).tolist() if isinstance(b, tuple) else round(b, 3)) for a, b in v.items()}, flush=True)
         r["curve"] = curve[::30].tolist()
         res["questions"][q] = r
-    with open(f"{OUT}/blame.json", "w") as f:
+    with open(f"{out_dir}/blame.json", "w") as f:
         json.dump(res, f)
     print(f"done in {time.time() - t0:.0f}s")
 

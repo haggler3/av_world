@@ -36,6 +36,8 @@ from . import collect as C  # noqa: E402
 from . import common as CM  # noqa: E402
 
 OUT = "results/nets"
+REAL_STATS = "results/nets/real_stats.json"  # the real Argoverse 2 statistics, computed once from AV2_ROOT
+AV2_ROOT = os.environ.get("AV2_ROOT", "data/av2")  # where av-world fetch-av2 puts the scenarios
 KNOBS = (("p_red", 0.0, 0.4, False), ("distract_rate", -7.0, -3.5, True), ("p_aggressive", 0.0, 0.6, False), ("T_med", 0.6, 1.6, False),
          ("T_sigma", 0.0, 0.7, False), ("accel_noise", 0.0, 1.0, False), ("pulse_rate", 0.0, 0.02, False), ("ped_scale", -0.5, 0.5, True),
          ("p_ped_violate", 0.0, 0.4, False))
@@ -135,10 +137,11 @@ def sample(p, s, n, key):
     return np.asarray(jax.nn.sigmoid(z))                               # back to the unit cube
 
 
-def main(n_worlds=1024, batch=32):
-    os.makedirs(OUT, exist_ok=True)
+def main(n_worlds=1024, batch=32, out_dir=OUT, quick=False):
+    os.makedirs(out_dir, exist_ok=True)
+    n_worlds, steps = (96, 800) if quick else (n_worlds, 2500)
     t0 = time.time()
-    cache = f"{OUT}/sbi_sims.npz"
+    cache = f"{out_dir}/sbi_sims.npz"
     w = C.World()
     if os.path.exists(cache):
         z = np.load(cache)
@@ -160,7 +163,8 @@ def main(n_worlds=1024, batch=32):
     rng = np.random.default_rng(1)
     s_aug = np.concatenate([Sn[tr] + 0.1 * rng.normal(size=Sn[tr].shape) for _ in range(8)]).astype(np.float32)
     z_aug = np.concatenate([logit(U[tr])] * 8).astype(np.float32)
-    p, curve = CM.fit(nll, p, {"s": s_aug, "z": z_aug}, steps=2500, batch=256, lr=1e-3, wd=1e-3)
+    p, curve = CM.fit(nll, p, {"s": s_aug, "z": z_aug}, steps=steps, batch=256, lr=1e-3, wd=1e-3)
+    CM.save_params(f"{out_dir}/sbi_params.pkl", p, stats_mean=mu_s, stats_sd=sd_s)
     held = float(nll(p, {"s": jnp.asarray(Sn[te]), "z": jnp.asarray(logit(U[te]).astype(np.float32))}))
     # simulation-based calibration: rank of the truth among 99 posterior draws, per knob
     ranks = np.zeros((n_te, D), int)
@@ -173,13 +177,13 @@ def main(n_worlds=1024, batch=32):
     for i in range(min(n_te, 64)):
         shrink += sample(p, Sn[te][i], 400, jax.random.PRNGKey(1000 + i)).std(0) / 0.2887
     shrink /= min(n_te, 64)
-    real = np.asarray(json.load(open("results/nets/real_stats.json"))["stats"], np.float32) if os.path.exists("results/nets/real_stats.json") else None
+    real = np.asarray(json.load(open(REAL_STATS))["stats"], np.float32) if os.path.exists(REAL_STATS) else None
     if real is not None:
         lo_, hi_ = S.min(0), S.max(0)
         print("real statistics outside every simulated world:", [n for n, r_, a, b in zip(STATS, real, lo_, hi_) if r_ < a or r_ > b], flush=True)
     if real is None:
-        real = real_stats("/tmp/claude-0/-home-user/55bcdaf2-8ef3-51cf-9658-ec3ffd940c9e/scratchpad/av2")
-        json.dump({"stats": real.tolist(), "names": STATS}, open("results/nets/real_stats.json", "w"))
+        real = real_stats(AV2_ROOT)
+        json.dump({"stats": real.tolist(), "names": STATS}, open(REAL_STATS, "w"))
     post = sample(p, (real - mu_s) / sd_s, 4000, jax.random.PRNGKey(7))
     th = to_theta(post)
     summ = {k: {"median": float(np.median(v)), "q05": float(np.quantile(v, 0.05)), "q95": float(np.quantile(v, 0.95))} for k, v in th.items()}
@@ -188,15 +192,24 @@ def main(n_worlds=1024, batch=32):
            "sbc_chi2": [float(x) for x in (((hist - hist.sum(1, keepdims=True) / 10) ** 2) / (hist.sum(1, keepdims=True) / 10)).sum(1)],
            "outside_sim_range": [n for n, r_, a, b in zip(STATS, real, S.min(0), S.max(0)) if r_ < a or r_ > b]}
     print(json.dumps({k: v for k, v in res.items() if k != "sbc_hist"}, indent=1), flush=True)
-    np.savez_compressed(f"{OUT}/sbi_posterior.npz", post=post, U=U, S=S, real=real, ranks=ranks)
+    np.savez_compressed(f"{out_dir}/sbi_posterior.npz", post=post, U=U, S=S, real=real, ranks=ranks)
     # posterior-predictive check: simulate 32 posterior draws and 32 prior draws, compare their statistics with the real ones
     pp = simulate(w, post[:32].astype(np.float32), seed=99)
     pr = simulate(w, np.random.default_rng(5).uniform(size=(32, D)).astype(np.float32), seed=99)
     dist = lambda X_: np.abs((X_ - real) / sd_s).mean(1)
     res["ppc"] = {"posterior_draws_mean_abs_z": CM.boot(dist(pp)), "prior_draws_mean_abs_z": CM.boot(dist(pr)), "posterior_stats": pp.tolist(), "prior_stats": pr.tolist()}
-    print("posterior-predictive distance to the real statistics (in SDs):", res["ppc"]["posterior_draws_mean_abs_z"], "prior:", res["ppc"]["prior_draws_mean_abs_z"], flush=True)
+    cem = "results/tail/calibrated_drivers.json"           # the cross-entropy point fit of avlab/tail_calibrate, for comparison
+    if os.path.exists(cem):
+        fit = json.load(open(cem))["knobs"]
+        base = dict(LD.knobs(), p_aggressive=0.2, ped_scale=1.0, p_ped_violate=0.03)
+        th = {**{k: base.get(k, 0.0) for k, *_ in KNOBS}, **fit}
+        u = np.array([np.clip(((np.log10(max(th[k], 1e-12)) if lg else th[k]) - lo) / (hi - lo), 0, 1) for k, lo, hi, lg in KNOBS], np.float32)
+        pc = simulate(w, np.tile(u, (32, 1)), seed=99)
+        res["ppc"]["cem_point_fit_mean_abs_z"] = CM.boot(dist(pc))
+    print("posterior-predictive distance to the real statistics (in SDs):", res["ppc"]["posterior_draws_mean_abs_z"], "prior:", res["ppc"]["prior_draws_mean_abs_z"],
+          "point fit:", res["ppc"].get("cem_point_fit_mean_abs_z"), flush=True)
     res["curve"] = curve[::40].tolist()
-    with open(f"{OUT}/sbi.json", "w") as f:
+    with open(f"{out_dir}/sbi.json", "w") as f:
         json.dump(res, f)
     print(f"done in {time.time() - t0:.0f}s")
 

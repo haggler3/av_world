@@ -69,3 +69,17 @@ works with the same API and a minimal `Box`).
 * `train` with a few updates shows the mechanics, not a good driver; see notebook 03 and [RL.md](RL.md).
 * `GymEnv` controls one AV with the safety envelope on (`shield="off"` for the raw command); its reward is the simulator's
   per-step reward, the same one PPO uses.
+
+## Neural nets only this simulator can train: `easy.nets`
+
+Six networks (risk critic, social response, occlusion belief, mind reader, crash blame, real-traffic posterior) and seven world-model
+upgrades, each trainable in one call ([TRAINING_NETS.md](TRAINING_NETS.md), results in [NEURAL_NETS.md](NEURAL_NETS.md)).
+
+| call | what it does |
+|---|---|
+| `easy.nets.list()` | every feature: its question, minutes (quick / full), whether it is trained, its headline result |
+| `easy.nets.info(name)` | what it needs, what it writes, how to use it |
+| `easy.nets.train(name, quick=True)` | train it (quick: a few minutes, results in `results/nets/quick/`) |
+| `easy.nets.load(name)` | the trained network, e.g. `load("critic").risk(obs, u)`, `load("occlusion").belief(tokens)`, `load("mindreader").read(windows)`, `load("sbi").real()` |
+
+The same from the shell: `av-world nets list | info NAME | train NAME --quick | figures | gifs`.

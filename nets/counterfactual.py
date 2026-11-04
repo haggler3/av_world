@@ -23,7 +23,6 @@ import optax
 from . import common as CM
 
 OUT = "results/nets"
-DATA = f"{OUT}/forks.npz"
 
 
 def features(obs, u):
@@ -48,13 +47,14 @@ def predict(ps, x):
     return np.asarray(jnp.mean(jnp.stack([jax.nn.sigmoid(CM.mlp(p, jnp.asarray(x))[:, 0]) for p in ps]), 0))
 
 
-def main():
-    d = np.load(DATA)
+def main(out_dir=OUT, quick=False):
+    steps = 1000 if quick else 4000
+    d = np.load(f"{out_dir}/forks.npz")
     deltas = d["deltas"]
     K = len(deltas)
     obs, up, bad, env = d["obs"], d["u_prior"], d["bad"].astype(bool), d["env"]
     marg = np.clip(d["margin"], -10, 30) / 10.0
-    test = env >= 24
+    test = env >= CM.split_env(env)
     tr = ~test
     # interventional rows: every state x every action
     xi = np.concatenate([features(obs[tr], up[tr] + deltas[k]) for k in range(K)])
@@ -63,8 +63,9 @@ def main():
     # observational rows: the state and what the policy did (the unperturbed branch, index K)
     xo, yo, mo = features(obs[tr], up[tr]), bad[tr, K], marg[tr, K]
     # equal compute and equal number of rows: the observational set is repeated K times by the sampler (same steps)
-    q_int, c_int = train(xi, yi, mi)
-    q_obs, c_obs = train(xo, yo, mo)
+    q_int, c_int = train(xi, yi, mi, steps=steps)
+    q_obs, c_obs = train(xo, yo, mo, steps=steps)
+    CM.save_params(f"{out_dir}/critic_params.pkl", {"interventional": q_int, "observational": q_obs}, deltas=deltas)
     res = {"n_train_states": int(tr.sum()), "n_test_states": int(test.sum()), "bad_rate_per_action": bad.mean(0).tolist(), "actions": deltas.tolist()}
     pi = np.stack([predict(q_int, features(obs[test], up[test] + deltas[k])) for k in range(K)], 1)
     po = np.stack([predict(q_obs, features(obs[test], up[test] + deltas[k])) for k in range(K)], 1)
@@ -97,22 +98,22 @@ def main():
     print("AUROC", {k: [round(x, 3) for x in v] for k, v in res["auroc"].items()})
     print("mean effect of each action vs as-is: true", np.round(cal["true_mean_effect"], 4), "int", np.round(cal["interventional"]["mean_pred_effect"], 4),
           "obs", np.round(cal["observational"]["mean_pred_effect"], 4))
-    os.makedirs(OUT, exist_ok=True)
-    with open(f"{OUT}/counterfactual.json", "w") as f:
+    os.makedirs(out_dir, exist_ok=True)
+    with open(f"{out_dir}/counterfactual.json", "w") as f:
         json.dump(res, f)
-    np.savez_compressed(f"{OUT}/counterfactual_preds.npz", pi=pi, po=po, truth=truth, env=env[test])
-    res["budget"] = budget_curves()
+    np.savez_compressed(f"{out_dir}/counterfactual_preds.npz", pi=pi, po=po, truth=truth, env=env[test])
+    res["budget"] = budget_curves(out_dir=out_dir)
     print("bad-outcome rate at an intervention budget of", res["budget"]["budgets"], {k: np.round(v, 5).tolist() for k, v in res["budget"].items() if k != "budgets"})
-    with open(f"{OUT}/counterfactual.json", "w") as f:
+    with open(f"{out_dir}/counterfactual.json", "w") as f:
         json.dump(res, f)
 
 
-def budget_curves(budgets=(0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0)):
+def budget_curves(budgets=(0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0), out_dir=OUT):
     """A fairer decision test than argmin: acting differently has a cost (braking harder everywhere is safe but slow), so give each
     critic a budget. It may change the policy's action at a fraction b of the moments: those where it predicts the largest risk
     reduction, using its best action there; everywhere else the AV acts as the policy did. Random: the same budget spent on random
     moments with the action that is safest on average (brake harder)."""
-    z = np.load(f"{OUT}/counterfactual_preds.npz")
+    z = np.load(f"{out_dir}/counterfactual_preds.npz")
     truth = z["truth"].astype(float)
     n = len(truth)
     out = {"budgets": list(budgets)}
