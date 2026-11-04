@@ -1,0 +1,142 @@
+{
+ "date": "2026-11-04",
+ "method": "PUCT, c=1.2, 3 rounds; Q=(novelty*relevance*visual*holds-up)/sqrt(minutes)",
+ "candidates": [
+  {
+   "idea": "speed-limit sweep: power model of crash rate (next-step 5)",
+   "artefact": "figure+table",
+   "minutes": 8,
+   "prior": 0.7,
+   "probe": "probe: link_v scaling hook in net dict confirmed; 2-copy quick run moved mean speed 18.6->22.8 km/h",
+   "outcome": "KEPT"
+  },
+  {
+   "idea": "twin-divergence trace: what amplifies one kick (next-step 3)",
+   "artefact": "GIF+figure",
+   "minutes": 4,
+   "prior": 0.7,
+   "probe": "probe: seed 9 of the twin test reproduces on a single copy (quick run on copy 0 stays in step, as expected)",
+   "outcome": "KEPT"
+  },
+  {
+   "idea": "re-score AVBench with unsafe_rbg stream (next-step 1)",
+   "artefact": "table",
+   "minutes": 10,
+   "prior": 0.5,
+   "probe": "one draw per scenario, cannot separate stream from hardware without the GPU row regenerated",
+   "outcome": "dropped: one draw is uninformative; needs seeds (next-step 2)"
+  },
+  {
+   "idea": "seeds with intervals on all leaderboard rows (next-step 2)",
+   "artefact": "table",
+   "minutes": 45,
+   "prior": 0.8,
+   "probe": "cost 45 min",
+   "outcome": "dropped: over budget"
+  },
+  {
+   "idea": "crash-rate vs demand x speed interaction surface",
+   "artefact": "figure",
+   "minutes": 25,
+   "prior": 0.4,
+   "probe": "",
+   "outcome": "dropped: over budget"
+  },
+  {
+   "idea": "Lyapunov spectrum of the full city by finite-time Jacobian",
+   "artefact": "figure",
+   "minutes": 20,
+   "prior": 0.3,
+   "probe": "state is discrete (tracks, gap acceptance): Jacobian not defined",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "AV-share x speed-limit interaction",
+   "artefact": "figure",
+   "minutes": 20,
+   "prior": 0.5,
+   "probe": "",
+   "outcome": "dropped: over budget; child of idea 1, next-step"
+  },
+  {
+   "idea": "per-link crash hotspot vs link speed after the sweep",
+   "artefact": "map",
+   "minutes": 3,
+   "prior": 0.4,
+   "probe": "too few crashes (116) for a map",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "string-stability test of IDM in av_world (platoon kick)",
+   "artefact": "figure",
+   "minutes": 5,
+   "prior": 0.4,
+   "probe": "covered partly by the twin trace",
+   "outcome": "merged into idea 2"
+  },
+  {
+   "idea": "scenario search by CMA-ES for worst-case AVBench",
+   "artefact": "table",
+   "minutes": 30,
+   "prior": 0.5,
+   "probe": "covered in avlab.adversary",
+   "outcome": "dropped: duplicate"
+  },
+  {
+   "idea": "README quick-start GIF gallery",
+   "artefact": "doc",
+   "minutes": 5,
+   "prior": 0.3,
+   "probe": "",
+   "outcome": "dropped: not a result"
+  },
+  {
+   "idea": "learned surrogate of crash rate vs knobs (GP)",
+   "artefact": "figure",
+   "minutes": 15,
+   "prior": 0.3,
+   "probe": "needs more sims",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "wild card: kick every car by 1 m/s at 100 seeds",
+   "artefact": "table",
+   "minutes": 30,
+   "prior": 0.4,
+   "probe": "",
+   "outcome": "dropped: twins covers"
+  },
+  {
+   "idea": "GPU float32 vs float64 rerun",
+   "artefact": "table",
+   "minutes": 10,
+   "prior": 0.3,
+   "probe": "needs x64 path in xnet",
+   "outcome": "dropped"
+  }
+ ],
+ "rounds": [
+  {
+   "pick": "speed-limit sweep",
+   "probe": "net link_v scale hook; 2-copy quick run",
+   "Q_after": 0.31,
+   "N": 1
+  },
+  {
+   "pick": "twin trace",
+   "probe": "seed 9 reproduces",
+   "Q_after": 0.38,
+   "N": 1
+  },
+  {
+   "pick": "speed-limit sweep",
+   "probe": "web: Nilsson power model exponents 2/3/4 (Elvik)",
+   "Q_after": 0.33,
+   "N": 2
+  }
+ ],
+ "kept": [
+  "speed-limit sweep",
+  "twin-divergence trace"
+ ]
+}
