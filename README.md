@@ -54,6 +54,14 @@ av-world nets train occlusion --quick   # ~3 min, then: python -c "from av_world
 
 <img src="docs/img/nets/forks.gif" width="440" alt="One moment of the city forked into five futures with different AV actions"> <img src="docs/img/nets/occlusion.gif" width="300" alt="The AV's view: visible cars, hidden cars and the network's belief where the hidden ones are">
 
+**A scene auto-tagger for real logs, taught by the simulator** ([design, DAG and results](docs/AUTOTAG.md), `av-world tag`).
+It tags real Argoverse 2 logs and simulated runs in one scene format. Rules cover the kinematics. Taggers learned from simulator truth cover what
+nobody can annotate, such as a hidden road user ahead (AUROC 0.96). Isotonic calibration and a precision threshold decide which tags are applied
+automatically and which go to review. A `sim_gap` tag flags real scenes the simulator cannot produce. Boolean and interval queries
+(`av-world tag query "cut_in & hidden_ahead" --overlap`) and a cached, content-hashed DAG (pipeline) run on top.
+
+<img src="docs/img/autotag/av2_scene.gif" width="440" alt="A real Argoverse 2 scene with its tags drawn on a live timeline">
+
 ## Install
 
 ```bash
@@ -176,6 +184,7 @@ impact over the effort of a follow-up.
 |---|---|
 | [docs/NEURAL_NETS.md](docs/NEURAL_NETS.md) | six networks only this simulator can train (risk critic from exact forks, social response, occlusion belief, mind reader, but-for blame, real-traffic posterior): method, math, results |
 | [docs/TRAINING_NETS.md](docs/TRAINING_NETS.md) | the easy guide: train and use each of them in one command (`av-world nets`, `easy.nets`), quick mode, data, speed, troubleshooting |
+| [docs/AUTOTAG.md](docs/AUTOTAG.md) | the scene auto-tagger: first principles, the engineering DAG, ten methods with pseudocode, pros and cons, and results |
 | [docs/WORLD_MODEL_UPGRADES.md](docs/WORLD_MODEL_UPGRADES.md) | ten world-model ideas from the literature, seven built and measured: CRN, conservative imagination, agent tokens, learned humans, multi-step loss, SIGReg, terminal value |
 | [docs/EASY.md](docs/EASY.md) | easy mode for beginners (`av_world.easy`) and compatibility with Gymnasium, PettingZoo, SB3, PyTorch, ONNX, pandas, CARLA, OpenUSD |
 | [docs/FIXES.md](docs/FIXES.md) | the fix round: every open question and weak result from the last rounds, what was changed, and what happened (two fixes failed) |

@@ -21,9 +21,9 @@ def anchors(path):
 
 
 def test_every_feature_is_complete_and_runnable():
-    assert len(RG.FEATURES) == 13 and len(RG.BY_NAME) == 13
+    assert len(RG.FEATURES) == 14 and len(RG.BY_NAME) == 14
     for f in RG.FEATURES:
-        assert f.kind in ("network", "upgrade") and f.question.endswith("?") and f.result and f.use
+        assert f.kind in ("network", "upgrade", "system") and f.question.endswith("?") and f.result and f.use
         q, full = f.minutes
         assert 0 < q <= full
         mod, fn = f.runner.split(":")
