@@ -1,0 +1,29 @@
+219468 AV views, hidden-cell rate 0.0179, someone hidden ahead 0.176 (79s)
+/home/user/av_world/nets/occlusion.py:162: RuntimeWarning: overflow encountered in exp
+  pg = 1 / (1 + np.exp(-out[:, :-1]))
+/home/user/av_world/nets/occlusion.py:163: RuntimeWarning: overflow encountered in exp
+  pp = 1 / (1 + np.exp(-out[:, -1]))
+{
+ "n_views": 219468,
+ "n_test": 54311,
+ "hidden_cell_rate": 0.01791284792125225,
+ "hidden_ahead_rate": 0.1763218343257904,
+ "grid": {
+  "network": {
+   "auroc": 0.9677102077008906,
+   "brier": 0.01354459673166275
+  },
+  "marginal prior": {
+   "auroc": 0.8744340539796667,
+   "brier": 0.01760767214000225
+  },
+  "shadow geometry": {
+   "auroc": 0.92581370774613,
+   "brier": 0.016494385830706906
+  }
+ },
+ "ahead": {
+  "network_auroc": 0.9783554299722074,
+  "shadow_ahead_auroc": 0.7695864937365576
+ }
+}

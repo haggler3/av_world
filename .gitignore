@@ -23,3 +23,9 @@ results/bev/*_ckpt.pkl
 results/bev/snaps/
 results/notebooks/
 results/easy/
+
+# nets: large regenerable datasets and prediction dumps
+results/nets/forks.npz
+results/nets/mindreader_windows.npz
+results/nets/occlusion_samples.npz
+results/nets/*_preds.npz

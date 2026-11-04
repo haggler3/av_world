@@ -1,0 +1,31 @@
+0 min: 0 crashes resolved, 0 pending (18s)
+1 min: 58 crashes resolved, 1 pending (55s)
+2 min: 169 crashes resolved, 0 pending (86s)
+3 min: 294 crashes resolved, 1 pending (127s)
+4 min: 422 crashes resolved, 0 pending (169s)
+5 min: 566 crashes resolved, 1 pending (215s)
+6 min: 726 crashes resolved, 1 pending (266s)
+7 min: 877 crashes resolved, 0 pending (313s)
+8 min: 1046 crashes resolved, 1 pending (356s)
+9 min: 1239 crashes resolved, 0 pending (412s)
+10 min: 1393 crashes resolved, 1 pending (449s)
+11 min: 1551 crashes resolved, 0 pending (483s)
+12 min: 1713 crashes resolved, 1 pending (517s)
+13 min: 1873 crashes resolved, 1 pending (550s)
+14 min: 2028 crashes resolved, 1 pending (583s)
+15 min: 2193 crashes resolved, 1 pending (618s)
+16 min: 2317 crashes resolved, 0 pending (645s)
+17 min: 2498 crashes resolved, 1 pending (683s)
+18 min: 2645 crashes resolved, 0 pending (714s)
+19 min: 2800 crashes resolved, 0 pending (746s)
+mistake: 2948 crashes, 0.016 with a cause, 0.006 of the collided pair and 0.000 of bystanders are causes
+  network {'top1': [0.5, 0.25, 0.75], 'auroc': 0.821}
+  striker (faster of the two) {'top1': [0.5, 0.25, 0.75], 'auroc': 0.728}
+  crossed on red {'top1': [0.417, 0.167, 0.667], 'auroc': 0.804}
+  privileged: had a mistake on {'top1': [0.917, 0.75, 1.0], 'auroc': 0.872}
+careful: 2948 crashes, 0.466 with a cause, 0.264 of the collided pair and 0.005 of bystanders are causes
+  network {'top1': [0.894, 0.861, 0.925], 'auroc': 0.938}
+  striker (faster of the two) {'top1': [0.955, 0.931, 0.976], 'auroc': 0.911}
+  crossed on red {'top1': [0.535, 0.483, 0.589], 'auroc': 0.886}
+  privileged: had a mistake on {'top1': [0.468, 0.414, 0.52], 'auroc': 0.741}
+done in 814s
