@@ -7,10 +7,62 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 
 1. **Check which random stream the L4 leaderboard used** (carried over). Re-score the rule-based AV on CPU with `unsafe_rbg` and compare with the stored GPU row.
 2. **Seeds with intervals on every leaderboard row** (carried over): `avlab.twins.bench` with `restream=1..N`, ~45 min, split over days.
-3. **Is the junction-box handoff the cause of the twin divergence in general?** `avlab.twintrace` explained one twin (seed 9). Run it on the other kicks (and a 1 m/s kick to every car) and count, per divergence, whether the first other car is displaced from a junction box.
+3. **Is the junction-box handoff the cause of the twin divergence in general?** Only 1 of 16 single-car kicks diverged, and a 1 m/s kick to every car is "displaced" at once under the 1 m rule, so this needs a different displacement threshold (for example a decision change: another track or a turn) before it can be counted over many kicks.
 4. Settle H4's curve shape and H3's wet-road threshold (GPU-sized data).
-5. **Speed limit x AV share and x demand** (child of 2026-11-04 idea 1): does an AV-heavy city pay less for a higher limit? Also weight crashes by speed at impact to compare with Nilsson's fatal exponent 4.
-6. **Pedestrian crashes carry the speed effect (38 of 57 at x1.3).** Rerun the sweep with pedestrian crossings' yield behaviour varied, or at crossings only.
+5. **Why do the rule-based AVs not reduce pedestrian crashes?** Pedestrian crashes at x1.3 were 38 (0 % AVs) and 41 (about 45 % AVs). Read a few with `avlab.blackbox` (`types=("pedestrian",)`): does the AV's envelope brake for a pedestrian who steps out without WALK, or only for one already in the crosswalk? Then try a 100 % AV city (`python -m avlab.speedlimit --p-av 1.0`, ~12 min) and a pedestrian-yield knob.
+6. **Weight crashes by impact speed** to compare with Nilsson's fatal exponent 4 (needs the impact speed recorded, which the counters do not keep).
+7. **More power for the AV x limit interaction**: the 95 % interval of the difference of two elasticities is about +-1.8 here; 4x the copies would halve it.
+
+---
+
+## 2026-11-05 - Does a city with AVs pay less for a higher speed limit? (No measurable difference)
+
+**Ideas kept** (from 12 candidates; [search](../results/daily/2026-11-05/search.json)): (1) repeat the speed-limit sweep with about half of the cars AVs and compare the
+crash-rate elasticity, overall and by crash type (next step 5 of yesterday, merged with step 6's by-type question); (2) a zoomed black-box GIF of a
+pedestrian crash at x1.3 limits. Prior art: the power model (Nilsson; Elvik) is for human traffic, and a 2025 review of speed and crash
+models says mixed-traffic effects on it are neglected ([ITF, speed changes and crash risk](https://www.itf-oecd.org/sites/default/files/docs/speed-changes-crash-risk.pdf)); a standard web search found nothing on AV share and the exponent, so as far as I can tell this has not been measured.
+
+### Pseudocode (what the code does)
+
+```
+avlab/speedlimit.py --p-av 0.5   (the saved 0 % run is unchanged)
+    for scale in 0.7 0.85 1.0 1.15 1.3:   net["link_v"] *= scale;  32 copies, calibrated humans with Behaviour.p_av = 0.5 (rule-based AV under its envelope),
+                                          warm 120 s, count 600 s; record crashes, vehicle-hours, by crash type
+avlab/speedshare.py
+    b, se   = quasi-Poisson regression of crashes on log(scale), offset log vehicle-hours, per copy, for each world
+    per type: the same on the 5 scale totals, SE x sqrt(dispersion of the all-types fit)   (per-copy type counts are not stored)
+    z = (b_0 - b_50) / sqrt(se_0^2 + se_50^2); two-sided p; Holm correction over the 5 comparisons (all types + 4 types with crashes at >= 3 scales)
+    --gif: hunt (blackbox.hunt, new `types` filter) for a pedestrian crash with all limits x1.3, replay it, zoomed GIF
+```
+
+### Prediction, written before the full run
+
+P1: with half the cars AVs, the elasticity is lower than 4.5 by at least 1 (the difference significant at 95 %), because AV share halves crashes in the AV-share sweep and AVs keep a longer headway. (Quick probe at x0.7 showed no visible AV effect, 5 against 4 crashes, but that is a few crashes.)
+
+### Result
+
+| limit | crashes, 0 % AVs | crashes, ~45 % AVs | rate per 1000 vehicle-h, 0 % | rate, ~45 % |
+|---|---|---|---|---|
+| x0.70 | 4 | 5 | 1.5 | 1.9 |
+| x0.85 | 10 | 6 | 3.9 | 2.4 |
+| x1.00 | 14 | 11 | 5.6 | 4.4 |
+| x1.15 | 31 | 26 | 12.6 | 10.7 |
+| x1.30 | 57 | 59 | 23.5 | 24.6 |
+
+(AV share measured on a probe run: 41-47 % of the alive vehicles are AVs through the 12 minutes; buses, vans and cyclists are never AVs.)
+
+![speed limit x AV share](img/speedshare.png)
+
+**P1 failed.** Elasticity 4.5 (SE 0.6) with no AVs and **5.1 (SE 0.7)** with about half: the difference is -0.6 (p = 0.53), so the data cannot tell the two
+apart and the point estimate goes the wrong way. The interval of the difference is roughly +-1.8, so an effect of 1 or less is not excluded.
+By crash type (totals-based SEs, Holm over 5 comparisons, all adjusted p = 1.0): pedestrian 7.2 (SE 1.1) against 8.1 (SE 1.3); rear-end 3.9 against 1.9 (the one hint of an AV effect: p = 0.26 unadjusted); left-turn and merge are too sparse.
+Pedestrian crashes at x1.3 are 38 against 41: the AVs do not remove the crashes that carry the speed effect. At the standard limit the AVs have fewer crashes (14 to 11), which is within the noise of yesterday's AV-share sweep. `results/speedlimit/speedshare.json`, `results/speedlimit/speedlimit_av50.json`.
+
+![pedestrian crash at x1.3](img/speedshare.gif)
+
+The GIF is one pedestrian crash with every limit x1.3 (102 s in; a car at 57 km/h three seconds before, 37 km/h at impact after braking at -9 m/s^2, hitting a pedestrian who started crossing without WALK). One example, not a sample.
+
+**Tests**: `tests/test_daily_1105.py` (Holm, the elasticity fit recovers a known power, the comparison detects a real difference and not an absent one). Health check at the start: `tests/test_ideas.py tests/test_easy.py tests/test_examples.py` 27 passed, 1 skipped.
 
 ---
 

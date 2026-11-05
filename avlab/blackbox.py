@@ -23,11 +23,11 @@ KINDS = {X.CAR: "car", X.BUS: "bus", X.VAN: "delivery van", X.BIKE: "cyclist"}
 LIGHT = {0: "red", 1: "yellow", 2: "green"}
 
 
-def hunt(net, beh, seed=0, warm=90.0, chunk=20.0, budget=600.0, copies=8, av_only=False, policy=None):
+def hunt(net, beh, seed=0, warm=90.0, chunk=20.0, budget=600.0, copies=8, av_only=False, policy=None, types=None):
     """Run copies until one crashes in a chunk, then replay that chunk of that copy with recording on (the replay steps one at a
     time and is checked to contain the crash). -> (frames, copy) or (None, None)."""
     key = "av_crash" if av_only else None
-    idx = [X.METRICS.index(k) for k in ((key,) if key else X.CRASH_NAMES)]
+    idx = [X.METRICS.index(k) for k in ((key,) if key else (types or X.CRASH_NAMES))]
     sim = X.Sim(net, n_envs=copies, beh=beh, seed=seed, reroute_s=0, policy=policy)
     sim.run(warm)
     for _ in range(max(int(budget / chunk), 1)):
