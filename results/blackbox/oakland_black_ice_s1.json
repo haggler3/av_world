@@ -1,0 +1,41 @@
+{
+ "t_s": 123.2,
+ "frame": 65,
+ "types": [
+  "pedestrian"
+ ],
+ "vehicles": [
+  {
+   "slot": 25,
+   "kind": "car",
+   "where": "inside junction 90, turning left",
+   "xy": [
+    3211.4,
+    -239.3
+   ],
+   "light_on_approach": "none",
+   "came_through": null,
+   "node": 90,
+   "speed_at_impact_kmh": 37.0,
+   "speed_3s_before_kmh": 63.1,
+   "peak_braking_mps2": -3.2,
+   "braked_hard_s_before_impact": 2.8,
+   "contributing": [
+    "struck a pedestrian crossing with the WALK signal",
+    "slippery road (friction 0.35)"
+   ]
+  }
+ ],
+ "closing_speed_kmh": null,
+ "pedestrians_crossing_nearby_city_wide": 56,
+ "centre_xy": [
+  3211.4,
+  -239.3
+ ],
+ "summary": "Pedestrian crash: a car (37 km/h). Contributing: slippery road (friction 0.35); struck a pedestrian crossing with the WALK signal.",
+ "area": "oakland",
+ "scenario": "black_ice",
+ "copy": 6,
+ "seed": 1,
+ "search_s": 15.0
+}
