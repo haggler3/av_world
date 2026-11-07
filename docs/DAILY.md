@@ -5,6 +5,7 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 
 ## What to try next (running list)
 
+0. **Cyclist hypothesis** (2026-11-07): rerun the friction grid with `p_bike=0` and see whether the jump at 0.5 vanishes; then place the cliff with more copies at 0.6, 0.55, 0.5.
 1. **Check which random stream the L4 leaderboard used** (carried over). Re-score the rule-based AV on CPU with `unsafe_rbg` and compare with the stored GPU row.
 2. **Seeds with intervals on every leaderboard row** (carried over): `avlab.twins.bench` with `restream=1..N`, ~45 min, split over days.
 3. **Is the junction-box handoff the cause of the twin divergence in general?** `avlab.twintrace` explained one twin (seed 9). Run it on the other kicks (and a 1 m/s kick to every car) and count, per divergence, whether the first other car is displaced from a junction box.
@@ -12,9 +13,52 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 5. **Speed limit x AV share and x demand** (child of 2026-11-04 idea 1): does an AV-heavy city pay less for a higher limit? Also weight crashes by speed at impact to compare with Nilsson's fatal exponent 4.
 6. **Pedestrian crashes carry the speed effect (38 of 57 at x1.3).** Rerun the sweep with pedestrian crossings' yield behaviour varied, or at crossings only.
 
-7. **Find the friction cliff's cause** (2026-11-06): the rate jumps 3.5x between friction 0.6 and 0.45. Print the braking the drivers *need* (gap / speed at the moment of each crash) to see whether 9 x friction falls below what car-following and junction approaches demand, then test a finer grid (0.6, 0.55, 0.5, 0.45).
+7. **(partly done 2026-11-07: not rear-ends)** the friction cliff's cause: the rate jumps 3.5x between friction 0.6 and 0.45. Print the braking the drivers *need* (gap / speed at the moment of each crash) to see whether 9 x friction falls below what car-following and junction approaches demand, then test a finer grid (0.6, 0.55, 0.5, 0.45).
 8. **Why does a half-AV city lose its advantage when the road is slick?** Rate ratio 0.55 (dry) to 0.95 (friction 0.3), but no single interval excludes 1; ~4x the copies at friction 1.0, 0.6 and 0.3 would decide it (AVBench's wet_road is the rule-based AV's worst scenario).
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-07 - Which crashes make the friction cliff, and do pedestrian violators carry the speed-limit effect?
+
+**Ideas kept** (from 13 candidates; [search](../results/daily/2026-11-07/search.json)): (1) the friction sweep again on a finer grid, crash counts split by type (next step 7);
+(2) speed limit x1.0 and x1.3 with pedestrian violators on or off (next step 6). Prior art: collision risk is commonly framed as the braking a follower
+*needs* against the braking the road *allows* (DRAC against maximum available deceleration, [arXiv 1810.04776](https://arxiv.org/pdf/1810.04776)); jaywalking raises conflict risk and one Seoul
+study put 40 % of pedestrian fatalities on jaywalkers ([SWOV](https://swov.nl/nl/publicatie/pedestrian-crashes-during-jaywalking-can-we-afford-overlook); search snippets only, full texts not read).
+
+### Pseudocode (what `avlab/crashmix.py` does)
+
+```
+A. for mu in 1.0 0.8 0.7 0.6 0.55 0.5 0.45 0.4 0.3: 12 copies of Oakland, calibrated humans, friction=mu, warm 120 s, count 600 s (one compiled run)
+     per cell: crashes by type, vehicle-hours, rear-end closing speed (imp_rear_closing / imp_rear_n)
+     single power law vs power law with one hinge (hinge tried at each interior grid value), Poisson deviance + 2 x parameters
+B. for limit scale in 1.0 1.3 (net link_v *= scale): 24 copies with p_ped_violate 0.03 and 24 with 0; same protocol
+     rate ratio x1.3 / x1.0 per violator setting (exact conditional interval), elasticity = ln(ratio) / ln 1.3
+```
+
+### Predictions ([written before the runs](../results/daily/2026-11-07/predictions.md)) and results
+
+| prediction | result |
+|---|---|
+| A1 rear-ends carry > 50 % of the extra crashes from friction 0.6 to 0.45 | **failed**: 12 % (2.2 of 17.5 extra crashes per 1000 vehicle-h); cyclist crashes 11.9, merge 8.7, pedestrian -4.1 |
+| A2 a hinge beats one power law, break at 0.5-0.6 | **failed**: best hinge at 0.8, delta AIC 2.6 (search not paid for), so no evidence for a break on this grid |
+| A3 rear-end closing speed rises as friction falls | **failed**: Spearman 0.19 (p 0.65); closing speeds 2.9-6.9 m/s with no trend, from 0-26 rear-ends per cell |
+| B1 no violators: pedestrian crashes at x1.3 fall by > 70 % | **point estimate held, not established**: ratio 0.23 (95 % 0.08-0.53), 7 against 31 crashes; the interval includes a 47 % fall |
+| B2 limit elasticity falls below 3 without violators | **failed**: 5.2 (1.7-9.4) without violators against 5.7 (3.2-8.6) with them; crashes 6 -> 23 and 11 -> 48 |
+
+![crash types](img/crashmix.png)
+
+![crash types GIF](img/crashmix.gif)
+
+Per-1000-vehicle-hour totals along the friction grid: 6.4, 4.3, 9.7, 15.9, 17.9, 34.4, 33.4, 53.8, 184 (1.0 down to 0.3). The cliff here sits between 0.55 and 0.5 (17.9 to 34.4), not between 0.6 and 0.45 as yesterday's coarser grid suggested; with 4 to 17 crashes per cell
+at 0.6 and above, the location is not pinned down. The one sharp feature is the cyclist type: 0 crashes in each of the six cells from 1.0 to 0.55, then 12 at 0.5, 11 at 0.45, 15 at 0.4, 28 at 0.3. That was seen after the fact, so it is a hypothesis
+(a car closing on a slow cyclist needs braking the road no longer gives; `bicycle` bundles rear-end, junction and side-swipe events with cyclists), not a finding. Rear-end closing speed is an indirect proxy for "braking needed";
+the simulator does not record needed deceleration at a crash. Violators matter for pedestrian crashes (31 -> 7 at x1.3) but the speed-limit effect on all crashes survives without them, so the speed power law is not mainly a violator story.
+Caveat: 11 crashes at limit x1.0 with violators here against 14 in the 2026-11-04 run (32 copies), consistent with Poisson noise. `results/crashmix/crashmix.json`.
+
+**Tests**: `tests/test_daily_1107.py` (hinge fit finds a planted break and does not favour one for a pure power law, rate-ratio interval, type counts).
+
+**What to try next**: (a) test the cyclist hypothesis: friction grid with `p_bike=0` (does the 0.5 jump vanish?), 9 cells x 12 copies, ~8 min; (b) a 16-copy rerun of friction 0.6, 0.55, 0.5 only to place the cliff; (c) add a needed-deceleration recorder as a read-only counter ratio outside `xnet/` (replay with `avlab.blackbox`).
 
 ---
 
