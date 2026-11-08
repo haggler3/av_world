@@ -12,9 +12,48 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 5. **Speed limit x AV share and x demand** (child of 2026-11-04 idea 1): does an AV-heavy city pay less for a higher limit? Also weight crashes by speed at impact to compare with Nilsson's fatal exponent 4.
 6. **Pedestrian crashes carry the speed effect (38 of 57 at x1.3).** Rerun the sweep with pedestrian crossings' yield behaviour varied, or at crossings only.
 
-7. **Find the friction cliff's cause** (2026-11-06): the rate jumps 3.5x between friction 0.6 and 0.45. Print the braking the drivers *need* (gap / speed at the moment of each crash) to see whether 9 x friction falls below what car-following and junction approaches demand, then test a finer grid (0.6, 0.55, 0.5, 0.45).
+7. **Friction cliff** (2026-11-08): the finer grid shows no step and the crashes are merge / pedestrian / bicycle, not rear-end. Next: more copies at 0.7 and 0.6 to see whether 0.7->0.6 really doubles, and why bicycle crashes only appear at friction <= 0.5.
+10. **Does the AV planner read friction and the speed limit?** (2026-11-08) grep the AV policy for `friction`; if not, "AVs do not adapt" explains the half-AV city's steeper limit slope (7.1 vs 4.4, n.s.). Rerun with 48 copies per cell.
 8. **Why does a half-AV city lose its advantage when the road is slick?** Rate ratio 0.55 (dry) to 0.95 (friction 0.3), but no single interval excludes 1; ~4x the copies at friction 1.0, 0.6 and 0.3 would decide it (AVBench's wet_road is the rule-based AV's worst scenario).
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-08 - What is behind the friction cliff? And do AVs flatten the speed-limit curve?
+
+**Ideas kept** ([search](../results/daily/2026-11-08/search.json), only 8 candidates and a short search today): (1) humans-only Oakland at friction 0.7, 0.6, 0.55, 0.5, 0.45, 0.4 (12 copies each) with crashes split by type
+(next step 7 of 2026-11-06); (2) speed limit x0.85 / 1.0 / 1.3 with 0 and 50 % AVs (12 copies per cell; next step 5). Prior art: skid-resistance studies find
+wet-crash rates rise faster at low friction, with thresholds that vary by method ([Texas CRR thesis](https://tdl-ir.tdl.org/handle/2152/23567), [SWOV review](https://swov.nl/en/publicatie/assessment-skid-resistance-effect-traffic-safety-under-wet-pavement-conditions));
+Nilsson's exponents and their weaker fit on urban roads ([ACRS](https://archive.acrs.org.au/article/nilssons-power-model-connecting-speed-and-road-trauma-does-it-apply-on-urban-roads)); I found no study of the power model in AV mixed traffic (search snippets only).
+
+### Pseudocode (what `avlab/cliffcause.py` does)
+
+```
+cliff: for mu in 0.7..0.4: 12 copies, calibrated humans, friction=mu, one compiled run (examples._common.run_copies), warm 120 s, count 600 s
+       sum the seven crash-type counters per mu; rear-end share; hinge model: grid over mu of a quasi-Poisson fit with an extra slope below the hinge
+limit: for scale in .85 1 1.3: link_v *= scale (copy of the net dict); 12 copies with p_av=0 and 12 with p_av=0.5; slope of log rate on log scale per share,
+       and the slope difference (interaction)
+```
+
+### Predictions (written before the runs, [file](../results/daily/2026-11-08/predictions.md))
+
+* P1: rear-end share rises from < 35 % at friction >= 0.6 to > 50 % at <= 0.5.  * P2: a hinge between 0.5 and 0.6 with extra slope whose interval excludes 0.  * P3: half-AV elasticity smaller than humans' (interaction < 0, interval excludes 0).
+
+### Results ([cliff](../results/cliffcause/cliff.json), [limit](../results/cliffcause/limit.json))
+
+![cliff cause](img/cliffcause.png)
+
+| friction | 0.7 | 0.6 | 0.55 | 0.5 | 0.45 | 0.4 |
+|---|---|---|---|---|---|---|
+| crashes (per 1000 vehicle-h) | 8 (8.6) | 16 (17.1) | 17 (18.4) | 30 (31.8) | 33 (34.8) | 67 (71.4) |
+
+**All three predictions failed.** (P1) Rear-end crashes are a small part of the slick-road crashes: 21 % of crashes at friction >= 0.6 (5 of 24; the 0.7 cell alone is 4 of 8) and 6 % at <= 0.5 (8 of 130).
+What grows is merge, pedestrian and, from 0.5 on, bicycle crashes (0, 0, 0, then 6, 9, 21). So the 9 x friction braking cap is not biting car-following; it is the other conflict types that get worse. (P2) On this
+finer grid there is no sharp cliff: the rate climbs steadily (8.6, 17, 18, 32, 35, 71) and the best hinge (at 0.45) has an extra slope of -2.4 with SE 2.1, not distinguishable from 0; yesterday's "flat to 0.6, then 3.5x" came from a 16-copy cell with 17 crashes and is not
+reproduced as a step (here 0.7 to 0.6 doubles). (P3) The half-AV city's speed-limit elasticity is 7.1 (SE 1.7) against 4.4 (SE 1.1) for humans, the opposite sign to the prediction (interaction +2.7, SE 2.0, not significant): at x1.3 both cities have 25 crashes (27.7 vs 27.5 per 1000 vehicle-h) while at x1.0 it is 1 against 6.
+Caveats: 8-67 crashes per cell, one network, one seed stream; type counts per cell are small. Whether the AV planner reads the friction value is still unchecked.
+
+**Tests**: `tests/test_daily_1108.py`. No new GIF today (the existing `img/friction_blackice.gif` shows one slick-road crash).
 
 ---
 
