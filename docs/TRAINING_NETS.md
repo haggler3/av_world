@@ -139,6 +139,14 @@ Train any of them the same way: `av-world nets train crn --quick`.
 
 It is a cached DAG, so reruns only rebuild stale stages. The design, ten methods and results are in [AUTOTAG.md](AUTOTAG.md).
 
+## Sim-to-real
+
+| feature | question | quick / full | use |
+|---|---|---|---|
+| `realism` | where does simulated traffic differ from real logs, and what patch closes it? | 8 / 60 min | `av-world realism run`, then `beh = easy.realism.preset()` (patched human drivers for xnet) |
+
+The design, the ten methods and the results are in [SIM2REAL.md](SIM2REAL.md).
+
 ## Making it fast
 
 * **Use every core.** The network modules set `XLA_FLAGS=--xla_force_host_platform_device_count=4`, so the 4 CPU cores become 4 devices and

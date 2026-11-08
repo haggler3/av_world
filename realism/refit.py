@@ -11,7 +11,8 @@ from . import measure as M
 from . import simrec as SR
 from . import stats as ST
 
-SPACE = {"ou_sigma": (0.0, 1.2), "ou_tau": (0.3, 5.0), "pulse_rate": (0.0, 0.02), "bank": (0.5, 1.0), "s0_scale": (0.4, 1.2)}
+SPACE = {"demand": (0.8, 4.0), "v0_scale": (0.9, 1.35), "ou_sigma": (0.0, 1.2), "ou_tau": (0.3, 5.0), "pulse_rate": (0.0, 0.02),
+         "bank": (0.5, 1.0), "s0_scale": (0.3, 1.2)}
 FIXED = {"idm_plus": 1.0}
 
 

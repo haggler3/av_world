@@ -42,7 +42,7 @@ def log(msg):
 @stage("real_logs", config={"limit": None})
 def real_logs(limit=None):
     from autotag import scenes as AS
-    return AS.av2_scenes(limit=limit or cfg(400, 120))
+    return [M.crop(s) for s in AS.av2_scenes(limit=limit or cfg(400, 120))]
 
 
 @stage("tracker_noise", deps=("real_logs",))
@@ -55,8 +55,8 @@ def real_clean(real_logs, tracker_noise):
     return [M.clean(s, tracker_noise) for s in real_logs]
 
 
-@stage("sim_worlds", config={"version": 1})
-def sim_worlds(version=1):
+@stage("sim_worlds", config={"version": 2})
+def sim_worlds(version=2):
     sc = SR.record([SR.behaviour(**k) for k in WORLDS.values()], minutes=cfg(4, 2), copies=cfg(3, 1), seed=0)
     return {n: [s for s in sc if s["truth"]["beh"] == i] for i, n in enumerate(WORLDS)}
 
@@ -66,7 +66,7 @@ def headway_bank(real_clean, tracker_noise, iters=2):
     real_p10 = FL.p10_headways(real_clean)
 
     def simulate(bank):
-        sc = SR.record(SR.behaviour(idm_plus=1.0, bank=1.0), minutes=cfg(3, 2), copies=cfg(2, 1), seed=1, bank=bank)
+        sc = SR.record(SR.behaviour(idm_plus=1.0, bank=1.0, demand=2.0), minutes=cfg(3, 2), copies=cfg(2, 1), seed=1, bank=bank)
         return FL.p10_headways(RF.process(sc, tracker_noise))
     B, hist = FL.deconvolve(real_p10, simulate, iters=cfg(iters, 1), log=log)
     return {"bank": B, "history": hist, "real_p10": real_p10}
@@ -80,12 +80,15 @@ def refit(real_clean, tracker_noise, headway_bank, iters=3, pop=8):
 
 @stage("sim_patched", deps=("refit", "headway_bank"))
 def sim_patched(refit, headway_bank):
-    return SR.record(SR.behaviour(**refit["knobs"]), minutes=cfg(4, 2), copies=cfg(3, 1), seed=0, bank=headway_bank["bank"])
+    """The patched drivers, and the stored drivers in the refit's traffic density (demand only): the density step of the decomposition."""
+    sc = SR.record([SR.behaviour(**refit["knobs"]), SR.behaviour(demand=refit["knobs"]["demand"])], minutes=cfg(4, 2), copies=cfg(3, 1),
+                   seed=0, bank=headway_bank["bank"])
+    return {"patched": [s for s in sc if s["truth"]["beh"] == 0], "dense": [s for s in sc if s["truth"]["beh"] == 1]}
 
 
 @stage("processed", deps=("sim_worlds", "sim_patched", "tracker_noise"))
 def processed(sim_worlds, sim_patched, tracker_noise):
-    worlds = dict(sim_worlds, patched=sim_patched)
+    worlds = dict(sim_worlds, **sim_patched)
     out = {}
     for n, L in worlds.items():
         sens = [M.corrupt(s, tracker_noise, i) for i, s in enumerate(L)]
@@ -157,9 +160,9 @@ def report(tracker_noise, mix, scoreboard, following_check, discriminator, repla
 
 def decomposition(sb):
     """The gap, step by step: as logged -> through the same sensor -> both cleaned -> real scene mix -> structural fix -> fitted patch."""
-    steps = [("as logged (default drivers)", sb["default"]["raw"]), ("sim through the real tracker", sb["default"]["sensor"]),
-             ("both cleaned (driving only)", sb["default"]["clean"]), ("+ real scene mix", sb["default"]["clean_mix"]),
-             ("+ IDM+ (structural fix)", sb["idm_plus"]["clean"]), ("+ fitted patch (bank, OU, pulses)", sb["patched"]["clean"])]
+    steps = [("as logged, stored drivers", sb["default"]["raw"]), ("sim through the real tracker", sb["default"]["sensor"]),
+             ("both cleaned (driving only)", sb["default"]["clean"]), ("+ reweighted to the real scene mix", sb["default"]["clean_mix"]),
+             ("+ real traffic density (demand)", sb["dense"]["clean"]), ("+ IDM+, headway bank, OU, pulses", sb["patched"]["clean"])]
     return [{"step": n, "gap": s["gap"], **{k: s["tails"][k]["ratio"] for k in ST.TAILS}} for n, s in steps]
 
 

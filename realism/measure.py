@@ -93,6 +93,33 @@ def noise_model(scenes, pos_scenes=None):
     return out
 
 
+def crop(sc, radius=80.0):
+    """Field-of-view parity: keep the road users within `radius` of the ego at the middle frame, as simulated scenes are cut
+    (autotag.scenes.RADIUS). An AV2 log tracks objects much further out; uncropped, a real scene has several times the vehicles."""
+    T = sc["x"].shape[1]
+    e, k = sc["ego"], T // 2
+    ex, ey = sc["x"][e, k], sc["y"][e, k]
+    if not np.isfinite(ex):
+        ex, ey = np.nanmean(sc["x"][e]), np.nanmean(sc["y"][e])
+    # a vehicle's distance at the middle frame, or its closest approach if it is not logged then
+    d = np.nanmin(np.hypot(sc["x"] - ex, sc["y"] - ey), 1)
+    dm = np.hypot(sc["x"][:, k] - ex, sc["y"][:, k] - ey)
+    d = np.where(np.isfinite(dm), dm, d)
+    keep = np.nonzero(np.isfinite(d) & (d < radius))[0]
+    keep = np.r_[e, keep[keep != e]]
+    s = dict(sc)
+    for f in ("x", "y", "yaw", "v", "alive"):
+        s[f] = sc[f][keep]
+    for f in ("kind", "av", "length"):
+        s[f] = np.asarray(sc[f])[keep]
+    s["ego"] = 0
+    if len(sc["px"]):
+        pd = np.nanmin(np.hypot(sc["px"] - ex, sc["py"] - ey), 1)
+        pk = np.nonzero(np.isfinite(pd) & (pd < radius))[0]
+        s["px"], s["py"] = sc["px"][pk], sc["py"][pk]
+    return s
+
+
 # ---------------------------------------------------------------- real -> clean
 def hampel(v, k=2, n_sigma=3.0, floor=0.5):
     """Replace isolated spikes: a sample further than n_sigma robust SDs (and `floor` m/s) from its window median."""

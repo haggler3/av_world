@@ -11,8 +11,8 @@ from . import measure as M
 from . import stats as ST
 
 IMG = "docs/img/realism"
-C = {"real": "#222222", "default": "#d1495b", "tail_fit": "#edae49", "idm_plus": "#00798c", "patched": "#30638e"}
-LBL = {"real": "real AV2", "default": "sim: stored drivers", "tail_fit": "sim: earlier tail fit", "idm_plus": "sim: IDM+ only", "patched": "sim: patched"}
+C = {"real": "#222222", "dense": "#8d6a9f", "default": "#d1495b", "tail_fit": "#edae49", "idm_plus": "#00798c", "patched": "#30638e"}
+LBL = {"real": "real AV2", "dense": "sim: stored drivers, real density", "default": "sim: stored drivers", "tail_fit": "sim: earlier tail fit", "idm_plus": "sim: IDM+ only", "patched": "sim: patched"}
 
 
 def _style(ax):
@@ -116,7 +116,7 @@ def fig_waterfall(res):
     fig, axs = plt.subplots(1, 2, figsize=(14, 4.3), gridspec_kw={"width_ratios": [1.1, 1]})
     ax = axs[0]
     g = [d["gap"] for d in dec]
-    cols = ["#bbbbbb", "#999999", C["default"], "#b5838d", C["idm_plus"], C["patched"]]
+    cols = ["#bbbbbb", "#999999", C["default"], "#b5838d", C["dense"], C["patched"]]
     ax.barh(range(len(g))[::-1], g, color=cols)
     for i, v in enumerate(g):
         ax.text(v + 0.02, len(g) - 1 - i, f"{v:.2f}", va="center", fontsize=9)

@@ -171,6 +171,13 @@ def test_trait_bank_is_sampled_and_reproducible():
     alive, av, kind = np.asarray(st.alive[0]), np.asarray(st.av[0]), np.asarray(st.kind[0])
     cars = alive & ~av & (kind == X.CAR)
     assert cars.sum() > 5 and np.allclose(np.asarray(st.T[0])[cars], 0.5) and np.allclose(np.asarray(st.s0[0])[cars], 1.0)
+    X.set_trait_bank(np.array([[0.5, 1.0, 1.4, 2.2]], np.float32))
+    try:
+        st3 = C.run(w, w.reset(1, 0), X.Behaviour(bank=1.0, crn=1.0, s0_scale=0.5), 30.0)
+    finally:
+        X.set_trait_bank(None)
+    cars3 = np.asarray(st3.alive[0]) & ~np.asarray(st3.av[0]) & (np.asarray(st3.kind[0]) == X.CAR)
+    assert np.allclose(np.asarray(st3.s0[0])[cars3], 0.5)
     assert np.array_equal(np.asarray(st.T), np.asarray(st2.T))
 
 
