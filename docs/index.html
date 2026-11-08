@@ -315,6 +315,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="700" height="289" src="img/cliffcause.png" alt="Crash types by road friction, and crash rate against speed limit with and without AVs" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Behind the friction cliff</h3>
+          <p>A finer friction grid, crashes split by type, and the speed-limit sweep with half AVs (12 copies per cell).
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a>.</p></div>
+        <ul>
+          <li>Not rear-end crashes: they are 6&nbsp;% of crashes at friction 0.5 or lower. Merge, pedestrian and bicycle crashes grow, and the rate climbs steadily (8.6 to 71 per 1000 vehicle-hours) with no significant step.</li>
+          <li>Half-AV cities did not flatten the speed-limit curve (slope 7.1 against 4.4, not significant).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="700" height="392" src="img/twins.gif" alt="Two copies of Oakland, one nudged: a single car given +3 m/s leaves its twin in step, a new random stream puts almost every vehicle somewhere else within two minutes" loading="lazy"></figure>
       <div class="text">
         <div><h3>Twin cities: is the simulator chaotic?</h3>
