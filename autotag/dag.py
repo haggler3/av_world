@@ -58,12 +58,14 @@ def keys_for(target):
     return keys
 
 
-def run(target, force=(), log=print):
+def run(target, force=(), log=print, cache=None):
+    """cache: the folder for this pipeline's outputs (default CACHE); other packages (realism) keep their own."""
+    cache = cache or CACHE
     keys, vals = keys_for(target), {}
-    os.makedirs(CACHE, exist_ok=True)
+    os.makedirs(cache, exist_ok=True)
     for n in order(target):
         s = STAGES[n]
-        path = os.path.join(CACHE, f"{n}-{keys[n]}.pkl")
+        path = os.path.join(cache, f"{n}-{keys[n]}.pkl")
         if n not in force and os.path.exists(path):
             with open(path, "rb") as f:
                 vals[n] = pickle.load(f)
@@ -77,11 +79,12 @@ def run(target, force=(), log=print):
     return vals[target]
 
 
-def explain(target):
+def explain(target, cache=None):
+    cache = cache or CACHE
     keys = keys_for(target)
     lines = []
     for n in order(target):
-        fresh = os.path.exists(os.path.join(CACHE, f"{n}-{keys[n]}.pkl"))
+        fresh = os.path.exists(os.path.join(cache, f"{n}-{keys[n]}.pkl"))
         lines.append(f"{'cached' if fresh else 'stale ':6}  {n:22} <- {', '.join(STAGES[n].deps) or '(source)'}")
     return "\n".join(lines)
 

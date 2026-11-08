@@ -35,3 +35,7 @@ results/nets/quick/
 results/autotag/cache*/
 results/autotag/smoke/
 results/autotag/quick/
+
+# realism: stage caches and quick runs
+results/realism/cache*/
+results/realism/quick/

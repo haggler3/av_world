@@ -85,6 +85,9 @@ FEATURES = [
             "17 tags on real Argoverse 2 and simulated scenes; learned tags calibrated to a precision target; see docs/AUTOTAG.md",
             (3, 25), ("results/autotag/eval.json", "results/autotag/tags_av2.parquet"), "docs/AUTOTAG.md#the-ten-methods",
             ("city", "av2"), "nets.registry:_run_autotag", 'easy.tag.query("cut_in & hidden_ahead", source="av2")'),
+    Feature("realism", "system", "Sim-to-real gap", "Where does simulated traffic differ from real logs, and what patch closes it?",
+            "RESULT", (8, 60), ("results/realism/scoreboard.json", "results/realism/preset.json"), "docs/SIM2REAL.md#the-ten-methods",
+            ("city", "av2"), "nets.registry:_run_realism", "beh = easy.realism.preset()   # patched human drivers for xnet"),
 ]
 BY_NAME = {f.name: f for f in FEATURES}
 
@@ -181,6 +184,11 @@ def _run_sigreg(quick=False, out_dir=FULL_OUT):
 def _run_terminal_value(quick=False, out_dir=FULL_OUT):
     from wmplan import terminal_value as m
     m.main(64 if quick else 256, os.path.join(out_dir, "extras") if quick else "results/extras")
+
+
+def _run_realism(quick=False, out_dir=FULL_OUT):
+    from realism import pipeline as PL
+    return PL.run(quick=quick)
 
 
 def _run_autotag(quick=False, out_dir=FULL_OUT):
