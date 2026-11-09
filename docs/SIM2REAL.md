@@ -21,15 +21,99 @@ av-world realism report         # the gap, step by step
 python -c "from av_world import easy; beh = easy.realism.preset()"   # patched human drivers for xnet
 ```
 
-RESULTS_PLACEHOLDER
+## Results (400 real AV2 scenes, about 2,100 simulated scenes per world)
+
+| step | gap | hard brakes | headway < 0.8 s | TTC < 2 s | TTC < 1 s |
+|---|---|---|---|---|---|
+| as logged: stored drivers against the real tracker | 2.47 | ×0.33 | ×0.04 | ×0.43 | ×0.01 |
+| sim pushed through the real tracker | 1.43 | ×1.29 | ×0.10 | ×0.70 | ×0.31 |
+| both cleaned (driving only) | 2.25 | ×0.40 | ×0.04 | ×0.63 | ×0.02 |
+| + reweighted to the real scene mix | 2.09 | ×0.64 | ×0.02 | ×0.72 | ×0.00 |
+| + real traffic density (demand ×3.9 alone) | 2.25 | ×0.34 | ×0.04 | ×0.71 | ×0.03 |
+| **+ IDM+, headway bank, OU residual, pulses, launches (the preset)** | **0.85** | **×0.90** [0.69, 1.18] | **×1.20** [0.91, 1.60] | ×2.66 [2.20, 3.19] | **×0.53** [0.37, 0.78] |
+| for reference: the earlier tail fit (`avlab.tail_calibrate`) | 1.33 | | | | |
+
+Ratios are sim/real; brackets are 95 % bootstrap intervals over scenes.
+
+![The gap, step by step](img/realism/waterfall.png)
+
+**What is different, and where:**
+
+1. **The sensor is a large part of the logged gap.**
+   - 18 % of real tracks contain speed jumps no car can make.
+   - Tracked road users carry a correlated speed error of 0.29 m/s (lag-one correlation 0.78 per 0.2 s). The AV's own localisation
+     carries 0.08 m/s, uncorrelated: the built-in control works.
+   - Cleaning the real logs halves their hard-braking rate, from about 50 to 22 per hour. The stored simulator was never as gentle as the
+     raw comparison said: hard brakes go from ×0.33 as logged to ×0.40 cleaned. Through the real tracker, the simulator *over*-brakes
+     (×1.29).
+   - Both parity directions agree that braking is close and tight following is not, so the rest is driving.
+2. **Field of view.** An AV2 log tracks about 20 moving vehicles. Within the 80 m the simulator's scenes keep, it is 14, against 4 in a
+   stored-driver simulated scene. Uncropped,
+   every density comparison was off by half.
+3. **The scene mix cannot be reweighted into shape.**
+   - The density-ratio weights keep an effective 47 of 531 simulated scenes; the real context (7 moving neighbours within 30 m of a
+     typical vehicle against 3) barely exists in the simulator.
+   - Quadrupling demand alone does not fix it: the stored drivers stay as gentle (gap 2.25). The simulated city saturates around half
+     the real density, and gentle drivers in dense traffic are still gentle.
+4. **Car following is the main behavioural gap, and it is structural.**
+   - The stored drivers almost never follow under 0.8 s (×0.04, in every speed bin; see *where*). IDM's free-road term makes urban
+     followers hang back.
+   - IDM+ alone moves headways only a little (the IDM+ curve in the middle panel below). The rest is the T distribution: real
+     drivers' closest following has a long short tail. The deconvolved bank has T at its 10th, 50th and 90th percentiles of 0.32, 1.04
+     and 2.8 s, against the stored 1.0–1.8 s.
+   - The deconvolution converges in three simulations; its quantile error falls 0.084 → 0.063 → 0.039 s.
+   - The headway W1 falls from 0.37 to 0.04.
+5. **Real drivers launch harder and are jerkier.** The refit raises human cars' maximum acceleration ×1.6 and adds a smooth residual
+   (0.57 m/s², τ 3.2 s). Even so, the classifier's two strongest clues for the patched world are jerk (real 2.8 against 2.4 m/s³) and
+   the 98th-percentile acceleration (2.6 against 1.8 m/s²).
+
+![Headway, closest following, TTC](img/realism/distributions.png)
+
+![Where](img/realism/where.png)
+
+**What did not close (honest residuals):**
+
+- **The classifier still separates real from simulated vehicles easily:** AUROC 0.966 for the stored drivers against 0.954 patched. What
+  it uses changed: density fell from its top clue (permutation importance 0.14 → 0.05), and jerk and acceleration tails are now on top. A
+  driver model with a smooth longitudinal law will not produce real jerk; that needs a different action model (for example a learned
+  one) or more tracker noise left in the cleaned real logs than the smoother removes.
+- **TTC under 2 s overshoots (×2.7) while TTC under 1 s undershoots (×0.53).** Patched drivers close on leaders often but rarely
+  hard. Real closing is rarer but more extreme.
+- **Standstill gaps got smaller than real.** The median is 1.2 m patched against 2.7 m real; the W1 went from 0.54 to 0.69. The refit
+  still trades queue gaps for following at speed (s0 ×0.62). Real standstill gaps are noisy (SD 3.4 m) because AV2 lengths are assumed
+  per class, which caps how hard the scoreboard can push back.
+- **Log replay barely moves.** The 5 s error over 30 real scenes is 16.7 m with stored drivers, 16.2 m patched and 10.2 m for constant
+  velocity. Replay error is dominated by what the patch does not touch: routes, signals and lane assignment of seeded vehicles.
+- **Per-driver IDM fits are not identifiable from 4–10 s of urban driving.** Even on perfect simulated data, the fitted T correlates
+  with the true T at only Spearman 0.33. That is why the bank is deconvolved, not fitted.
+- **The refit's own score is optimistic.** The best candidate scored 0.74 on its 3-minute evaluation run and 0.85 on the fresh, longer
+  recording (selection on a noisy loss).
+
+![Following, coloured by headway: real, stored drivers, patched](img/realism/following.gif)
+
+![Sensor](img/realism/sensor.png)
+
+![Discriminator](img/realism/discriminator.png)
+
+**The preset** (`results/realism/preset.json`, with the trait table in `bank.npy`). All the knobs are new `Behaviour` fields and are off
+by default, so every stored result is unchanged:
+
+```python
+Behaviour(idm_plus=1.0, demand=3.91, v0_scale=1.18, amax_scale=1.58, ou_sigma=0.57, ou_tau=3.24, pulse_rate=0.0097,
+          bank=0.92, s0_scale=0.62)       # + xnet.sim.set_trait_bank(np.load("results/realism/bank.npy"))
+```
+
+`results/realism/scoreboard_v1_no_standstill.json` keeps the first refit, which had no standstill-gap statistic and no launch knob.
+It reached gap 0.77 by setting s0 ×0.3: a result the standstill statistic now rules out.
+
 
 ## First principles
 
 **One extractor, both sources.** Every statistic comes from the same code on the shared scene format: 0.2 s, with leaders found
 geometrically (same lane, heading within 35°). The statistics are the tail rates of the incident audit (hard brakes, headway < 0.8 s,
-TTC < 2 s and < 1 s) and six distributions (speed, acceleration over a step and over a second, jerk, headway, 1/TTC). Distances are
+TTC < 2 s and < 1 s) and seven distributions (speed, acceleration over a step and over a second, jerk, headway, 1/TTC, the standstill gap in queues). Distances are
 Wasserstein-1 in units of the real interquartile range; tail rates are compared as sim/real with a bootstrap over scenes. **gap** is
-the mean |log ratio| of the four tails (capped at log 20) plus the mean W1 of the six distributions. It is 0 when the two sources are
+the mean |log ratio| of the four tails (capped at log 20) plus the mean W1 of the seven distributions. It is 0 when the two sources are
 indistinguishable by these numbers.
 
 **Sensor model, fitted from the logs alone.** Write the observed speed as `y = v + e`. Let the driver's acceleration be an
@@ -119,7 +203,7 @@ for stage in topological_order(target):
 | `real_clean` | Hampel filter and RTS smoother on every real track | scenes |
 | `sim_worlds` | stored drivers, the earlier tail fit, IDM+ only: one compiled run, one behaviour per city copy, common random numbers | scenes |
 | `headway_bank` | deconvolution of the per-driver p10 headway: 2 iterations, each a simulation | trait table [2000, 4] |
-| `refit` | cross-entropy search over 7 knobs, 8 candidates per generation, each driving its own city copy | knobs and history |
+| `refit` | cross-entropy search over 8 knobs, 4 generations of 8 candidates, each driving its own city copy | knobs and history |
 | `sim_patched` | the patched drivers, plus the stored drivers at the refit's density | scenes |
 | `processed` | for every world: raw, through the sensor, and through the sensor then cleaned | scenes |
 | `mix` | scene-context density ratio and its effective sample size | weights |
@@ -232,13 +316,13 @@ features give a Gaussian-ish but not exactly Gaussian process; the residual igno
 ### 9. Refit (`refit.py`; stage `refit`)
 
 ```
-knobs = (demand, v0_scale, ou_sigma, ou_tau, pulse_rate, bank share, s0_scale);  idm_plus = 1
-CEM: 3 generations x 8 candidates; each candidate drives its own city copy in one vmapped run (common random numbers)
+knobs = (demand, v0_scale, amax_scale, ou_sigma, ou_tau, pulse_rate, bank share, s0_scale);  idm_plus = 1
+CEM: 4 generations x 8 candidates; each candidate drives its own city copy in one vmapped run (common random numbers)
 loss = scoreboard gap of clean(corrupt(sim)) against clean(real)
 ```
 
 **Pros:** every knob is fitted on the same scoreboard the report uses; candidates differ by their knobs, not by their dice.
-**Cons:** 24 evaluations of 3 simulated minutes each is a small budget, and the loss is noisy at that size; the result is a good point,
+**Cons:** 32 evaluations of 3 simulated minutes each is a small budget, and the loss is noisy at that size; the result is a good point,
 not a posterior.
 
 ### 10. Realism gates and log replay (`tests/test_realism.py`, `replay.py`; stage `replay`)

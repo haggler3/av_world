@@ -219,7 +219,10 @@ LEARNED = None  # parameters of wm2.model (read at trace time): set with set_lea
 
 def set_learned_follower(params):
     global LEARNED
+    changed = (LEARNED is None) != (params is None) or params is not None
     LEARNED = None if params is None else jax.tree.map(jnp.asarray, params)
+    if changed:
+        _clear_compiled()  # read at trace time, like BANK
 
 
 BANK = None  # trait table [M, 4] (T, s0, amax, b), read at trace time: set with set_trait_bank BEFORE building a Sim or tracing step
@@ -227,8 +230,23 @@ OU_K = 8     # random Fourier features per driver for the smooth acceleration re
 
 
 def set_trait_bank(table):
+    """BANK is read when step is traced, so every compiled function that traced it is stale after a change: clear JAX's caches
+    (otherwise a run with the same shapes as an earlier one silently reuses the old bank)."""
     global BANK
-    BANK = None if table is None else jnp.asarray(np.asarray(table, np.float32)[:, :4])
+    new = None if table is None else jnp.asarray(np.asarray(table, np.float32)[:, :4])
+    changed = (BANK is None) != (new is None) or (new is not None and (BANK.shape != new.shape or not bool(jnp.all(BANK == new))))
+    BANK = new
+    if changed:
+        _clear_compiled()
+
+
+def _clear_compiled():
+    jax.clear_caches()
+    try:
+        from nets import collect as _C
+        _C._PMAPS.clear()
+    except Exception:
+        pass
 
 
 def ou_residual(uid, t, tau):
