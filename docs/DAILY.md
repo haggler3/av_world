@@ -17,6 +17,51 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 8. **Why does a half-AV city lose its advantage when the road is slick?** Rate ratio 0.55 (dry) to 0.95 (friction 0.3), but no single interval excludes 1; ~4x the copies at friction 1.0, 0.6 and 0.3 would decide it (AVBench's wet_road is the rule-based AV's worst scenario).
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
 
+11. **Friction-aware AVs** (2026-11-09): tune the clamp (speed exponent 0.25..1) for the safety-speed frontier; 48 copies per cell; slow only near crossings.
+12. **Twin kicks**: 100+ kicks to settle junction-box vs car-following origin of divergences; kick size vs divergence probability.
+
+---
+
+## 2026-11-09 - Do AVs that read the road friction crash less? And where do kicked twins first diverge?
+
+**Ideas kept** (13 candidates, short paper search; [search](../results/daily/2026-11-09/search.json)): (1) make the AV friction-aware from outside the simulator (next step 10 of 2026-11-08); (2) 24 kicked twins instead of one (next step 3). A grep showed that `xnet/sim.py` uses friction only in the braking cap `a_min = -9 x friction`: an AV keeps its 1.3 s headway and its desired speed on any road.
+Prior art: friction-adaptive headway and braking thresholds are standard in patents and ACC papers ([patent 7739023](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7739023), [friction-aware policy preprint 2605.08528](https://arxiv.org/pdf/2605.08528)); disturbance growth through intersections ([Treiber and Kesting simulator notes](https://arxiv.org/pdf/1012.4913)). I read search snippets only.
+
+### Pseudocode
+
+```
+frictionav.py: half-AV Oakland, mu = 0.45, 16 copies per cell (same initial states), 4 cells: base | headway | speed | both
+               after every X.step:  av slots:  T = max(T, 1.3/mu)   [headway, 2.9 s]   v0f = min(v0f, sqrt(mu))   [speed, 0.67]   (xnet/ untouched)
+               warm 120 s, count 600 s; AV-involved crashes per AV vehicle-hour vs base: exact conditional rate ratio, Holm over 3 cells
+twinkicks.py:  12 copies warmed 120 s; per mode (fastest car / random moving car) a twin with that car +3 m/s; 300 s at 1 s resolution
+               displaced = alive in both and (|ds| > 1 m or other track); first other displaced car: following (same track <= 30 m) / box (kicked or it in a junction box) / other
+```
+
+### Predictions ([1](../results/daily/2026-11-09/predictions.md), [2](../results/daily/2026-11-09/predictions2.md)) and results ([frictionav](../results/frictionav/frictionav.json), [twinkicks](../results/twinkicks/twinkicks.json))
+
+![friction-aware AVs](img/frictionav.png)
+
+| cell | all crashes (per 1000 veh-h) | AV-involved crashes (per 1000 AV-h) | AV-involved ratio vs base (95 %), Holm p | AV mean speed |
+|---|---|---|---|---|
+| base | 49 (39.3) | 23 (42.0) | 1 | 16.6 km/h |
+| headway 2.9 s | 41 (32.2) | 16 (28.0) | 0.67 (0.33-1.32), p 0.26 | 15.3 |
+| speed x0.67 | 37 (28.6) | 3 (5.1) | 0.12 (0.02-0.40), p 1e-4 | 14.8 |
+| both | 28 (21.2) | 5 (8.2) | 0.20 (0.06-0.53), p 4e-4 | 13.6 |
+
+**P1 held, P2 failed, P3 failed.** Slowing the AVs' desired speed (or both) cuts AV-involved crashes by 80-90 %; all crashes fall to 0.54 (0.33-0.87) with both changes (unadjusted p 0.009; Holm over 3 cells 0.026). Headway alone gives 0.67 but its interval includes 1 (P2 predicted > 0.8: the point estimate is lower, so P2 failed, though it is not significant). The speed price is 11 % for the speed cell (16.6 to 14.8 km/h), 18 % for both (to 13.6), so P3 (> 15 % for the speed cell) failed. Human-involved crashes are not changed by design, so the city total falls less than the AV part.
+Caveat: 3 and 5 AV crashes per cell, one network, one initial-state set, clamp values chosen once (no tuning); `finished` trips also fall (7397 to 6430 with both).
+
+![kicked twins](img/twinkicks.png)
+
+**Q1 inconclusive, Q2 failed.** Only 3 of 24 kicks (1 of 12 fastest-car, 2 of 12 random-car) spread to >= 25 cars within 300 s; of those, 2 began through a junction box and 1 through car-following (2/3, interval 0.09-0.99). Kicking the fastest car did not diverge more often (1/12 vs 2/12). Two random-car twins displaced 348 and 360 cars, so when a divergence happens it spreads city-wide; most +3 m/s kicks (21 of 24) never move another car in 300 s, which says the earlier single diverging twin was a lucky draw, not the typical case.
+
+**Tests**: `tests/test_daily_1109.py`. No new GIF today (time); `img/twintrace.gif` shows the divergence mechanism.
+
+### Next
+* Tune the AV clamp: speed-only with sqrt(mu)^k, k in 0.25..1, to draw the safety-vs-speed frontier; more copies (48) per cell.
+* Does an AV that slows only near pedestrian crossings keep the gain at a smaller speed price?
+* 100+ kicks (cheap: 1-2 s per pair) to settle box vs following, and kick size vs divergence probability.
+
 ---
 
 ## 2026-11-08 - What is behind the friction cliff? And do AVs flatten the speed-limit curve?

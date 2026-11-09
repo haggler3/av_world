@@ -1,0 +1,98 @@
+{
+ "date": "2026-11-09",
+ "candidates": [
+  {
+   "idea": "friction-aware AVs (headway/speed clamps) at mu 0.45",
+   "prior": 0.6,
+   "minutes": 25,
+   "outcome": "KEPT: probe ran 15 s quick; full run 4 cells"
+  },
+  {
+   "idea": "kicked twins: junction-box handoff across 24 kicks",
+   "prior": 0.5,
+   "minutes": 10,
+   "outcome": "KEPT"
+  },
+  {
+   "idea": "does AV planner read friction? (grep)",
+   "prior": 0.9,
+   "minutes": 0,
+   "outcome": "answered by grep: only a_min cap; folded into idea 1"
+  },
+  {
+   "idea": "seeds with intervals on every AVBench row",
+   "prior": 0.6,
+   "minutes": 45,
+   "outcome": "dropped: >12 min"
+  },
+  {
+   "idea": "settle H4 curve / H3 wet threshold",
+   "prior": 0.4,
+   "minutes": 60,
+   "outcome": "dropped: GPU-sized"
+  },
+  {
+   "idea": "half-AV advantage at friction 1.0/0.6/0.3, 4x copies",
+   "prior": 0.4,
+   "minutes": 30,
+   "outcome": "dropped: >12 min"
+  },
+  {
+   "idea": "ped yield behaviour vs speed effect",
+   "prior": 0.4,
+   "minutes": 20,
+   "outcome": "dropped: needs xnet knob"
+  },
+  {
+   "idea": "L4 leaderboard random stream check",
+   "prior": 0.5,
+   "minutes": 15,
+   "outcome": "dropped: duplicates existing twin-stream result"
+  },
+  {
+   "idea": "friction x AV share GIF of a crash avoided",
+   "prior": 0.4,
+   "minutes": 10,
+   "outcome": "dropped: no GIF budget"
+  },
+  {
+   "idea": "mini-bench with more drivers",
+   "prior": 0.3,
+   "minutes": 0,
+   "outcome": "dropped: needs seeds"
+  },
+  {
+   "idea": "adaptive AV via learned policy",
+   "prior": 0.3,
+   "minutes": 60,
+   "outcome": "dropped: compute"
+  },
+  {
+   "idea": "speed-at-impact weighted exponent",
+   "prior": 0.4,
+   "minutes": 15,
+   "outcome": "dropped: not instrumented"
+  },
+  {
+   "idea": "README tidy / doc links",
+   "prior": 0.8,
+   "minutes": 2,
+   "outcome": "done in cleanup"
+  }
+ ],
+ "probes": [
+  {
+   "idea": "friction-aware AVs",
+   "probe": "grep friction in xnet/sim.py: only a_min=-9*friction (line 231); --quick run ok",
+   "Q_after": 0.55,
+   "N": 2
+  },
+  {
+   "idea": "twin kicks",
+   "probe": "--quick run (2 copies, 40 s) ok",
+   "Q_after": 0.4,
+   "N": 1
+  }
+ ],
+ "note": "short search (13 candidates, paper PUCT, c=1.2); kept the two with best Q"
+}
