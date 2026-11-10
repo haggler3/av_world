@@ -328,6 +328,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="576" height="608" src="img/whocrashes.gif" alt="Black box replay: an AV in a left-turn crash on a slick road" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Who is struck: AV or human?</h3>
+          <p>A half-AV Oakland, pedestrian and bicycle strikes per vehicle-hour by driver type, plus the two friction runs pooled (152 copies).
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> · <a href="img/whocrashes.png">figure</a> · <a href="img/frictionpool.png">pooled friction</a>.</p></div>
+        <ul>
+          <li>AVs strike <b>3x fewer</b> road users per vehicle-hour at friction 0.4 (28 of 139), but the advantage is gone at a x1.3 speed limit (ratio 0.91, 0.53&ndash;1.56).</li>
+          <li>Pooled friction: flat from 1.0 to 0.7, then crash rate ~ friction<sup>&minus;3.5</sup>. A bend, not a cliff.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="700" height="392" src="img/twins.gif" alt="Two copies of Oakland, one nudged: a single car given +3 m/s leaves its twin in step, a new random stream puts almost every vehicle somewhere else within two minutes" loading="lazy"></figure>
       <div class="text">
         <div><h3>Twin cities: is the simulator chaotic?</h3>
