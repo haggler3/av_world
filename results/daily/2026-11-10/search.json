@@ -1,0 +1,114 @@
+{
+ "date": "2026-11-10",
+ "method": "PUCT on paper, c=1.2, 3 rounds; probes: a 19 s --quick run, a grep of xnet/sim.py for friction, a pooled-fit script, two web searches. Final N: idea1 2, idea2 2, grep 1, rest 0-1.",
+ "candidates": [
+  {
+   "idea": "who strikes road users: AV vs human per vehicle-hour in a half-AV city, by friction and limit",
+   "minutes": 8,
+   "prior": 0.6,
+   "probe": "quick run 19 s works; av_pedestrian/av_bicycle counters exist",
+   "outcome": "KEPT (idea 1)"
+  },
+  {
+   "idea": "pool the two human-only friction runs: cliff or power law?",
+   "minutes": 1,
+   "prior": 0.6,
+   "probe": "5-line load of both per-copy files; 152 copies; hinge p 0.003",
+   "outcome": "KEPT (idea 2)"
+  },
+  {
+   "idea": "does the AV planner read friction? grep",
+   "minutes": 1,
+   "prior": 0.8,
+   "probe": "only xnet/sim.py:231 uses friction (braking cap); folded into idea 1 as its P2",
+   "outcome": "MERGED into idea 1"
+  },
+  {
+   "idea": "friction x AV share with 4x copies (step 8)",
+   "minutes": 14,
+   "prior": 0.5,
+   "probe": "overlaps idea 1 (same counters, same cells)",
+   "outcome": "MERGED into idea 1"
+  },
+  {
+   "idea": "twin kicks on every seed, count junction handoffs (step 3)",
+   "minutes": 25,
+   "prior": 0.4,
+   "probe": "needs per-slot traces",
+   "outcome": "dropped: over budget"
+  },
+  {
+   "idea": "seeds on every leaderboard row (step 2)",
+   "minutes": 45,
+   "prior": 0.7,
+   "probe": "none",
+   "outcome": "dropped: over budget"
+  },
+  {
+   "idea": "L4 leaderboard random stream check (step 1)",
+   "minutes": 10,
+   "prior": 0.3,
+   "probe": "needs the GPU run's key, not recorded",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "impact-speed power law for the speed limit",
+   "minutes": 10,
+   "prior": 0.4,
+   "probe": "only 5 pedestrian strikes per 12 copies at x1.0",
+   "outcome": "dropped: too few events"
+  },
+  {
+   "idea": "crash overdispersion / contagion across copies",
+   "minutes": 1,
+   "prior": 0.3,
+   "probe": "phi already 1.0 in every fit",
+   "outcome": "dropped: nothing to find"
+  },
+  {
+   "idea": "friction-aware AV (T, v0 scale with mu)",
+   "minutes": 15,
+   "prior": 0.6,
+   "probe": "needs an xnet change",
+   "outcome": "dropped: not allowed"
+  },
+  {
+   "idea": "conformal intervals for AVBench scores",
+   "minutes": 8,
+   "prior": 0.4,
+   "probe": "needs more seeds",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "time-to-first-crash survival curves",
+   "minutes": 6,
+   "prior": 0.3,
+   "probe": "counters are per window, not timed",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "crash heat map vs speed limit",
+   "minutes": 10,
+   "prior": 0.3,
+   "probe": "no location counters",
+   "outcome": "dropped"
+  },
+  {
+   "idea": "wild: extreme-value extrapolation of the AV crash tail",
+   "minutes": 12,
+   "prior": 0.2,
+   "probe": "too few AV events",
+   "outcome": "dropped"
+  }
+ ],
+ "final": {
+  "whocrashes": {
+   "Q": 0.9,
+   "N": 2
+  },
+  "frictionpool": {
+   "Q": 1.1,
+   "N": 2
+  }
+ }
+}
