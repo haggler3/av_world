@@ -16,10 +16,59 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 10. ~~Does the AV planner read friction?~~ (answered 2026-11-10: no, `friction` appears only in the braking cap, `xnet/sim.py:231`; the AVs' time headway, speed and comfortable braking are fixed.)
 8. **Why does a half-AV city lose its advantage when the road is slick?** Rate ratio 0.55 (dry) to 0.95 (friction 0.3), but no single interval excludes 1; ~4x the copies at friction 1.0, 0.6 and 0.3 would decide it (AVBench's wet_road is the rule-based AV's worst scenario).
 11. **Why does the AV advantage vanish at speed but not on slick roads?** (2026-11-10) AV / human pedestrian+bicycle strike ratio is 0.33 at friction 0.4 (28 of 139) but 0.91 at limit x1.3 (25 of 61). Split by crash site (crossing vs mid-block) and by the AV's time headway; repeat at 96+ copies at friction 1.0 (only 10 strikes today).
-12. **Confirm the knee at 0.7**: 48 more copies each at 0.9, 0.8, 0.75, 0.7, 0.65 with a new seed stream; the pooled hinge (p 0.003 in sample) is not yet confirmed out of sample.
-13. **Is the speed-limit elasticity also a knee?** Pool the speed-limit runs the same way (`avlab/frictionpool.py` is a template).
+12. ~~Confirm the knee at 0.7~~ (answered 2026-11-11: replicated on a fresh random stream, extra slope 3.4, one-sided p 0.004). Next: a third stream at 0.8 / 0.75 / 0.65 to place the knee more finely (the replication's searched hinge was 0.85 on a 3-point grid).
+13. ~~Is the speed-limit elasticity also a knee?~~ (answered 2026-11-11: no, search-corrected p 0.54; a plain power law, b 4.5, is enough.)
+14. **Why a knee at 0.7?** Friction enters only the braking cap 9 x mu m/s^2 (`xnet/sim.py:231`). Log the decelerations humans actually ask for: if ~6.3 m/s^2 is where demanded braking starts to be capped, the knee is mechanical. Cheap: one run with a histogram of requested deceleration.
+15. **A results index**: one table of every `results/` file and the doc that cites it (dropped today for time).
 
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-11 - Does the friction knee replicate on a fresh random stream? And is there a speed-limit knee?
+
+**Ideas kept** (14 candidates; [search](../results/daily/2026-11-11/search.json)): (1) a pre-registered replication of the knee at friction 0.7 (next step 12): a new humans-only run on a fresh random stream with the hinge fixed in advance; (2) a search-corrected p-value for the pooled hinge of 2026-11-10, whose F-test ignored that the hinge was picked from six positions; (3) the same corrected test on the pooled speed-limit runs (next step 13). One tool, `avlab/knee.py`.
+Prior art: testing a breakpoint is Davies' problem, a nuisance parameter that exists only under the alternative (Davies 1987, *Biometrika* 74:33-43; implemented as [segmented::davies.test](https://rdrr.io/cran/segmented/man/davies.test.html)); here a parametric bootstrap of the sup statistic plays that role. Pavement studies look for friction thresholds below which crash rates rise ([FDOT BE385](https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/research/reports/fdot-be385-rpt.pdf), [FHWA 2023](https://highways.dot.gov/sites/fhwa.dot.gov/files/2023-06/FHWA%20Characterizing%20Road%20Safety%20Performance%20Using%20Pavement%20Friction.pdf)), and FDOT recommends checking such thresholds further; I found no study that confirms one out of sample (search summaries only).
+
+### Pseudocode (what `avlab/knee.py` does)
+
+```
+model:  log E[crashes_i] = log hours_i + a + r*run_i + b*log x_i + c*max(log h - log x_i, 0)     # 'above' knee for speed limits: max(log x - log h, 0)
+replicate: humans-only Oakland, 36 copies at friction 1.0 0.85 0.7 0.6 0.5, run_copies(seed=1) (earlier runs: seed 0), warm 120 s, count 600 s
+fixed hinge (h = 0.7, chosen before the run): quasi-Poisson fits with and without the hinge term; LR = deviance drop / dispersion;
+           one-sided p = P(N(0,1) > sign(c) sqrt(LR))
+search-corrected: S = max over the hinge grid of the Poisson deviance drop vs the power law
+           null: 1999 parametric bootstrap draws y* ~ Poisson(fitted power law), refit every hinge, p = (1 + #{S* >= S}) / 2000
+           friction pool (152 copies, grid 0.45-0.8); speed-limit pool (196 human-only copies, x0.7-1.3, knee above 0.85 / 1.0 / 1.15)
+Holm over the three primary p-values (replication fixed hinge, friction pool, speed-limit pool)
+```
+
+### Predictions, written before the run ([file](../results/daily/2026-11-11/predictions.md))
+
+* P1: in the new run the extra slope below 0.7 is positive with one-sided p < 0.05. P2: the slope above 0.7 has a 95 % interval that includes 0.
+* P3: the pooled friction hinge survives the search correction (p < 0.05). P4: the speed-limit pool shows no knee (corrected p > 0.05).
+
+### Results ([knee.json](../results/knee/knee.json), [replicate.json](../results/knee/replicate.json))
+
+| friction (new run, 36 copies each) | 1.0 | 0.85 | 0.7 | 0.6 | 0.5 |
+|---|---|---|---|---|---|
+| crashes (per 1000 vehicle-h) | 23 (8.2) | 15 (5.3) | 26 (9.4) | 39 (14.0) | 84 (29.4) |
+
+| test | statistic | p | Holm p |
+|---|---|---|---|
+| new run, hinge fixed at 0.7 | extra slope 3.42 (SE 1.30; 95 % 0.86 to 5.98); slope above 0.7 -0.39 (SE 0.80) | 0.0039 (one-sided) | 0.012 |
+| friction pool, hinge searched | deviance drop 9.2 at 0.7; null 95 % quantile 5.7 | 0.010 (bootstrap) | 0.020 |
+| speed-limit pool, knee searched | deviance drop 1.1 at x1.0; null 95 % quantile 5.5 | 0.54 (bootstrap) | 0.54 |
+
+![knee](img/knee.png)
+
+![knee GIF](img/knee.gif)
+
+(GIF: the fixed-hinge test on the new run as copies are added. The p-value is recomputed at each step, so the animation shows how the evidence builds, not an anytime-valid sequential test.)
+
+**All four predictions held.** On a fresh random stream the crash rate is again flat from friction 1.0 to 0.7 (8.2, 5.3, 9.4 per 1000 vehicle-h; slope -0.39, SE 0.80) and then steepens. The extra slope, 3.42 (SE 1.30), is almost the same as the pooled estimate from the old runs (3.47, SE 1.08), and the one-sided p is 0.004 (Holm 0.012). The old pooled hinge also survives the correction for having searched six positions (bootstrap p 0.010 against the nominal 0.003). The speed-limit curve has no knee (p 0.54): crash rate ~ limit^4.5 (SE 0.5) across x0.7 to x1.3. So friction has a knee and speed has a power law. Caveats: the new run's own searched hinge lands at 0.85, not 0.7, because the 0.85 cell is low (15 crashes). The data say a knee somewhere in 0.7 to 0.85, not exactly at 0.7. Dry cells have 15 to 26 crashes each. This is one network, and the bootstrap assumes Poisson counts (dispersion 1.0 to 1.05).
+
+**Tests**: `tests/test_daily_1111.py` (hinge design, a known knee recovered by the fixed test, and a bootstrap that leaves a pure power law alone but flags a planted knee).
 
 ---
 
