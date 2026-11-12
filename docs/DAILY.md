@@ -18,10 +18,68 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 11. **Why does the AV advantage vanish at speed but not on slick roads?** (2026-11-10) AV / human pedestrian+bicycle strike ratio is 0.33 at friction 0.4 (28 of 139) but 0.91 at limit x1.3 (25 of 61). Split by crash site (crossing vs mid-block) and by the AV's time headway; repeat at 96+ copies at friction 1.0 (only 10 strikes today).
 12. ~~Confirm the knee at 0.7~~ (answered 2026-11-11: replicated on a fresh random stream, extra slope 3.4, one-sided p 0.004). Next: a third stream at 0.8 / 0.75 / 0.65 to place the knee more finely (the replication's searched hinge was 0.85 on a 3-point grid).
 13. ~~Is the speed-limit elasticity also a knee?~~ (answered 2026-11-11: no, search-corrected p 0.54; a plain power law, b 4.5, is enough.)
-14. **Why a knee at 0.7?** Friction enters only the braking cap 9 x mu m/s^2 (`xnet/sim.py:231`). Log the decelerations humans actually ask for: if ~6.3 m/s^2 is where demanded braking starts to be capped, the knee is mechanical. Cheap: one run with a histogram of requested deceleration.
-15. **A results index**: one table of every `results/` file and the doc that cites it (dropped today for time).
+14. ~~Why a knee at 0.7?~~ (answered 2026-11-12: not the onset of braking at the cap. Capped braking rises smoothly, ~mu^-2.1 with no bend at 0.7, but half the cars in crashes braked at the cap in the second before.) Next: **which of friction's two channels makes the knee?** Friction caps braking (`acc` clip) and decides whether a car can still stop before a line (`stoppable`, `xnet/sim.py:528`). Count the overruns (cars that may not enter but cannot stop) per friction cell: if they start near 0.7, the knee is the stop-line channel.
+15. ~~A results index~~ (done 2026-11-12: `python -m avlab.resultsindex`, [RESULTS_INDEX.md](RESULTS_INDEX.md); 375 of 479 tracked files are mentioned by no doc or code path, most of them written through a directory variable).
+16. **Friction tomography** (wild card, 2026-11-12): the braking histogram has a spike at 9 mu in every cell, so the road's friction can be read off the braking alone. How few car-seconds does it take to infer mu within 0.05? A detector for "hidden road friction" in ROADMAP item 1.
 
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-12 - Why is there a friction knee near 0.7? Braking at the road's limit, cell by cell. And an index of results/
+
+**Ideas kept** (14 candidates; [search](../results/daily/2026-11-12/search.json)): (1) log the braking human drivers actually do at six frictions and test whether the knee is where braking starts to hit the road's cap, 9 mu m/s^2 (next step 14); (2) a results index: every tracked `results/` file, the docs and code that mention it, orphans and broken links (next step 15). Tools: `avlab/brakedemand.py` (+ `brakedemand_plot.py`) and `avlab/resultsindex.py`.
+Prior art: surrogate safety analysis compares the deceleration a conflict needs (DRAC) with the maximum the road allows (MADR); wet roads give more DRAC > MADR conflicts ([Castelo Branco group, UFC](https://repositorio.ufc.br/ri/bitstream/riufc/55714/1/2020_dis_rsm.pdf); a digital-twin study adding tyre-road friction to microsimulation finds lower minimum TTC and higher DRAC as mu falls, [arXiv 2502.09561](https://arxiv.org/pdf/2502.09561)). Here the simulator lets us count the cap being hit directly, rather than infer it from trajectories (search snippets only).
+
+### Pseudocode (what `avlab/brakedemand.py` does)
+
+```
+for mu in 1.0 0.85 0.7 0.6 0.5 0.4: 10 copies of humans-only Oakland, calibrated drivers, seed 2 (a fresh stream), warm 120 s, count 480 s
+    (one compiled vmapped run of X.step(..., diag=True); xnet/ untouched)
+    each 0.1 s step, per copy:
+        moving    = alive & human & not wrecked & not halted & v > 0.5 m/s     (state before the step)
+        acc       = applied acceleration after the step (already clipped to a_min = -9 mu)
+        histogram of -acc over braking moving cars (0.25 m/s^2 bins); saturated = acc <= a_min + 0.01
+        sat_age   = seconds since this slot's car last braked at the cap (reset when the slot empties)
+        involved  = diag 'crashed' & human & not already a wreck; recent = sat_age <= 1 s
+per cell: saturated share (bootstrap over copies), dry-road prediction = share of mu=1.0 braking steps at or beyond 9 mu,
+          enrichment = P(recent | involved) / P(recent | moving car-step) with a Katz log interval; Spearman(saturated share, crash rate)
+```
+
+### Predictions, written before the run ([file](../results/daily/2026-11-12/predictions.md))
+
+* P1 (mechanical knee): saturated share changes < 1.5x from mu 1.0 to 0.7 and at least doubles from 0.7 to 0.5.
+* P2 (no adaptation): the dry-road histogram predicts the saturated share at every mu within 2x.
+* P3: crash-involved cars braked at the cap in the 1 s before far more often than moving cars (pooled mu <= 0.6, lower bound > 1).
+* P4: crash rate and saturated share rank together across cells (Spearman >= 0.8).
+
+### Results ([brake.json](../results/brakedemand/brake.json))
+
+| friction | 1.0 | 0.85 | 0.7 | 0.6 | 0.5 | 0.4 |
+|---|---|---|---|---|---|---|
+| cap (m/s^2) | 9.0 | 7.65 | 6.3 | 5.4 | 4.5 | 3.6 |
+| moving car-steps braking at the cap (%, 95 % CI) | 0.153 (0.148-0.158) | 0.191 (0.183-0.199) | 0.298 (0.290-0.306) | 0.396 (0.384-0.408) | 0.590 (0.574-0.603) | 0.980 (0.957-1.004) |
+| observed / dry-road prediction | 1.00 | 1.06 | 1.31 | 1.36 | 1.39 | 1.58 |
+| crashes (per 1000 vehicle-h) | 3 (5.3) | 2 (3.5) | 7 (12.3) | 17 (29.1) | 11 (19.2) | 30 (52.7) |
+
+| test | result | p (Holm over P3, P4) |
+|---|---|---|
+| P1 knee in braking at the cap | **failed**: x1.94 from 1.0 to 0.7, x1.98 from 0.7 to 0.5; log-log slope -1.87 above 0.7 and -2.14 below (-2.05 overall) | - |
+| P2 dry-road histogram predicts it within 2x | held (ratio 1.00 to 1.58), but the ratio grows as mu falls | - |
+| P3 crash-involved cars at the cap within 1 s | held: mu <= 0.6, 47 of 92 (51 %) vs 1.3 % of moving car-steps, enrichment 39 (32-48); mu >= 0.7, 8 of 18 (44 %) vs 0.6 % | < 1e-10 |
+| P4 Spearman(saturated share, crash rate) | held: rho 0.89 | 0.019 (Holm 0.019) |
+
+![brakedemand](img/brakedemand.png)
+
+![brakedemand GIF](img/brakedemand.gif)
+
+(GIF: the braking histogram per friction; the cap moves left and the mass beyond it piles up at the cap.)
+
+**The knee is not where braking starts to hit the road's limit.** Braking at the cap is rare (0.15 % of moving car-steps on a dry road) and grows smoothly, about mu^-2.1, with no bend at 0.7 (P1 failed). The dry-road braking histogram has a smooth tail beyond 4 m/s^2, so lowering the cap from 9 to 6.3 catches only a little more braking. What the cap does matter for is crashes: about half of the human cars involved in a crash were braking at the cap in the second before (55 of 110 over all cells), against about 1 % of moving cars in general. Hard braking just before a crash is also what a driver does when a crash is coming, so this is not proof that the cap caused them. Drivers on slick roads also end up braking at the cap more than dry-road braking predicts (1.58x at 0.4), so slick roads create harder situations, not only weaker brakes. So the knee must come from somewhere else. Friction's other channel, whether a car can still stop before a line (`stoppable`), is the next candidate. Caveats: 70 crashes in all, 10 copies per cell, so the crash rates here are noisy (0.5 lower than 0.6); the enrichment interval treats car-steps as independent and is too narrow; one network, one seed.
+
+**Results index**: `python -m avlab.resultsindex` writes [RESULTS_INDEX.md](RESULTS_INDEX.md) (479 tracked files in 94 directories; 375 mentioned by no doc or code path, most of them written by tools through a directory variable). `--check` exits 1 if a doc links a `results/` file that does not exist. Git-ignored outputs (notebook runs) are allowed. Today: 0 broken links.
+
+**Tests**: `tests/test_daily_1112.py` (exceedance from a histogram, the ratio interval, the per-cell summary, and the index on a throwaway git repo: citation, use, a broken link, an ignored output).
 
 ---
 
