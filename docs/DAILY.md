@@ -20,10 +20,91 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 13. ~~Is the speed-limit elasticity also a knee?~~ (answered 2026-11-11: no, search-corrected p 0.54; a plain power law, b 4.5, is enough.)
 14. ~~Why a knee at 0.7?~~ (answered 2026-11-12: not the onset of braking at the cap.) ~~Which of friction's channels makes the knee?~~ (2026-11-13: not the stop line, not the commitment rule; both are almost absent before crashes. By elimination the braking cap carries it, but its rate has no bend.) Next: **the knee may be in what the cap *fails to stop*, not in how often it is hit**: for each car braking at the cap, record the speed it still had when it hit (impact speed) or stopped; test whether the share of cap-braking episodes that end in contact bends at 0.7.
 15. ~~A results index~~ (done 2026-11-12: `python -m avlab.resultsindex`, [RESULTS_INDEX.md](RESULTS_INDEX.md); 375 of 479 tracked files are mentioned by no doc or code path, most of them written through a directory variable).
-16. ~~Friction tomography~~ (done 2026-11-13: within 0.05 in every copy after 10 s exact, 20 s with 0.3 m/s^2 noise.) Next: **give the AVs that estimate** (ROADMAP item 1, hidden road friction): a policy or the rule-based AV that reads `mu_hat` from the fleet and adapts its headway; and a harder test with friction varying by street.
-17. **Crash-rate knee, third stream** (2026-11-13 run, seed 3, 16 copies per cell): 8.6, 6.6, 15.6, 13.2, 23.8, 56.5 per 1000 vehicle-h from 1.0 to 0.4; pool with the earlier streams in `avlab.knee` (not done today).
+16. ~~Friction tomography~~ (done 2026-11-13.) ~~Give the AVs that estimate~~ (2026-11-14: headway x 1/mu cut AV crashes 31 % at 0.4, not significant; slowing down did no better.) Next: **the merge channel**: 13 of 21 AV crashes at friction 0.4 were merges, which longitudinal headway does not reach; make the friction-aware AV also scale its gap acceptance (u[:, 1]) by 1/mu, and run 3x the copies at 0.4 only (one cell pair, ~8 min) to get an interval that can exclude 1. Also a harder test with friction varying by street.
+17. ~~Crash-rate knee, third stream~~ (pooled 2026-11-14, `avlab.kneepool`: extra slope 2.9, 95 % 1.7-4.1; streams do not differ, p 0.49.) Next: stream 3 alone is weak (p 0.12, and nothing in 0.5-1.0: extra 0.15). Its 0.7 cell (15.6) sits above 0.6 (13.2); a fourth stream with 32 copies at 0.85 / 0.7 / 0.6 would say whether stream 3's 0.7 is a fluke.
+
+18. **Merge or port the 2026-11-09 branch** (`claude/exciting-bohr-cmq43w`: `avlab.frictionav`, `avlab.twinkicks`, `avlab.frictionsense`; never merged into `main`). Then explain why sqrt(friction) speed helps the rule-based AV (0.12x) but not the IDM policy (0.78x): rerun both policies in one compiled program at friction 0.45 and 0.4 with 32 copies, split AV crashes by type.
 
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-14 - Does an AV that knows the road's friction crash less? And the friction knee on three random streams
+
+**Ideas kept** (14 candidates; [search](../results/daily/2026-11-14/search.json)): (1) give the AVs the friction estimate that 2026-11-13 showed the fleet can read in 10-20 s, and measure what it buys in a half-AV city (next step 16, ROADMAP item 1); (2) pool 2026-11-13's third random stream into the knee test and ask whether the knee differs by stream (next step 17). Tools: `avlab/frictionaware.py` (+ `_plot`), `avlab/kneepool.py`.
+Prior art: adjusting the ACC following interval with the road's friction is an old patent family ([US 6208106](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/6208106)); a Hyundai patent sets a minimum safety distance from estimated peak friction ([US 7739023](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7739023)); a 2025 Chalmers thesis builds a friction- and curvature-aware ACC with robust MPC ([odr.chalmers.se](https://odr.chalmers.se/bitstreams/8b2704ac-ae40-433b-8b52-7997f84bfee6/download)). These evaluate single vehicles in simulation; I found none that measured crashes city-wide with mixed traffic (search snippets only). The hinge test is a threshold (broken-stick) Poisson regression; the searched-hinge p-value uses a parametric bootstrap for the Davies problem, as in `avlab.knee` (cf. the hinge models of the R package [chngpt](https://cran.nics.utk.edu/cran/web/packages/chngpt/chngpt.pdf)).
+
+### Pseudocode
+
+```
+avlab.frictionaware (xnet/ untouched; AVs driven through the policy slot X.step(..., rl=(policy, key)), under the usual envelope)
+  policy = examples/my_policy.careful_idm with T = 1.5 s * T_scale, v0 = v0 * v_scale       (mu assumed known exactly: 2026-11-13)
+     blind   T_scale 1,     v_scale 1
+     headway T_scale 1/mu,  v_scale 1
+     slow    T_scale 1/mu,  v_scale sqrt(mu)        (keeps the dry road's stopping distance v^2 / 2a)
+  cells: blind@1.0, {blind, headway, slow} @ 0.6 and @ 0.4; 24 copies each, p_av 0.5, calibrated humans,
+         copy i of every cell uses key (5000 + i), one compiled program; warm 120 s, score 480 s
+  per cell: AV-involved crashes / AV-hours, AV km / AV-hours, city crashes / vehicle-hours, trips
+  tests: aware vs blind at the same mu, exact conditional Poisson rate ratio (avlab.whocrashes.rate_ratio), Holm over 4
+
+avlab.kneepool (no simulation)
+  per-copy humans-only crashes, hours, mu from: stream 0 (friction.json p_av 0 + cliff.json, 2 run dummies),
+     stream 1 (knee/replicate.json), stream 3 (stopline/stopline.json, NEW, includes mu 0.4)
+  log rate = run dummy + b log mu + c max(log 0.7 - log mu, 0)    quasi-Poisson IRLS (avlab.knee.fixed_hinge), one-sided on c > 0
+  tests: stream 3 alone (all mu; mu >= 0.5); all pooled (fixed 0.7; sup over 0.45..0.8 with 1999 bootstrap draws);
+         heterogeneity: one c per stream vs a common c, LR chi^2 with 2 df
+```
+
+### Predictions, written before the runs ([file](../results/daily/2026-11-14/predictions.md))
+
+* P1: at friction 0.4, `headway` cuts the AV-involved crash rate by >= 30 % with the rate ratio's 95 % upper bound below 1.
+* P2: `slow` cuts it more than `headway` at 0.4 and 0.6.
+* P3: `headway` costs < 10 % of AV speed at 0.4; `slow` 25-40 %.
+* P4: city crash rate falls with `slow` at 0.4 (rate ratio < 1), by less than the AV rate.
+* P5: pooled with stream 3, the fixed 0.7 hinge keeps c > 0 with one-sided p < 0.05; stream 3 alone (mu >= 0.5) has c > 0.
+
+### Results ([frictionaware.json](../results/frictionaware/frictionaware.json), [kneepool.json](../results/knee/kneepool.json))
+
+| cell | AV crashes / AV-h | per 1000 AV-h | AV speed km/h | city crashes per 1000 veh-h | AV trips |
+|---|---|---|---|---|---|
+| blind @ 1.0 | 0 / 643 | 0 | 15.2 | 3.5 | 3194 |
+| blind @ 0.6 | 8 / 641 | 12.5 | 15.2 | 9.8 | 3175 |
+| headway @ 0.6 | 5 / 651 | 7.7 | 14.6 | 8.3 | 3056 |
+| slow @ 0.6 | 3 / 680 | 4.4 | 13.1 | 8.1 | 2579 |
+| blind @ 0.4 | 21 / 641 | 32.7 | 15.2 | 47.6 | 3169 |
+| headway @ 0.4 | 15 / 660 | 22.7 | 13.8 | 40.6 | 2802 |
+| slow @ 0.4 | 18 / 708 | 25.4 | 11.3 | 42.1 | 2053 |
+
+| test | rate ratio vs blind (95 %) | p (Holm) | AV speed ratio |
+|---|---|---|---|
+| headway @ 0.6 | 0.62 (0.16-2.13) | 0.42 (0.96) | 0.96 |
+| slow @ 0.6 | 0.35 (0.06-1.47) | 0.14 (0.54) | 0.86 |
+| headway @ 0.4 | 0.69 (0.33-1.41) | 0.32 (0.96) | 0.91 |
+| slow @ 0.4 | 0.78 (0.39-1.53) | 0.52 (0.96) | 0.74 |
+
+| knee test | copies (crashes) | extra slope c below 0.7 (95 %) | one-sided p |
+|---|---|---|---|
+| stream 3 alone, mu 0.4-1.0 | 96 (113) | 1.9 (-1.3 to 5.2) | 0.12 |
+| stream 3 alone, mu 0.5-1.0 | 80 (62) | 0.15 (-4.2 to 4.5) | 0.47 |
+| three streams pooled | 428 (796) | **2.9 (1.7 to 4.1)** | 5e-6 (Holm 1e-5); searched hinge 0.7, bootstrap p 0.0005 |
+| pooled, mu >= 0.45 only | 384 | 2.7 (1.1 to 4.3) | 0.0005 |
+| streams differ? | | c = 3.0 / 3.4 / 2.6 (SE 0.6 / 1.0 / 0.8) | LR p 0.49 (2 df) |
+
+![friction-aware AV](img/frictionaware.png)
+
+![cumulative AV crash rate GIF](img/frictionaware.gif)
+
+![knee on three streams](img/kneepool.png)
+
+**P1 failed, P2 failed, P3 held, P4 failed, P5 held (weakly).** Knowing the friction and lengthening the headway as 1/mu lowered the AV-involved crash rate at friction 0.4 by 31 % (0.69) for 9 % less AV speed, but with 21 and 15 crashes the interval runs from 0.33 to 1.41, so this run cannot tell it from no effect; slowing down as well (v0 x sqrt(mu)) cost 26 % of AV speed and 35 % of AV trips and did no better at 0.4 (0.78). The reason is visible in the crash types: at 0.4, 13 of the blind AVs' 21 crashes were **merges** (and 11 of 18 for `slow`), which a longer car-following headway does not reach; rear-end crashes went 4 -> 0 with `headway` but 4 -> 6 with `slow`. **The friction knee is not a one-stream artefact**: pooled over three streams it is sharp (extra slope 2.9, 1.7-4.1) and still there without friction below 0.45 (2.7), and the streams' slopes do not differ significantly (p 0.49). But stream 3 on its own does not show it (p 0.12; within 0.5-1.0 c = 0.15), because its 0.7 cell is high (15.6 per 1000 vehicle-h, above 0.6's 13.2), so the knee's position is less sure than its existence.
+
+**Overlap found after the run.** The 2026-11-09 run did a similar test on the **rule-based AV** (its headway and desired-speed state clamped after each step, friction 0.45, 16 copies), but that work is on branch `claude/exciting-bohr-cmq43w` and was never merged into `main`, so today's run (which starts from `main`) did not see it; I found it in the daily artifact's history while publishing. The two runs agree on headway (0.67, 95 % 0.33-1.32 then; 0.69, 0.33-1.41 today, both not significant) and **disagree on speed**: capping the rule-based AV's speed at sqrt(friction) cut its AV-involved crashes to 0.12x (0.02-0.40, 3 crashes), while today's IDM policy with the same sqrt(friction) speed scale gave 0.78x (0.39-1.53). So the benefit of slowing down depends on the AV's policy (and maybe on 0.45 vs 0.4, and on 3 crashes in one cell). That branch should be reviewed and merged, or its results copied into `main` (next step 18).
+
+**What failed / limits.** The AV policy is the example IDM, not the rule-based AV or a learned one (the rule-based AV's headway is internal to xnet/ and was not touched); mu is given exactly, not estimated online; 24 copies per cell, one stream (seed 5), one network; the AV-hours differ by cell because slower AVs stay longer, which the rate ratio accounts for but the trip counts do not. The heterogeneity test assumes a common power slope b across streams.
+
+**Tests**: `tests/test_daily_1114.py` (policy scales; the aware IDM equals the example policy at mu 1 and never asks for more acceleration; the hinge and heterogeneity tests on synthetic data; the stream-3 loader).
+
+Commands: `python -m avlab.frictionaware [--quick|--plot]` (~8 min full), `python -m avlab.kneepool` (~30 s).
 
 ---
 

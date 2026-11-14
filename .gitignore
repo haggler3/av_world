@@ -24,3 +24,4 @@ results/bev/snaps/
 results/notebooks/
 results/easy/
 results/brakedemand/quick.json
+results/*/*_quick.json
