@@ -1,0 +1,210 @@
+{
+ "date": "2026-11-15",
+ "formula": "Q = novelty*relevance*visual*holds/sqrt(minutes); select argmax Q + 1.2 P sqrt(N_total)/(1+N_i)",
+ "candidates": [
+  {
+   "id": "merge",
+   "idea": "Friction-aware AV that also raises its gap-acceptance scale (u[:,1]) as 1/mu, at friction 0.4 with 40 copies x 4 cells",
+   "artefact": "tool avlab.frictionmerge, figure, counterfactual black-box GIF",
+   "minutes": 9,
+   "prior": 0.6,
+   "P": 0.098,
+   "Q_final": 0.14,
+   "N": 1,
+   "kept": true,
+   "why_dropped": null
+  },
+  {
+   "id": "stream4",
+   "idea": "Fourth random stream with 32 copies at 0.85/0.7/0.6: was stream 3's high 0.7 cell a fluke?",
+   "artefact": "tool avlab.knee4, figure",
+   "minutes": 6,
+   "prior": 0.6,
+   "P": 0.098,
+   "Q_final": 0.073,
+   "N": 1,
+   "kept": true,
+   "why_dropped": null
+  },
+  {
+   "id": "port",
+   "idea": "Port the three never-merged daily branches (11-05, 11-07, 11-09) into main",
+   "artefact": "modules, results, tests, DAILY entries",
+   "minutes": 1,
+   "prior": 0.9,
+   "P": 0.146,
+   "Q_final": 0.092,
+   "N": 1,
+   "kept": true,
+   "why_dropped": null
+  },
+  {
+   "id": "capfail",
+   "idea": "Share of cap-braking episodes that end in contact vs friction (next step 14)",
+   "artefact": "figure",
+   "minutes": 10,
+   "prior": 0.3,
+   "P": 0.049,
+   "Q_final": 0.009,
+   "N": 1,
+   "kept": false,
+   "why_dropped": "probe: saved counts too small; needs a new instrumented run (>10 min) - carried over"
+  },
+  {
+   "id": "leader_stream",
+   "idea": "Re-score the rule-based AV with unsafe_rbg on CPU to identify the L4 leaderboard's random stream",
+   "artefact": "table",
+   "minutes": 10,
+   "prior": 0.4,
+   "P": 0.065,
+   "Q_final": 0.007,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "low novelty; carried over"
+  },
+  {
+   "id": "seeds_board",
+   "idea": "Seed intervals on every leaderboard row via avlab.twins.bench restream",
+   "artefact": "table",
+   "minutes": 45,
+   "prior": 0.6,
+   "P": 0.098,
+   "Q_final": 0.015,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "45 min of compute, over the budget"
+  },
+  {
+   "id": "twin_handoff",
+   "idea": "Is the junction-box handoff the general cause of twin divergence (twintrace on other kicks)",
+   "artefact": "table, GIF",
+   "minutes": 12,
+   "prior": 0.4,
+   "P": 0.065,
+   "Q_final": 0.024,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "lower relevance to the open friction thread; > 10 min"
+  },
+  {
+   "id": "ped_yield",
+   "idea": "Pedestrian crossing yield behaviour varied at limit x1.3",
+   "artefact": "figure",
+   "minutes": 10,
+   "prior": 0.4,
+   "P": 0.065,
+   "Q_final": 0.019,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "needs a pedestrian-behaviour knob not exposed without touching xnet/"
+  },
+  {
+   "id": "street_mu",
+   "idea": "Friction varying by street (patchy ice): does a fleet friction map help AVs?",
+   "artefact": "figure, GIF",
+   "minutes": 15,
+   "prior": 0.4,
+   "P": 0.065,
+   "Q_final": 0.035,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "per-street friction needs a change to xnet/ (friction is a scalar Behaviour field)"
+  },
+  {
+   "id": "sqrtmu_policy",
+   "idea": "Why does sqrt(mu) speed help the rule-based AV (0.12x) but not IDM (0.78x)?",
+   "artefact": "table",
+   "minutes": 12,
+   "prior": 0.4,
+   "P": 0.065,
+   "Q_final": 0.022,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "depends on porting the 11-09 branch first (done today); next time"
+  },
+  {
+   "id": "cem_falsify",
+   "idea": "Cross-entropy search over friction/demand/AV share for the most AV-hostile condition",
+   "artefact": "figure",
+   "minutes": 12,
+   "prior": 0.35,
+   "P": 0.057,
+   "Q_final": 0.022,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "low prior that a 12-min search finds anything clear"
+  },
+  {
+   "id": "conformal",
+   "idea": "Conformal intervals for per-copy crash counts (how many copies a cell needs)",
+   "artefact": "doc, tool",
+   "minutes": 3,
+   "prior": 0.5,
+   "P": 0.081,
+   "Q_final": 0.036,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "useful but low visual appeal; Q below the kept ideas"
+  },
+  {
+   "id": "bev_wet",
+   "idea": "BEV perception on a wet-road render (wild card)",
+   "artefact": "GIF",
+   "minutes": 20,
+   "prior": 0.2,
+   "P": 0.033,
+   "Q_final": 0.008,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "renderer has no wet-road material; > 20 min"
+  },
+  {
+   "id": "sonify",
+   "idea": "Sonify the city's crash stream as audio (wild card)",
+   "artefact": "wav",
+   "minutes": 3,
+   "prior": 0.1,
+   "P": 0.016,
+   "Q_final": 0.008,
+   "N": 0,
+   "kept": false,
+   "why_dropped": "wild card with little research value"
+  }
+ ],
+ "probes": [
+  {
+   "round": 1,
+   "picked": "port",
+   "ucb": 0.253,
+   "probe": "git diff --name-status main...branch: almost all files added (no conflicts); eetr4g's blackbox/speedlimit edits apply cleanly; DAILY sections insert in date order.",
+   "Q_after": 0.092
+  },
+  {
+   "round": 2,
+   "picked": "merge",
+   "ucb": 0.287,
+   "probe": "grep xnet/sim.py for u[:,1]: gsc = 1.15 + 0.35 tanh(u1) scales the junction critical gap (line 354) and lane-change gaps (line 563); the example IDM sends 0 -> 1.15, less cautious than the rule-based 1.25. Quick run (2 copies x 4 cells, 60 s) ran in 9 s of stepping.",
+   "Q_after": 0.14
+  },
+  {
+   "round": 3,
+   "picked": "stream4",
+   "ucb": 0.276,
+   "probe": "avlab.knee.replicate takes mus and seed; stream-3 0.7 cell 15.6 vs 0.6 13.2 confirmed in kneepool.json; 96 copies ~6 min.",
+   "Q_after": 0.073
+  },
+  {
+   "round": 4,
+   "picked": "capfail",
+   "probe": "results/brakedemand/brake.json holds involved_recent_sat per cell: 2, 2, 4, 9, 11, 27 crash-involved cars; too few per cell to see a bend without a new instrumented run.",
+   "Q_after": 0.009
+  }
+ ],
+ "kept": [
+  "merge",
+  "stream4",
+  "port (cleanup, no compute)"
+ ],
+ "merged_children": "merge and the GIF share one sub-result: the counterfactual fork reuses frictionmerge's policies",
+ "note": "The probes were run while the ideas were being written (the merge hook grep and quick run came first); the table records them in UCB order, not a blind replay."
+}

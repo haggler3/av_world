@@ -41,20 +41,20 @@ def poisson_fit(y, t, x):
     return float(beta[1]), float(np.sqrt(cov[1, 1])), float(phi)
 
 
-def run(E=32, warm_s=120.0, seconds=600.0, seed=0, scales=SCALES, area="oakland"):
+def run(E=32, warm_s=120.0, seconds=600.0, seed=0, scales=SCALES, area="oakland", p_av=0.0):
     from examples import _common as C
     from xnet import network as NW
     from xnet import sim as X
     net, geo, info = NW.build(area)
     nh = jnp.asarray(net["nh"])
-    beh = C.calibrated()
+    beh = C.calibrated(p_av=p_av) if p_av else C.calibrated()   # p_av=0 reproduces the saved run exactly
     n = int(round(20.0 / X.DT))
 
     @jax.jit
     def chunk(s, J):
         return jax.lax.scan(lambda c, _: (jax.vmap(lambda si: X.step(si, J, beh, nh))(c), None), s, None, length=n)[0]
 
-    res = {"area": area, "copies": E, "seconds": seconds, "scales": {}}
+    res = {"area": area, "copies": E, "seconds": seconds, "p_av": p_av, "scales": {}}
     for sc in scales:
         J = X.to_jnp(dict(net, link_v=(np.asarray(net["link_v"]) * sc).astype(np.float32)))
         st = jax.vmap(X.reset, in_axes=(0, None, None))(jax.random.split(jax.random.PRNGKey(seed), E), J, 1024)
@@ -97,15 +97,16 @@ def main():
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--plot", action="store_true")
     ap.add_argument("--copies", type=int, default=32)
+    ap.add_argument("--p-av", type=float, default=0.0, help="share of AVs (rule-based AV under its envelope); output goes to speedlimit_av<pct>.json")
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
     if a.plot:
         return plot()
-    res = run(E=4 if a.quick else a.copies, seconds=60.0 if a.quick else 600.0, scales=(0.7, 1.3) if a.quick else SCALES)
+    res = run(E=4 if a.quick else a.copies, seconds=60.0 if a.quick else 600.0, scales=(0.7, 1.3) if a.quick else SCALES, p_av=a.p_av)
     res["summary"] = summarize(res)
     print(json.dumps(res["summary"], indent=1))
     if not a.quick:
-        json.dump(res, open(f"{OUT}/speedlimit.json", "w"), indent=1)
+        json.dump(res, open(f"{OUT}/speedlimit.json" if not a.p_av else f"{OUT}/speedlimit_av{round(100 * a.p_av)}.json", "w"), indent=1)
 
 
 def plot():

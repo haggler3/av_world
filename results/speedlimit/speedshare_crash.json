@@ -1,0 +1,41 @@
+{
+ "t_s": 102.0,
+ "frame": 59,
+ "types": [
+  "pedestrian"
+ ],
+ "vehicles": [
+  {
+   "slot": 155,
+   "kind": "car",
+   "where": "on link 544 (5 m long, 5 m along)",
+   "xy": [
+    3687.7,
+    -127.6
+   ],
+   "light_on_approach": "green",
+   "came_through": {
+    "junction": 272,
+    "turn": "left",
+    "light_at_entry": "no signal",
+    "s_before_impact": 2.2,
+    "ran_red_there": false
+   },
+   "node": 274,
+   "speed_at_impact_kmh": 36.9,
+   "speed_3s_before_kmh": 56.6,
+   "peak_braking_mps2": -9.0,
+   "braked_hard_s_before_impact": 0.6,
+   "contributing": [
+    "struck a pedestrian who started crossing without the WALK signal"
+   ]
+  }
+ ],
+ "closing_speed_kmh": null,
+ "pedestrians_crossing_nearby_city_wide": 58,
+ "centre_xy": [
+  3687.7,
+  -127.6
+ ],
+ "summary": "Pedestrian crash: a car (37 km/h). Contributing: struck a pedestrian who started crossing without the WALK signal."
+}

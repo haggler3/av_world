@@ -354,6 +354,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="864" height="456" src="img/frictionmerge.gif" alt="Animation: the same junction on ice replayed twice from the same moment; on the left a friction-blind AV merges into a short gap and crashes, on the right a gap-cautious AV waits and nothing happens" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Gap caution on ice</h3>
+          <p>Most of the friction-aware AV's crashes on ice were merges, so use the policy's second output, the gap it accepts, as well as its headway. Friction 0.4, half-AV Oakland, 40 copies per cell; the GIF forks one city just before a blind AV's merge crash and replays it with a gap-cautious AV.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/frictionmerge.png">figure</a> &middot; <a href="img/knee4.png">knee on four streams</a>.</p></div>
+        <ul>
+          <li>Accepting only longer gaps cut the AV's merge crashes from 22 to 6 and all its crashes to 0.54x (95&nbsp;% 0.30&ndash;0.95) for 3&nbsp;% of speed. After correcting for four tests, p 0.097: suggestive, not settled.</li>
+          <li>A fourth random stream (96 copies) does not show the friction knee alone, but pooled over four streams it holds (extra slope 2.8, 95&nbsp;% 1.6&ndash;3.9) and the streams agree (p 0.45). Where between 0.6 and 0.85 it sits is open.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="512" height="320" src="img/brakedemand.gif" alt="Animation: braking histograms of human drivers at six road frictions; as the cap moves left, braking piles up at it" loading="lazy"></figure>
       <div class="text">
         <div><h3>Why a friction knee at 0.7?</h3>
