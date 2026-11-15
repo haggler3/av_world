@@ -20,12 +20,116 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 13. ~~Is the speed-limit elasticity also a knee?~~ (answered 2026-11-11: no, search-corrected p 0.54; a plain power law, b 4.5, is enough.)
 14. ~~Why a knee at 0.7?~~ (answered 2026-11-12: not the onset of braking at the cap.) ~~Which of friction's channels makes the knee?~~ (2026-11-13: not the stop line, not the commitment rule; both are almost absent before crashes. By elimination the braking cap carries it, but its rate has no bend.) Next: **the knee may be in what the cap *fails to stop*, not in how often it is hit**: for each car braking at the cap, record the speed it still had when it hit (impact speed) or stopped; test whether the share of cap-braking episodes that end in contact bends at 0.7.
 15. ~~A results index~~ (done 2026-11-12: `python -m avlab.resultsindex`, [RESULTS_INDEX.md](RESULTS_INDEX.md); 375 of 479 tracked files are mentioned by no doc or code path, most of them written through a directory variable).
-16. ~~Friction tomography~~ (done 2026-11-13.) ~~Give the AVs that estimate~~ (2026-11-14: headway x 1/mu cut AV crashes 31 % at 0.4, not significant; slowing down did no better.) Next: **the merge channel**: 13 of 21 AV crashes at friction 0.4 were merges, which longitudinal headway does not reach; make the friction-aware AV also scale its gap acceptance (u[:, 1]) by 1/mu, and run 3x the copies at 0.4 only (one cell pair, ~8 min) to get an interval that can exclude 1. Also a harder test with friction varying by street.
-17. ~~Crash-rate knee, third stream~~ (pooled 2026-11-14, `avlab.kneepool`: extra slope 2.9, 95 % 1.7-4.1; streams do not differ, p 0.49.) Next: stream 3 alone is weak (p 0.12, and nothing in 0.5-1.0: extra 0.15). Its 0.7 cell (15.6) sits above 0.6 (13.2); a fourth stream with 32 copies at 0.85 / 0.7 / 0.6 would say whether stream 3's 0.7 is a fluke.
+16. ~~Friction tomography~~ (done 2026-11-13.) ~~Give the AVs that estimate~~ (2026-11-14.) ~~The merge channel~~ (2026-11-15: maximum gap caution cut AV merge crashes to 0.27x and all AV crashes to 0.54x at friction 0.4, Holm p 0.097.) Next: **confirm it on a fresh stream with the bar fixed in advance** (one test, gap vs blind, 40 copies, ~5 min), and at friction 0.6 and 1.0 to see what gap caution costs when it is not needed. Also a harder test with friction varying by street.
+17. ~~Crash-rate knee, third stream~~ (pooled 2026-11-14.) ~~Fourth stream~~ (2026-11-15: stream 4's 0.7 is below 0.6, the pooled knee holds at 2.8, 1.6-3.9, but the searched hinge moved to 0.6.) Next: **where is the knee?** A profile likelihood for the hinge position on the four pooled streams (no simulation) with a bootstrap interval.
 
-18. **Merge or port the 2026-11-09 branch** (`claude/exciting-bohr-cmq43w`: `avlab.frictionav`, `avlab.twinkicks`, `avlab.frictionsense`; never merged into `main`). Then explain why sqrt(friction) speed helps the rule-based AV (0.12x) but not the IDM policy (0.78x): rerun both policies in one compiled program at friction 0.45 and 0.4 with 32 copies, split AV crashes by type.
+18. ~~Merge or port the 2026-11-09 branch~~ (2026-11-15: the 11-05, 11-07 and 11-09 branches are ported to `main`.) Next: explain why sqrt(friction) speed helps the rule-based AV (0.12x) but not the IDM policy (0.78x): rerun both policies in one compiled program at friction 0.45 and 0.4 with 32 copies, split AV crashes by type. Today's result suggests a lead: the IDM policy's gap scale is 1.15, the rule-based AV's 1.25.
 
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-15 - The merge channel: an AV that is more careful at gaps on ice. And the friction knee on a fourth stream
+
+**Ideas kept** (14 candidates; [search](../results/daily/2026-11-15/search.json)): (1) give the friction-aware AV of 2026-11-14 the
+policy slot's second output, the gap-acceptance scale, because 13 of its 21 crashes at friction 0.4 were merges (next step 16);
+(2) a fourth random stream with 32 copies at 0.85 / 0.7 / 0.6, to see whether stream 3's high 0.7 cell was a fluke (next step 17);
+(3) cleanup with no simulation: the three daily branches that were never merged (2026-11-05, -07, -09) are now on `main` (next step 18).
+Tools: `avlab/frictionmerge.py` (+ `_plot`), `avlab/knee4.py`.
+Prior art: drivers accept longer gaps in rain, about 10 % longer at roundabout entries with 10-20 % lower acceptance probability for
+the same gap ([J. Adv. Transp. 2018, logit model](https://pure.uos.ac.kr/en/publications/evaluation-of-the-rain-effects-on-gap-acceptance-behavior-at-roun/)),
+and longer left-turn gaps as rain gets heavier ([TRID 1091714](https://trid.trb.org/view/1091714)); a Virginia Tech dissertation finds
+drivers less aggressive as rain increases ([VTechWorks](https://vtechworks.lib.vt.edu/server/api/core/bitstreams/2ceb9c12-3c3d-4df5-b082-457f160e086b/content)).
+These are measurements of human drivers; I found none that changes an AV's gap acceptance with friction and counts crashes in a city
+(search snippets only). Pooling random streams is a fixed-effects count meta-analysis; random-effects Poisson pooling is the usual
+choice when the studies differ ([PMC8985876](https://pmc.ncbi.nlm.nih.gov/articles/PMC8985876)). The heterogeneity test below checks
+whether they do.
+
+### Pseudocode
+
+```
+avlab.frictionmerge (xnet/ untouched; AVs driven through the policy slot X.step(..., rl=(policy, key)), under the usual envelope)
+  xnet: gsc = 1.15 + 0.35 tanh(u[:, 1]) multiplies the AV's critical gap at junctions and its lane-change / zipper gaps
+        (the example IDM sends u1 = 0 -> gsc 1.15, i.e. less cautious than the rule-based AV's 1.25)
+  policy = avlab.frictionaware.aware_idm (T = 1.5 s * T_scale) with u[:, 1] = u1
+     blind        T_scale 1,    u1 0
+     headway      T_scale 1/mu, u1 0
+     gap          T_scale 1,    u1 = arctanh((clip(1.15/mu, 1.15, 1.495) - 1.15) / 0.35)    (at mu 0.4: gsc 1.495, the slot's maximum)
+     headway+gap  both
+  all at friction 0.4, p_av 0.5, calibrated humans; 40 copies per cell, copy i of every cell on key (6000 + i); one compiled program;
+  warm 120 s, score 480 s
+  tests: 4 pre-registered rate ratios of AV-involved crashes per AV-hour (exact conditional Poisson), Holm over 4;
+         merge-only rate ratios and city rate ratios reported, not tested
+  GIF: blind AVs, 8 copies, seed 11: run 20 s chunks until an AV crash; fork the state at that chunk's start; replay it once with
+       blind and once with headway+gap (same cars, signals, random numbers), zoomed side by side
+
+avlab.knee4
+  run: avlab.knee.replicate(E = 32, mus = (0.85, 0.7, 0.6), seed = 4)     (humans only, warm 120 s, 600 s scored)
+  stream 4 alone: rate(0.7) / rate(0.6), one-sided exact test that it is < 1; fixed 0.7 hinge (one-sided)
+  four streams (kneepool's runs 0-3 + stream 4 as run 4): fixed 0.7 hinge; sup over 0.45..0.8 (1999 parametric bootstrap draws);
+     heterogeneity: one extra slope per stream vs one common, LR chi^2 with 3 df; Holm over the three one-sided tests
+```
+
+### Predictions, written before the full runs ([file](../results/daily/2026-11-15/predictions.md))
+
+* P1: `gap` cuts AV merge crashes vs `blind` by >= 50 %.
+* P2: `headway+gap` vs `blind`: rate ratio <= 0.6 with Holm-corrected p < 0.05.
+* P3: `headway+gap` vs `headway`: rate ratio < 1.
+* P4: `gap` costs < 10 % of AV speed.
+* P5: stream 4's 0.7 cell is below its 0.6 cell. P6: pooled over four streams, c > 0 with p < 0.001. P7: streams do not differ (p > 0.05).
+
+### Results ([frictionmerge.json](../results/frictionmerge/frictionmerge.json), [knee4.json](../results/knee/knee4.json))
+
+| cell (friction 0.4) | AV crashes / AV-h | of which merges | per 1000 AV-h | AV speed km/h | city crashes per 1000 veh-h | AV trips |
+|---|---|---|---|---|---|---|
+| blind | 37 / 1076 | 22 | 34.4 | 15.3 | 46.0 | 5423 |
+| headway | 28 / 1112 | 10 | 25.2 | 13.8 | 45.0 | 4785 |
+| gap | 20 / 1085 | 6 | 18.4 | 14.8 | 42.9 | 5232 |
+| headway+gap | 21 / 1116 | 6 | 18.8 | 13.5 | 37.9 | 4686 |
+
+| test | AV rate ratio (95 %) | p (Holm) | merge rate ratio (95 %) | AV speed ratio |
+|---|---|---|---|---|
+| headway vs blind | 0.73 (0.43-1.23) | 0.22 (0.44) | 0.44 (0.19-0.97) | 0.90 |
+| gap vs blind | 0.54 (0.30-0.95) | 0.024 (0.097) | 0.27 (0.09-0.69) | 0.97 |
+| headway+gap vs blind | 0.55 (0.30-0.96) | 0.026 (0.097) | 0.26 (0.09-0.67) | 0.89 |
+| headway+gap vs headway | 0.75 (0.40-1.36) | 0.32 (0.44) | 0.60 (0.18-1.82) | 0.98 |
+
+| knee test | copies (crashes) | estimate (95 %) | one-sided p (Holm) |
+|---|---|---|---|
+| stream 4 cells: 0.85 / 0.7 / 0.6 | 96 (84) | 8.1 / 12.1 / 13.8 per 1000 veh-h | |
+| stream 4: rate 0.7 / rate 0.6 | | 0.87 (0.52-1.47) | 0.31 (0.62) |
+| stream 4 alone, fixed hinge 0.7 | | extra slope -1.2 (-6.4 to 4.0) | 0.67 (0.67) |
+| four streams pooled, fixed hinge 0.7 | 524 (880) | **2.8 (1.6 to 3.9)** | 2e-6 (6e-6); searched hinge 0.6, bootstrap p 0.0005 |
+| streams differ? | | c = 2.8 / 3.1 / 2.4 / 1.1 (SE 0.6 / 0.9 / 0.8 / 1.7) | LR p 0.45 (3 df) |
+
+![merge channel](img/frictionmerge.png)
+
+![counterfactual black box: blind vs headway+gap](img/frictionmerge.gif)
+
+![knee on four streams](img/knee4.png)
+
+**P1 held, P2 failed (narrowly), P3 held as a point estimate only, P4 held; P5 held (not significantly), P6 held, P7 held.** Asking
+the AV to accept only longer gaps on ice (gap scale 1.15 -> 1.5) cut its merge crashes from 22 to 6 (rate ratio 0.27, 0.09-0.69) and
+all its crashes by 46 % (0.54, 0.30-0.95) for 3 % of speed; on its own that interval excludes 1 (p 0.024), but after Holm over the
+four pre-registered tests it is p 0.097, so the pre-registered bar (Holm p < 0.05) was missed. Lengthening the headway on top added
+little (0.75 vs headway alone, n.s.) and cost 11 % of speed. In the counterfactual GIF, the same city, forked at the start of the 20 s chunk that holds a blind
+AV's merge crash, replays with no AV crash once the AV is gap-cautious. **The fourth stream** puts its 0.7 cell (12.1) below 0.6
+(13.8), as predicted, but the rise is in 0.85 -> 0.7, not below 0.7, so stream 4 on its own shows no knee at 0.7 either (its
+three cells span too little friction to tell); pooled over four streams the knee stays (2.8, 1.6-3.9), the streams still do not
+differ (p 0.45), and the searched hinge moves from 0.7 to 0.6. The knee exists over the wide range; where exactly it sits
+between 0.6 and 0.85 the data do not pin down.
+
+**What failed / limits.** One friction (0.4), one network, one stream for the merge run; the gap scale saturates at the slot's
+maximum (1.495) for every mu below 0.77, so this is "maximum gap caution", not a calibrated 1/mu law. Headway alone also cut merges
+(0.44, unadjusted p 0.033), so part of what looks like a merge effect may be the AV leaving more room for merging humans. Slower,
+more careful AVs finished 12-14 % fewer trips with headway; gap alone cost 3.5 %. The GIF is one hand-picked crash (the first one
+found with seed 11) and illustrates, it does not test.
+
+**Tests**: `tests/test_daily_1115.py` (the u1 -> gap-scale map, including the clip; merge_idm only changes u[:, 1]; the four-stream
+loader and tests on a synthetic stream). The ported branches' tests (`test_daily_1105/1107/1109.py`, 11 tests) pass on `main`.
+
+Commands: `python -m avlab.frictionmerge [--quick|--plot]` (~9 min full), `python -m avlab.knee4 [--quick|--run]` (~6 min run,
+~1 min tests).
 
 ---
 
@@ -326,6 +430,75 @@ Prior art: an observational California matched case-control study finds highly a
 
 ---
 
+## 2026-11-09 - Do AVs that read the road friction crash less? And where do kicked twins first diverge?
+
+**Ideas kept** (13 candidates, short paper search; [search](../results/daily/2026-11-09/search.json)): (1) make the AV friction-aware from outside the simulator (next step 10 of 2026-11-08); (2) 24 kicked twins instead of one (next step 3). A grep showed that `xnet/sim.py` uses friction only in the braking cap `a_min = -9 x friction`: an AV keeps its 1.3 s headway and its desired speed on any road.
+Prior art: friction-adaptive headway and braking thresholds are standard in patents and ACC papers ([patent 7739023](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7739023), [friction-aware policy preprint 2605.08528](https://arxiv.org/pdf/2605.08528)); disturbance growth through intersections ([Treiber and Kesting simulator notes](https://arxiv.org/pdf/1012.4913)). I read search snippets only.
+
+### Pseudocode
+
+```
+frictionav.py: half-AV Oakland, mu = 0.45, 16 copies per cell (same initial states), 4 cells: base | headway | speed | both
+               after every X.step:  av slots:  T = max(T, 1.3/mu)   [headway, 2.9 s]   v0f = min(v0f, sqrt(mu))   [speed, 0.67]   (xnet/ untouched)
+               warm 120 s, count 600 s; AV-involved crashes per AV vehicle-hour vs base: exact conditional rate ratio, Holm over 3 cells
+twinkicks.py:  12 copies warmed 120 s; per mode (fastest car / random moving car) a twin with that car +3 m/s; 300 s at 1 s resolution
+               displaced = alive in both and (|ds| > 1 m or other track); first other displaced car: following (same track <= 30 m) / box (kicked or it in a junction box) / other
+```
+
+### Predictions ([1](../results/daily/2026-11-09/predictions.md), [2](../results/daily/2026-11-09/predictions2.md)) and results ([frictionav](../results/frictionav/frictionav.json), [twinkicks](../results/twinkicks/twinkicks.json))
+
+![friction-aware AVs](img/frictionav.png)
+
+| cell | all crashes (per 1000 veh-h) | AV-involved crashes (per 1000 AV-h) | AV-involved ratio vs base (95 %), Holm p | AV mean speed |
+|---|---|---|---|---|
+| base | 49 (39.3) | 23 (42.0) | 1 | 16.6 km/h |
+| headway 2.9 s | 41 (32.2) | 16 (28.0) | 0.67 (0.33-1.32), p 0.26 | 15.3 |
+| speed x0.67 | 37 (28.6) | 3 (5.1) | 0.12 (0.02-0.40), p 1e-4 | 14.8 |
+| both | 28 (21.2) | 5 (8.2) | 0.20 (0.06-0.53), p 4e-4 | 13.6 |
+
+**P1 held, P2 failed, P3 failed.** Slowing the AVs' desired speed (or both) cuts AV-involved crashes by 80-90 %; all crashes fall to 0.54 (0.33-0.87) with both changes (unadjusted p 0.009; Holm over 3 cells 0.026). Headway alone gives 0.67 but its interval includes 1 (P2 predicted > 0.8: the point estimate is lower, so P2 failed, though it is not significant). The speed price is 11 % for the speed cell (16.6 to 14.8 km/h), 18 % for both (to 13.6), so P3 (> 15 % for the speed cell) failed. Human-involved crashes are not changed by design, so the city total falls less than the AV part.
+Caveat: 3 and 5 AV crashes per cell, one network, one initial-state set, clamp values chosen once (no tuning); `finished` trips also fall (7397 to 6430 with both).
+
+![kicked twins](img/twinkicks.png)
+
+**Q1 inconclusive, Q2 failed.** Only 3 of 24 kicks (1 of 12 fastest-car, 2 of 12 random-car) spread to >= 25 cars within 300 s; of those, 2 began through a junction box and 1 through car-following (2/3, interval 0.09-0.99). Kicking the fastest car did not diverge more often (1/12 vs 2/12). Two random-car twins displaced 348 and 360 cars, so when a divergence happens it spreads city-wide; most +3 m/s kicks (21 of 24) never move another car in 300 s, which says the earlier single diverging twin was a lucky draw, not the typical case.
+
+**Tests**: `tests/test_daily_1109.py`. No new GIF today (time); `img/twintrace.gif` shows the divergence mechanism.
+
+### Next
+* Tune the AV clamp: speed-only with sqrt(mu)^k, k in 0.25..1, to draw the safety-vs-speed frontier; more copies (48) per cell.
+* Does an AV that slows only near pedestrian crossings keep the gain at a smaller speed price?
+* 100+ kicks (cheap: 1-2 s per pair) to settle box vs following, and kick size vs divergence probability.
+
+### Follow-up (same day): can an AV learn the friction from its own braking?
+
+Question from the review of the first result: the clamp above was an oracle (`mu` read from the config). `avlab/frictionsense.py` asks whether it can be *measured*. xnet has one city-wide friction value that only caps braking (`a = max(a_cmd, -9 x friction)`), so the patches here are **patches in time** (1.0 -> 0.45 -> 0.7 -> 0.3 -> 1.0, 50 s ramps), not in space; spatial patches would need a per-road friction inside `xnet/sim.py`, which we do not change. Prior art on road-friction estimation from vehicle braking and slip is large (tyre-force and slip-slope methods); this is the simplest version, a cap detector, and I did not review the literature further.
+
+```
+frictionsense.py: 8 copies of half-AV Oakland, friction = mu(t) interpolated inside the scan; each second keep, per slot, the largest deceleration
+                  applied by an AV moving > 1 m/s (st.acc); the estimator never sees mu
+estimate(W = 30 s): f = largest deceleration of the fleet in the window; n = events within 3 % of f; n >= 3 -> mu_hat = f / 9, else only mu >= f / 9
+```
+
+Predictions ([file](../results/daily/2026-11-09/predictions3.md)) and results ([json](../results/frictionsense/frictionsense.json)):
+
+![friction sense](img/frictionsense.png)
+
+![friction sense animation](img/frictionsense.gif)
+
+* **R1 held.** On slick road (mu < 0.6) the estimate is identified 87 % of the time, within 0.1 of the truth in 84 % of those seconds (median error ~0: the cap is exact).
+* **R2 failed.** On dry road it is identified 88 % of the time, not < 20 %: AVs brake at the 9 m/s^2 limit often enough (emergency stops) that the floor is visible even when dry. I checked that the scripted "halted" branch (where xnet sets acc = cap) is not the source: it accounts for 1e-5 of floor events.
+* **R3 failed on the fleet size.** One AV alone identifies the floor in 1.1 % of seconds (3 AVs 4 %, 10 AVs 12 %, 30 AVs 21 %); the full fleet (807 slots that were ever an AV braking) 88 %. So the information is a fleet or cloud one, not a single vehicle's.
+* **Delay.** After a ramp ends the estimate needs 19 to 28 s to reach the new value going to 0.45 (median 23 s) and 16 to 19 s going to 0.3, mostly the 30 s window; ramp-downs are tracked with a lag, ramp-ups (to 0.7, 1.0) show a bound before an identified value.
+* **Noise.** Adding accelerometer noise (sigma 0.2 / 0.5 m/s^2) to the recorded decelerations: the naive largest-value estimator is identified only 55 % / 23 % of slick seconds; a robust one (mean of the top 5, band 2 sigma) stays at 100 % with a bias of +0.04 / +0.11 in mu.
+Caveats: the simulator's cap is exact and noise-free, which flatters the estimator; patches are temporal and city-wide; one network, 8 copies; real tyres have a slip-dependent curve, not a hard cap. **Test**: `tests/test_daily_1109.py`.
+
+**Next:** feed the estimate back into the AV (clamp with `mu_hat` instead of `mu`) and re-run the crash comparison; spatial patches (needs per-road friction in xnet, a design change to discuss); a noise-aware floor detector (mode of the top cluster rather than top-5 mean).
+
+*Ported on 2026-11-15 from branch `claude/exciting-bohr-cmq43w`, which was never merged into `main`; its files are now on `main` unchanged.*
+
+---
+
 ## 2026-11-08 - What is behind the friction cliff? And do AVs flatten the speed-limit curve?
 
 **Ideas kept** ([search](../results/daily/2026-11-08/search.json), only 8 candidates and a short search today): (1) humans-only Oakland at friction 0.7, 0.6, 0.55, 0.5, 0.45, 0.4 (12 copies each) with crashes split by type
@@ -361,6 +534,51 @@ reproduced as a step (here 0.7 to 0.6 doubles). (P3) The half-AV city's speed-li
 Caveats: 8-67 crashes per cell, one network, one seed stream; type counts per cell are small. Whether the AV planner reads the friction value is still unchecked.
 
 **Tests**: `tests/test_daily_1108.py`. No new GIF today (the existing `img/friction_blackice.gif` shows one slick-road crash).
+
+---
+
+## 2026-11-07 - Which crashes make the friction cliff, and do pedestrian violators carry the speed-limit effect?
+
+**Ideas kept** (from 13 candidates; [search](../results/daily/2026-11-07/search.json)): (1) the friction sweep again on a finer grid, crash counts split by type (next step 7);
+(2) speed limit x1.0 and x1.3 with pedestrian violators on or off (next step 6). Prior art: collision risk is commonly framed as the braking a follower
+*needs* against the braking the road *allows* (DRAC against maximum available deceleration, [arXiv 1810.04776](https://arxiv.org/pdf/1810.04776)); jaywalking raises conflict risk and one Seoul
+study put 40 % of pedestrian fatalities on jaywalkers ([SWOV](https://swov.nl/nl/publicatie/pedestrian-crashes-during-jaywalking-can-we-afford-overlook); search snippets only, full texts not read).
+
+### Pseudocode (what `avlab/crashmix.py` does)
+
+```
+A. for mu in 1.0 0.8 0.7 0.6 0.55 0.5 0.45 0.4 0.3: 12 copies of Oakland, calibrated humans, friction=mu, warm 120 s, count 600 s (one compiled run)
+     per cell: crashes by type, vehicle-hours, rear-end closing speed (imp_rear_closing / imp_rear_n)
+     single power law vs power law with one hinge (hinge tried at each interior grid value), Poisson deviance + 2 x parameters
+B. for limit scale in 1.0 1.3 (net link_v *= scale): 24 copies with p_ped_violate 0.03 and 24 with 0; same protocol
+     rate ratio x1.3 / x1.0 per violator setting (exact conditional interval), elasticity = ln(ratio) / ln 1.3
+```
+
+### Predictions ([written before the runs](../results/daily/2026-11-07/predictions.md)) and results
+
+| prediction | result |
+|---|---|
+| A1 rear-ends carry > 50 % of the extra crashes from friction 0.6 to 0.45 | **failed**: 12 % (2.2 of 17.5 extra crashes per 1000 vehicle-h); cyclist crashes 11.9, merge 8.7, pedestrian -4.1 |
+| A2 a hinge beats one power law, break at 0.5-0.6 | **failed**: best hinge at 0.8, delta AIC 2.6 (search not paid for), so no evidence for a break on this grid |
+| A3 rear-end closing speed rises as friction falls | **failed**: Spearman 0.19 (p 0.65); closing speeds 2.9-6.9 m/s with no trend, from 0-26 rear-ends per cell |
+| B1 no violators: pedestrian crashes at x1.3 fall by > 70 % | **point estimate held, not established**: ratio 0.23 (95 % 0.08-0.53), 7 against 31 crashes; the interval includes a 47 % fall |
+| B2 limit elasticity falls below 3 without violators | **failed**: 5.2 (1.7-9.4) without violators against 5.7 (3.2-8.6) with them; crashes 6 -> 23 and 11 -> 48 |
+
+![crash types](img/crashmix.png)
+
+![crash types GIF](img/crashmix.gif)
+
+Per-1000-vehicle-hour totals along the friction grid: 6.4, 4.3, 9.7, 15.9, 17.9, 34.4, 33.4, 53.8, 184 (1.0 down to 0.3). The cliff here sits between 0.55 and 0.5 (17.9 to 34.4), not between 0.6 and 0.45 as yesterday's coarser grid suggested; with 4 to 17 crashes per cell
+at 0.6 and above, the location is not pinned down. The one sharp feature is the cyclist type: 0 crashes in each of the six cells from 1.0 to 0.55, then 12 at 0.5, 11 at 0.45, 15 at 0.4, 28 at 0.3. That was seen after the fact, so it is a hypothesis
+(a car closing on a slow cyclist needs braking the road no longer gives; `bicycle` bundles rear-end, junction and side-swipe events with cyclists), not a finding. Rear-end closing speed is an indirect proxy for "braking needed";
+the simulator does not record needed deceleration at a crash. Violators matter for pedestrian crashes (31 -> 7 at x1.3) but the speed-limit effect on all crashes survives without them, so the speed power law is not mainly a violator story.
+Caveat: 11 crashes at limit x1.0 with violators here against 14 in the 2026-11-04 run (32 copies), consistent with Poisson noise. `results/crashmix/crashmix.json`.
+
+**Tests**: `tests/test_daily_1107.py` (hinge fit finds a planted break and does not favour one for a pure power law, rate-ratio interval, type counts).
+
+**What to try next**: (a) test the cyclist hypothesis: friction grid with `p_bike=0` (does the 0.5 jump vanish?), 9 cells x 12 copies, ~8 min; (b) a 16-copy rerun of friction 0.6, 0.55, 0.5 only to place the cliff; (c) add a needed-deceleration recorder as a read-only counter ratio outside `xnet/` (replay with `avlab.blackbox`).
+
+*Ported on 2026-11-15 from branch `claude/exciting-bohr-e6iwkj`, which was never merged into `main`; its files are now on `main` unchanged.*
 
 ---
 
@@ -430,6 +648,59 @@ a 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in when picked on a
 Single scenario scores are themselves draws (2026-11-03), which sets a floor. `results/minibench/minibench.json`.
 
 **Tests**: `tests/test_daily_1106.py` (Poisson fit recovers a known slope and slope difference, summary shapes, subset helpers).
+
+---
+
+## 2026-11-05 - Does a city with AVs pay less for a higher speed limit? (No measurable difference)
+
+**Ideas kept** (from 12 candidates; [search](../results/daily/2026-11-05/search.json)): (1) repeat the speed-limit sweep with about half of the cars AVs and compare the
+crash-rate elasticity, overall and by crash type (next step 5 of yesterday, merged with step 6's by-type question); (2) a zoomed black-box GIF of a
+pedestrian crash at x1.3 limits. Prior art: the power model (Nilsson; Elvik) is for human traffic, and a 2025 review of speed and crash
+models says mixed-traffic effects on it are neglected ([ITF, speed changes and crash risk](https://www.itf-oecd.org/sites/default/files/docs/speed-changes-crash-risk.pdf)); a standard web search found nothing on AV share and the exponent, so as far as I can tell this has not been measured.
+
+### Pseudocode (what the code does)
+
+```
+avlab/speedlimit.py --p-av 0.5   (the saved 0 % run is unchanged)
+    for scale in 0.7 0.85 1.0 1.15 1.3:   net["link_v"] *= scale;  32 copies, calibrated humans with Behaviour.p_av = 0.5 (rule-based AV under its envelope),
+                                          warm 120 s, count 600 s; record crashes, vehicle-hours, by crash type
+avlab/speedshare.py
+    b, se   = quasi-Poisson regression of crashes on log(scale), offset log vehicle-hours, per copy, for each world
+    per type: the same on the 5 scale totals, SE x sqrt(dispersion of the all-types fit)   (per-copy type counts are not stored)
+    z = (b_0 - b_50) / sqrt(se_0^2 + se_50^2); two-sided p; Holm correction over the 5 comparisons (all types + 4 types with crashes at >= 3 scales)
+    --gif: hunt (blackbox.hunt, new `types` filter) for a pedestrian crash with all limits x1.3, replay it, zoomed GIF
+```
+
+### Prediction, written before the full run
+
+P1: with half the cars AVs, the elasticity is lower than 4.5 by at least 1 (the difference significant at 95 %), because AV share halves crashes in the AV-share sweep and AVs keep a longer headway. (Quick probe at x0.7 showed no visible AV effect, 5 against 4 crashes, but that is a few crashes.)
+
+### Result
+
+| limit | crashes, 0 % AVs | crashes, ~45 % AVs | rate per 1000 vehicle-h, 0 % | rate, ~45 % |
+|---|---|---|---|---|
+| x0.70 | 4 | 5 | 1.5 | 1.9 |
+| x0.85 | 10 | 6 | 3.9 | 2.4 |
+| x1.00 | 14 | 11 | 5.6 | 4.4 |
+| x1.15 | 31 | 26 | 12.6 | 10.7 |
+| x1.30 | 57 | 59 | 23.5 | 24.6 |
+
+(AV share measured on a probe run: 41-47 % of the alive vehicles are AVs through the 12 minutes; buses, vans and cyclists are never AVs.)
+
+![speed limit x AV share](img/speedshare.png)
+
+**P1 failed.** Elasticity 4.5 (SE 0.6) with no AVs and **5.1 (SE 0.7)** with about half: the difference is -0.6 (p = 0.53), so the data cannot tell the two
+apart and the point estimate goes the wrong way. The interval of the difference is roughly +-1.8, so an effect of 1 or less is not excluded.
+By crash type (totals-based SEs, Holm over 5 comparisons, all adjusted p = 1.0): pedestrian 7.2 (SE 1.1) against 8.1 (SE 1.3); rear-end 3.9 against 1.9 (the one hint of an AV effect: p = 0.26 unadjusted); left-turn and merge are too sparse.
+Pedestrian crashes at x1.3 are 38 against 41: the AVs do not remove the crashes that carry the speed effect. At the standard limit the AVs have fewer crashes (14 to 11), which is within the noise of yesterday's AV-share sweep. `results/speedlimit/speedshare.json`, `results/speedlimit/speedlimit_av50.json`.
+
+![pedestrian crash at x1.3](img/speedshare.gif)
+
+The GIF is one pedestrian crash with every limit x1.3 (102 s in; a car at 57 km/h three seconds before, 37 km/h at impact after braking at -9 m/s^2, hitting a pedestrian who started crossing without WALK). One example, not a sample.
+
+**Tests**: `tests/test_daily_1105.py` (Holm, the elasticity fit recovers a known power, the comparison detects a real difference and not an absent one). Health check at the start: `tests/test_ideas.py tests/test_easy.py tests/test_examples.py` 27 passed, 1 skipped.
+
+*Ported on 2026-11-15 from branch `claude/exciting-bohr-eetr4g`, which was never merged into `main`; its files are now on `main` unchanged.*
 
 ---
 
