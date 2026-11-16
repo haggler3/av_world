@@ -9,6 +9,7 @@ Exit status 0: the core is fine (optional extras only warn). 1: something the si
 import argparse
 import importlib
 import importlib.metadata as md
+import os
 import re
 import subprocess
 import sys
@@ -63,6 +64,30 @@ def smoke():
     return ok, f"Oakland, 2 copies: {s['vehicle_hours']} vehicle-hours, {s['mean_speed_kmh']} km/h, {s['trips_finished']} trips ({time.time() - t0:.0f} s)"
 
 
+def interpreter_mismatch(python=None, exe=None):
+    """Name of the `python` on PATH if it is a different interpreter from the one running av-world (packages go to the latter), else None.
+
+    A fresh machine can have `pip` and the `av-world` script on one Python (say 3.13) and a bare `python` on another (3.11) without jax;
+    then `python -m avlab...` fails with ModuleNotFoundError although the doctor says READY."""
+    import os
+    import shutil
+    python = python if python is not None else shutil.which("python")
+    exe = exe or sys.executable
+    if not python:
+        return None
+    try:
+        same = os.path.realpath(python) == os.path.realpath(exe) or os.path.samefile(python, exe)
+    except OSError:
+        same = False
+    if same:
+        return None
+    try:
+        out = subprocess.run([python, "-c", "import sys; print(sys.prefix)"], capture_output=True, text=True, timeout=10).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return python
+    return None if out and out == sys.prefix else python
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="av-world doctor")
     ap.add_argument("--smoke", action="store_true", help="also run a 15-second end-to-end simulation")
@@ -100,6 +125,10 @@ def main(argv=None):
     missing_opt = sorted({r["group"] for r in rows if not r["ok"] and r["group"] != "core"})
     if missing_opt:
         print("\noptional groups with something missing or old: " + ", ".join(missing_opt) + "  ->  pip install -e \".[all]\" installs them all")
+    other = interpreter_mismatch()
+    if other:
+        print(f"\nnote: `python` on PATH is {other}, not {sys.executable} (where the packages are); run modules with "
+              f"`{os.path.basename(sys.executable)} -m ...` or use a virtual environment")
     print("\nREADY" if not bad else "\nNOT READY: fix the core packages above (av-world doctor --fix)")
     return 1 if bad else 0
 

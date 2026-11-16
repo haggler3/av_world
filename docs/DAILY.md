@@ -20,12 +20,113 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 13. ~~Is the speed-limit elasticity also a knee?~~ (answered 2026-11-11: no, search-corrected p 0.54; a plain power law, b 4.5, is enough.)
 14. ~~Why a knee at 0.7?~~ (answered 2026-11-12: not the onset of braking at the cap.) ~~Which of friction's channels makes the knee?~~ (2026-11-13: not the stop line, not the commitment rule; both are almost absent before crashes. By elimination the braking cap carries it, but its rate has no bend.) Next: **the knee may be in what the cap *fails to stop*, not in how often it is hit**: for each car braking at the cap, record the speed it still had when it hit (impact speed) or stopped; test whether the share of cap-braking episodes that end in contact bends at 0.7.
 15. ~~A results index~~ (done 2026-11-12: `python -m avlab.resultsindex`, [RESULTS_INDEX.md](RESULTS_INDEX.md); 375 of 479 tracked files are mentioned by no doc or code path, most of them written through a directory variable).
-16. ~~Friction tomography~~ (done 2026-11-13.) ~~Give the AVs that estimate~~ (2026-11-14.) ~~The merge channel~~ (2026-11-15: maximum gap caution cut AV merge crashes to 0.27x and all AV crashes to 0.54x at friction 0.4, Holm p 0.097.) Next: **confirm it on a fresh stream with the bar fixed in advance** (one test, gap vs blind, 40 copies, ~5 min), and at friction 0.6 and 1.0 to see what gap caution costs when it is not needed. Also a harder test with friction varying by street.
-17. ~~Crash-rate knee, third stream~~ (pooled 2026-11-14.) ~~Fourth stream~~ (2026-11-15: stream 4's 0.7 is below 0.6, the pooled knee holds at 2.8, 1.6-3.9, but the searched hinge moved to 0.6.) Next: **where is the knee?** A profile likelihood for the hinge position on the four pooled streams (no simulation) with a bootstrap interval.
+16. ~~Friction tomography~~ (done 2026-11-13.) ~~Give the AVs that estimate~~ (2026-11-14.) ~~The merge channel~~ (2026-11-15: 0.54x, Holm p 0.097.) ~~Confirm on a fresh stream~~ (2026-11-16: 0.63, 0.36-1.07, p 0.076, failed the bar; pooled post hoc 0.58, 0.39-0.86.) Next: **a powered confirmation**: 120 copies per cell on a third stream (seed 8) for over 80 % power at a 0.6 ratio (~2 x 9 min, split over two days), and **a friction-scaled gap rule that switches off above 0.7**, because at friction 0.6 the always-cautious AV had 9 crashes to 3 (n.s.). Also a harder test with friction varying by street.
+17. ~~Crash-rate knee, third stream~~ (pooled 2026-11-14.) ~~Fourth stream~~ (2026-11-15.) ~~Where is the knee?~~ (2026-11-16: best 0.64, but any hinge 0.56-0.84 fits; bootstrap 0.58-0.96, bimodal; a kink beats a smooth quadratic, p 0.037, power ~38 %.) Next: **place it with data, not models**: 32 copies at friction 0.75 and 0.65 on a fifth stream (no runs exist between 0.7 and 0.8, or 0.6 and 0.7), ~5 min.
 
 18. ~~Merge or port the 2026-11-09 branch~~ (2026-11-15: the 11-05, 11-07 and 11-09 branches are ported to `main`.) Next: explain why sqrt(friction) speed helps the rule-based AV (0.12x) but not the IDM policy (0.78x): rerun both policies in one compiled program at friction 0.45 and 0.4 with 32 copies, split AV crashes by type. Today's result suggests a lead: the IDM policy's gap scale is 1.15, the rule-based AV's 1.25.
 
+19. **Doctor**: `av-world doctor` now flags a `python` that differs from the packages' interpreter (2026-11-16). Next: also print the right interpreter in the README install line.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-16 - Gap caution on ice, confirmed on a fresh stream? And where is the friction knee, and is it a knee at all?
+
+**Ideas kept** (15 candidates; [search](../results/daily/2026-11-16/search.json)): (1) the confirmation asked for in next step 16:
+one pre-registered test of gap caution at friction 0.4 on a new random stream (seed 7), plus its cost at friction 0.6 and 1.0;
+(2) next step 17 without simulation: a profile likelihood and a copy bootstrap for the knee's position on the four pooled streams,
+and a test of whether a kink beats a smooth curve; (3) small: `av-world doctor` now warns when `python` on PATH is a different
+interpreter from the one with the packages (today's setup: `pip` and `av-world` on Python 3.13, a bare `python` 3.11 without jax).
+Tools: `avlab/gapconfirm.py` (+ `_plot`), `avlab/kneeprofile.py` (+ `_plot`).
+Prior art: breakpoint intervals are non-standard because the breakpoint is not identified under the no-break null (Davies test);
+Muggeo's `segmented` package offers delta, score and gradient intervals, and finds smoothed score intervals better than Wald or
+likelihood-ratio ones in practice ([confint.segmented](https://rdrr.io/cran/segmented/man/confint.segmented.html)); a nonparametric
+bootstrap gave less biased and narrower breakpoint intervals than the piecewise-linear approach in small samples
+([PMC7713952](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7713952/)). On AV gap acceptance in low friction I again found no
+study that counts city crashes; a U.S. DOT report says weather can enter gap-acceptance models but found no suitable empirical data
+for lane changes and gap acceptance in adverse weather ([ROSA P dot/4003](https://rosap.ntl.bts.gov/view/dot/4003/dot_4003_DS1.pdf)).
+(Search snippets only.)
+
+### Pseudocode
+
+```
+avlab.gapconfirm (xnet/ untouched; AVs through the policy slot, IDM T = 1.5 s, u[:, 1] sets the gap scale gsc = 1.15 + 0.35 tanh(u1))
+  cells (one compiled program, copy i of every cell on key 7000 + i; half-AV Oakland, calibrated humans; warm 120 s, score 480 s):
+     blind@0.4, gap@0.4 (40 copies each)  <- the ONE pre-registered test: AV crashes per AV-hour, exact conditional Poisson, bar p < 0.05
+     blind@0.6, gap@0.6, blind@1.0, gap@1.0 (20 copies each)   <- cost of caution (speed, trips); crash ratios reported, not tested
+     blind: gsc 1.15 (u1 = 0); gap: gsc 1.495 (the slot's maximum, which is what 2026-11-15's clip(1.15/mu) gave at mu 0.4)
+  post hoc (labelled as such): fixed-effect pooling of the 0.4 cells with 2026-11-15's stream (seed 6)
+
+avlab.kneeprofile (no simulation; 524 copies, 880 crashes from four streams; copies summed into 25 (run, friction) cells)
+  model: log rate = a_run + b log mu [+ c max(log h - log mu, 0)]          (quasi-Poisson IRLS, as in avlab.knee)
+  profile: deviance drop over the power law for h = 0.42 .. 0.96 step 0.01; 'set' = {h : drop >= max - 3.84} (descriptive only)
+  copy bootstrap (B 999): resample copies within each cell, refit on h step 0.02, keep the best h -> 2.5 / 97.5 % quantiles
+  knee vs curve: T = dev(power + c (log mu - log 0.7)^2) - dev(best hinge); p from 999 Poisson draws under the fitted quadratic
+                 (power: share of draws under the best hinge with T above the null's 95 % point); curvature: quadratic vs power, LR chi^2 1 df
+  Holm over {knee vs curve, curvature}
+```
+
+### Predictions, written before the full runs ([file](../results/daily/2026-11-16/predictions.md))
+
+* C1 (confirmatory): gap vs blind at 0.4, rate ratio < 1 with p < 0.05. C2: merge rate ratio <= 0.5. C3: caution costs < 5 % of AV
+  speed and < 8 % of AV trips at 0.6 and 1.0. C4: at 1.0 the crash ratio's interval includes 1.
+* K1: the hinge's profile is flat (set wider than 0.2 in friction; half-known from a probe). K2: a kink does **not** beat a smooth
+  quadratic (p > 0.05). K3: the bootstrap interval of the best hinge is wider than 0.6-0.8.
+
+### Results ([gapconfirm.json](../results/frictionmerge/gapconfirm.json), [kneeprofile.json](../results/knee/kneeprofile.json))
+
+| cell (seed 7) | AV crashes / AV-h | of which merges | per 1000 AV-h | AV speed km/h | AV trips |
+|---|---|---|---|---|---|
+| blind@0.4 | 38 / 1065 | 27 | 35.7 | 15.2 | 5365 |
+| gap@0.4 | 24 / 1073 | 12 | 22.4 | 14.8 | 5174 |
+| blind@0.6 | 3 / 527 | 1 | 5.7 | 15.3 | 2702 |
+| gap@0.6 | 9 / 528 | 3 | 17.0 | 15.0 | 2614 |
+| blind@1.0 | 2 / 526 | 0 | 3.8 | 15.2 | 2669 |
+| gap@1.0 | 2 / 530 | 0 | 3.8 | 14.9 | 2604 |
+
+| comparison | AV rate ratio (95 %) | p | merge rate ratio (95 %) | AV speed ratio | AV trip ratio |
+|---|---|---|---|---|---|
+| **gap vs blind, 0.4 (confirmatory)** | **0.63 (0.36-1.07)** | **0.076** | 0.44 (0.20-0.90) | 0.98 | 0.96 |
+| gap vs blind, 0.6 | 2.99 (0.75-17.2) | 0.15 | 3 vs 1 crashes | 0.98 | 0.97 |
+| gap vs blind, 1.0 | 0.99 (0.07-13.7) | 1.0 | 0 vs 0 | 0.98 | 0.98 |
+| 0.4, both streams pooled (post hoc) | 0.58 (0.39-0.86) | 0.004 | 0.36 (0.20-0.64) | | |
+
+| knee | estimate |
+|---|---|
+| best hinge (profile, step 0.01) | 0.64, deviance drop 23.7 over the power law |
+| hinges within 3.84 of the best | 0.56-0.84 |
+| copy bootstrap of the best hinge (B 999) | median 0.66, 95 % 0.58-0.96; 72 % of draws in 0.6-0.8 |
+| curvature at all (quadratic vs power law) | drop 17.8, p 2e-5 (Holm 5e-5) |
+| kink vs smooth curve | T = 5.8 (null 95 % point 5.3), bootstrap p 0.037 (Holm 0.037); power of this test about 38 % |
+| fixed hinges 0.6 / 0.7 / 0.8: extra slope | 2.1 / 2.8 / 4.5 |
+
+![gap caution, fresh stream](img/gapconfirm.png)
+
+![knee profile](img/kneeprofile.png)
+
+![sliding the knee](img/kneeprofile.gif)
+
+**C1 failed, C2-C4 held; K1 and K3 held, K2 failed.** On a fresh random stream the gap-cautious AV again had fewer crashes on ice
+(24 vs 38, rate ratio 0.63) and fewer merge crashes (12 vs 27, 0.44, 0.20-0.90), for 2 % of speed and 4 % of trips, but the
+pre-registered test missed its bar (95 % 0.36-1.07, p 0.076): two streams, two point estimates in the same direction (0.54 and 0.63),
+neither alone decisive after correction. Pooled after the fact the two streams give 0.58 (0.39-0.86, p 0.004); that number was not
+pre-registered and should be read as a meta-analytic summary, not a confirmation. At friction 0.6 the cautious AV had 9 crashes to
+the blind AV's 3 (n.s., interval 0.75-17): caution where it is not needed did not help, and may cost. **The knee** is real
+curvature (p 2e-5), and a kink fits a little better than a smooth quadratic (p 0.037), so "knee" survives as the better description,
+but *where* is not pinned down: every hinge from 0.56 to 0.84 fits within 3.84 deviance of the best, and the bootstrap puts the best
+hinge anywhere from 0.58 to 0.96 (bimodal: a mode at 0.60-0.66 and a second at 0.76-0.84).
+
+**What failed / limits.** The confirmatory test failed its bar; 40 copies per cell detect a 0.5 ratio but not 0.6. The 0.6 cost cells
+are small (12 AV crashes). The knee-vs-curve test is weak (power ~38 % under the fitted hinge), only one smooth alternative was tried,
+and the 3.84 set is descriptive, not a calibrated interval (the hinge is not a regular parameter). The profile flattens above 0.85
+because no data lie between 0.85 and 1.0. Setup note: `python` and `pip` were different interpreters in this environment; all runs
+used `python3.13`.
+
+**Tests**: `tests/test_daily_1116.py` (aggregation preserves deviance differences; the profile finds a planted hinge; knee vs curve
+on synthetic data; the gap-confirm summary and u1 map; the doctor's interpreter check).
+
+Commands: `python -m avlab.gapconfirm [--quick|--plot]` (~6 min full), `python -m avlab.kneeprofile [--quick]` (~1 min).
 
 ---
 
