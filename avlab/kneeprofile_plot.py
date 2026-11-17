@@ -7,10 +7,10 @@ BG, FG, GRID_C = "#0d1117", "#e6edf3", "#30363d"
 PAL = {"data": "#e6edf3", "power": "#8b949e", "quad": "#f2a541", "hinge": "#4c9be8", "boot": "#3fb68b"}
 
 
-def _data():
+def _data(load=None):
     from avlab.knee4 import load_all4
     from avlab.kneeprofile import aggregate
-    yc, tc, muc, runc, _ = load_all4()
+    yc, tc, muc, runc, _ = (load or load_all4)()
     return aggregate(yc, tc, muc, runc)
 
 
@@ -88,12 +88,12 @@ def plot(out, path="docs/img/kneeprofile.png"):
     plt.close(fig)
 
 
-def gif(out, path="docs/img/kneeprofile.gif"):
+def gif(out, path="docs/img/kneeprofile.gif", load=None):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation, PillowWriter
-    y, t, mu, run = _data()
+    y, t, mu, run = _data(load)
     xs = np.exp(np.linspace(np.log(0.28), np.log(1.05), 120))
     g = np.array(out["grid"]); d = np.array(out["drops"])
     frames = list(range(0, len(g), 2)) + [int(np.argmax(d))] * 10

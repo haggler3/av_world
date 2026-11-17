@@ -1,0 +1,22 @@
+{
+ "date": "2026-11-17",
+ "method": "PUCT on paper, c = 1.2, 3 rounds; Q = novelty x relevance x visual x holds-up / sqrt(compute min); P = prior normalised",
+ "candidates": [
+  {"id": 1, "idea": "Powered gap-caution confirmation: 120 copies/cell at friction 0.4 on seed 8 (next step 16)", "artefact": "figure + table", "min": 9, "prior": 0.7, "Q": 0.20, "N": 2, "probe": "quick run (2 copies, 10 s wall) works; stratified exact pooling reproduces 2026-11-16's merge pooled 0.36 (0.20-0.64) on seeds 6+7", "kept": true},
+  {"id": 2, "idea": "Fill the knee's empty frictions 0.65 and 0.75 on a fifth stream (next step 17)", "artefact": "figure + GIF", "min": 6, "prior": 0.55, "Q": 0.18, "N": 2, "probe": "four-stream fits predict ratio 0.65/0.75 of 1.16 (hinge 0.64), 1.33 (0.7), 1.59 (0.8), 1.49 (power law): the new cells discriminate the models, weakly (~35 crashes per cell)", "kept": true},
+  {"id": 3, "idea": "Friction-gated gap rule that switches off above 0.7", "artefact": "table", "min": 9, "prior": 0.4, "Q": 0.07, "N": 1, "probe": "at the tested frictions 0.4/0.6/1.0 the gated rule equals 'gap' at 0.4 and 'blind' at 0.6 and 1.0: no new cells to run; merged into idea 1", "kept": false, "why": "duplicates idea 1 and 2026-11-16's cost cells"},
+  {"id": 4, "idea": "Share of cap-braking episodes ending in contact vs friction (next step 14)", "artefact": "figure", "min": 8, "prior": 0.35, "Q": 0.06, "N": 1, "probe": "grep: per-episode impact speed is not in X.METRICS; needs a new scan over states", "kept": false, "why": "needs new per-car logging; more than the budget allows"},
+  {"id": 5, "idea": "sqrt(mu) speed helps rule-based AV but not IDM: one compiled program at 0.45/0.4 (next step 18)", "artefact": "table", "min": 8, "prior": 0.35, "Q": 0.06, "N": 0, "kept": false, "why": "lower Q; third friction-AV run today would exceed the 2-job limit"},
+  {"id": 6, "idea": "Seeds with intervals on every leaderboard row (next step 2)", "min": 45, "prior": 0.6, "Q": 0.03, "N": 0, "kept": false, "why": "> 12 min compute"},
+  {"id": 7, "idea": "Re-score the rule-based AV on CPU to check the leaderboard's stream (next step 1)", "min": 10, "prior": 0.4, "Q": 0.05, "N": 0, "kept": false, "why": "low visual value; carried over"},
+  {"id": 8, "idea": "Junction-box handoff as the general cause of twin divergence (next step 3)", "min": 10, "prior": 0.4, "Q": 0.06, "N": 0, "kept": false, "why": "lower Q than the two open confirmations"},
+  {"id": 9, "idea": "Pedestrian crossing yield variation in the speed-limit sweep (next step 6)", "min": 12, "prior": 0.3, "Q": 0.04, "N": 0, "kept": false, "why": "needs an xnet parameter that does not exist"},
+  {"id": 10, "idea": "Friction varying by street (patchy ice) for gap caution", "min": 12, "prior": 0.4, "Q": 0.05, "N": 0, "kept": false, "why": "friction is a scalar per copy in Behaviour; would need xnet change"},
+  {"id": 11, "idea": "Optimal design: where the next copies should go to place the knee (expected profile narrowing per cell)", "min": 2, "prior": 0.4, "Q": 0.09, "N": 1, "probe": "web: no prior art found on c-optimal design for breakpoints; folded into idea 2's write-up as next step", "kept": false, "why": "merged as a child of idea 2 (next step)"},
+  {"id": 12, "idea": "README install line names the right interpreter (next step 19)", "min": 0, "prior": 0.9, "Q": 0.05, "N": 0, "kept": true, "why": "cleanup, no compute"},
+  {"id": 13, "idea": "Wild card: AV that learns gap caution by PPO on ice (avrl)", "min": 30, "prior": 0.2, "Q": 0.01, "N": 0, "kept": false, "why": "> 12 min"},
+  {"id": 14, "idea": "Wild card: a crash 'weather map' GIF of merge crashes by location, blind vs gap", "min": 10, "prior": 0.3, "Q": 0.04, "N": 0, "kept": false, "why": "needs per-crash positions not stored in the aggregate metrics"}
+ ],
+ "rounds": ["round 1: idea 1 (highest Q + prior) probed by a quick run", "round 2: idea 2 probed by computing the four-stream predictions; child idea 11 created", "round 3: idea 3 probed: degenerate at the tested frictions, merged into 1"],
+ "kept": [1, 2, 12]
+}

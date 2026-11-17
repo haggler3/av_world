@@ -64,11 +64,11 @@ def knee_vs_curve(y, t, mu, run, grid=GRID):
     return float(dq - (d0 - drops.max())), float(d0 - dq), grid[int(np.argmax(drops))]
 
 
-def analyse(B=999, seed=16):
+def analyse(B=999, seed=16, load=None):
     from scipy import stats
     from avlab.knee4 import load_all4
     from avlab.whocrashes import holm
-    yc, tc, muc, runc, _ = load_all4()
+    yc, tc, muc, runc, _ = (load or load_all4)()
     y, t, mu, run = aggregate(yc, tc, muc, runc)
     d0, drops = profile(y, t, mu, run)
     best = GRID[int(np.argmax(drops))]
