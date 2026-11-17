@@ -3,6 +3,19 @@
 One entry per day, newest first. Each entry: the ideas kept, the pseudocode, the result, the figures, and what to try next. The
 search behind each day's choice (candidates, probes, scores) is in `results/daily/<date>/search.json`.
 
+## Foundations backlog (one per day, see `.claude/skills/daily-research/SKILL.md`)
+
+Changes that add a capability. Several earlier ideas were dropped because one of these was missing.
+
+1. **Per-crash event log**: position, time, speeds, crash type and both road users' IDs for every crash, off by default.
+   It unlocks crash maps, impact-speed analysis (next step 14) and "which merges does caution prevent" (next step 16).
+2. **Friction that varies by street**: a per-link friction array in `xnet`, default all equal to the scalar. It unlocks patchy-ice tests.
+3. **Visibility (rain, night)**: a per-copy sight distance that limits what drivers and AVs observe.
+4. **AV sensor noise and latency** in the policy observation, with a fixed seed.
+5. **A speed benchmark** in `tests/` that fails when 200 steps of 16 Oakland copies get more than 5 % slower.
+6. **Seeds on every AVBench row**: the leaderboard with 95 % intervals from several random streams.
+7. **A scenario generator** that searches behaviour parameters for AV failures (cross-entropy method), with a replay GIF per failure.
+
 ## What to try next (running list)
 
 1. **Check which random stream the L4 leaderboard used** (carried over). Re-score the rule-based AV on CPU with `unsafe_rbg` and compare with the stored GPU row.
