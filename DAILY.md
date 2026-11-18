@@ -9,10 +9,10 @@ Changes that add a capability. Several earlier ideas were dropped because one of
 
 1. **Per-crash event log**: position, time, speeds, crash type and both road users' IDs for every crash, off by default.
    It unlocks crash maps, impact-speed analysis (next step 14) and "which merges does caution prevent" (next step 16).
-2. **Friction that varies by street**: a per-link friction array in `xnet`, default all equal to the scalar. It unlocks patchy-ice tests.
+2. ~~**Friction that varies by street**~~ (done 2026-11-18: `xnet.sim.patch_links` + `Behaviour.patch_friction`; patchy ice at mean 0.7 gave 3.3x the crashes of uniform 0.7).
 3. **Visibility (rain, night)**: a per-copy sight distance that limits what drivers and AVs observe.
 4. **AV sensor noise and latency** in the policy observation, with a fixed seed.
-5. **A speed benchmark** in `tests/` that fails when 200 steps of 16 Oakland copies get more than 5 % slower.
+5. **A speed benchmark** (timing tool `avlab.speedcheck` added 2026-11-18; still to do: the failing test) in `tests/` that fails when 200 steps of 16 Oakland copies get more than 5 % slower.
 6. **Seeds on every AVBench row**: the leaderboard with 95 % intervals from several random streams.
 7. **A scenario generator** that searches behaviour parameters for AV failures (cross-entropy method), with a replay GIF per failure.
 
@@ -40,7 +40,87 @@ Changes that add a capability. Several earlier ideas were dropped because one of
 
 19. ~~Doctor~~: `av-world doctor` flags a `python` that differs from the packages' interpreter (2026-11-16); ~~README line~~ (2026-11-17: the install section says to use one interpreter).
 
+20. **Where does ice form?** (2026-11-18) Patchy ice costs what the mixture predicts (0.84x, 0.67-1.07). Next: a mask on bridges,
+    shaded or steep links, or one contiguous zone, against a random mask of the same length; and AVs that read the patch map
+    (per-link `avlab.stopline.tomography`) and are gap-cautious only on icy links.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-18 - Friction that varies by street, and a patchy-ice test
+
+**What changed.** The simulator can now give each street its own friction. `xnet.sim.patch_links(net, share, seed)` returns a
+mask over links covering `share` of the network's length; put it in the jnp network as `J["link_patch"]`, and on those links the
+friction becomes $\mu \cdot m$, where $\mu$ is `Behaviour.friction` and $m$ is the new field `Behaviour.patch_friction` (default 1).
+A car inside a junction box uses its approach link. With no mask in the network the new code is never traced. New: `avlab/patchyice.py`
+(+ `_plot`), `avlab/speedcheck.py` (the 200-step timing used by the rule for `xnet/` changes), `tests/test_daily_1118.py`.
+This is foundations backlog item 2.
+
+**Why.** Road friction in real cities is patchy: black ice forms on bridges, in shade and on some streets before others. Iowa State
+work maps spatial pavement friction to crash probability per road section
+([InTrans](https://www.intrans.iastate.edu/wp-content/uploads/2018/07/Impact-of-Spatial-Pavement-Friction-on-Crash-Risk-Assessment-_04252017.pdf)),
+and a microsimulation digital twin found lower friction raises conflict measures ([arXiv 2502.09561](https://arxiv.org/pdf/2502.09561)),
+but I found no city-scale test of patchy against uniform friction at the same mean. (Search snippets only.)
+
+**How it works.**
+
+```
+xnet.sim.step (only when "link_patch" in net):
+    a_min = -9 * friction                                   # the hardest braking the road allows, as before
+    patched = link_patch[link if on a link else approach link of the junction move]
+    a_min = a_min * (patch_friction if patched else 1)      # per car; every later use of a_min is elementwise
+avlab.patchyice.run: one compiled program, humans-only Oakland, calibrated drivers, seed 9, warm 120 s, score 600 s, 40 copies per cell
+    U1.0, U0.7, U0.4: friction 1.0 / 0.7 / 0.4, patch_friction 1      P: friction 1.0, patch_friction 0.4
+    mask = patch_links(net, 0.5, seed 0): 292 of 622 links, 49.8 % of length (length-weighted mean friction 0.70)
+    w = P's share of vehicle-steps on patched links (from st.link_n after the warm-up)
+```
+
+Checks for the `xnet/` change (default off): per-copy counters for 200 steps of 16 Oakland copies (seed 0) are bit-identical before and
+after; the median of 5 timings went from 2.311 s to 2.178 s ($t_1/t_0 = 0.94 \le 1.05$). Tests also show that a mask with $m = 1$
+changes nothing and that a full mask with $\mu = 1, m = 0.5$ equals scalar friction 0.5.
+
+**Experiment** ([predictions, written before the run](../results/daily/2026-11-18/predictions.md)). H1: the crash rate ratio
+$\mathrm{RR} = \lambda_P / \lambda_{U0.7} > 1$, where $\lambda = k/t$ is crashes per vehicle-hour. Test: exact conditional Poisson,
+$k_P \sim \mathrm{Bin}(k_P + k_{U0.7},\, t_P/(t_P + t_{U0.7}))$ under RR = 1, bar two-sided $p < 0.05$. Expected RR about 4 by Jensen's
+inequality on a convex crash curve; power about 0.88 even at RR = 2 with ~30 crashes in U0.7. Secondary (Holm, m = 2): S1, P against the
+mixture $E = t_P\,(w\,\lambda_{0.4} + (1 - w)\,\lambda_{1.0})$, predicted $O/E$ in 0.75-1.33, delta method on $\log(O/E)$;
+S2, $\lambda_P / \lambda_{U0.4} < 1$.
+
+**Result** ([patchyice.json](../results/patchyice/patchyice.json)).
+
+| cell | crashes | vehicle-hours | per 1000 veh-h | share of vehicle-steps on patched links |
+|---|---|---|---|---|
+| U1.0 | 17 | 3113 | 5.5 | 0.558 |
+| U0.7 | 30 | 3103 | 9.7 | 0.557 |
+| P (0.4 on half the streets) | 101 | 3126 | 32.3 | 0.562 |
+| U0.4 | 201 | 3143 | 64.0 | 0.555 |
+
+| test | estimate (95 %) | p |
+|---|---|---|
+| **H1: P / U0.7** | **3.34 (2.20 to 5.21)** | **4e-10** |
+| S1: P / mixture of U0.4 and U1.0 | 0.84 (0.67 to 1.07); 101 observed, 119.8 expected | 0.16 (Holm 0.16) |
+| S2: P / U0.4 | 0.51 (0.39 to 0.64) | 9e-9 (Holm 2e-8) |
+
+![patchy ice](img/patchyice.png)
+
+![patchy ice GIF](img/patchyice.gif)
+
+**The experiment succeeded.** Ice on half of Oakland's streets gave 3.3 times the crash rate of friction 0.7 everywhere, although
+the mean friction by length is the same. Patchy ice cost about what a mixture of the all-dry and all-ice cities predicts (0.84 of it,
+interval includes 1), so in this simulator the risk comes from the time spent on ice and the transitions add nothing measurable.
+Speeds hardly moved (15.6-15.8 km/h in every cell).
+
+**Limits.** Traffic is not spread evenly: 56 % of vehicle-steps fell on the patched 50 % of length, so the exposure-weighted mean
+friction in P is 0.66, not 0.70; the effect is far larger than the 0.65-0.7 difference (stream 5: 41 vs 40 crashes). Drivers here
+do not see ice, so this tests the braking cap only. One random mask, one stream, one network.
+
+**Next.** (1) Put the mask where ice forms: bridges and shaded links, or a contiguous zone, and compare with a random mask of equal length.
+(2) Give AVs a sensed patch map (`avlab.stopline.tomography` per link) and test gap caution only on icy links. (3) A one-line
+`av_world` option for patchy ice.
+
+Commands: `python -m avlab.patchyice [--quick|--run]` (~10 min run with the GIF job alongside), `python -m avlab.patchyice_plot --gif`,
+`python -m avlab.speedcheck [--save f.json]`.
 
 ---
 
