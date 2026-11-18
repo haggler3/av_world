@@ -380,6 +380,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="648" height="360" src="img/patchyice.gif" alt="Animation: two copies of Oakland on the same random stream; left, friction 0.7 on every street; right, ice on the blue streets (half the network's length) and dry elsewhere; crashes are marked with orange crosses" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Friction that varies by street: patchy ice</h3>
+          <p>The simulator can now give each street its own friction (off by default; bit-identical and no slower when off). Ice on random streets covering half of Oakland's length, dry elsewhere, against the same mean friction everywhere: 40 copies per cell, one pre-registered test.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/patchyice.png">figure</a>.</p></div>
+        <ul>
+          <li>Patchy ice gave 3.3x the crashes of friction 0.7 everywhere (32 vs 9.7 per 1000 vehicle-hours; 95&nbsp;% 2.20&ndash;5.21, p 4e-10).</li>
+          <li>That is about what a mix of an all-ice and an all-dry city predicts (0.84x, 0.67&ndash;1.07): the risk is the time spent on ice, and the dry-to-ice transitions add nothing measurable here.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="864" height="456" src="img/frictionmerge.gif" alt="Animation: the same junction on ice replayed twice from the same moment; on the left a friction-blind AV merges into a short gap and crashes, on the right a gap-cautious AV waits and nothing happens" loading="lazy"></figure>
       <div class="text">
         <div><h3>Gap caution on ice</h3>

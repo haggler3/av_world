@@ -1,0 +1,108 @@
+{
+ "run": {
+  "area": "oakland",
+  "copies": 40,
+  "seconds": 600.0,
+  "warm_s": 120.0,
+  "seed": 9,
+  "share": 0.5,
+  "ice": 0.4,
+  "mask_seed": 0,
+  "patched_links": 292,
+  "links": 622,
+  "patched_length_share": 0.49771755933761597
+ },
+ "cells": {
+  "U1.0": {
+   "types": {
+    "rear-end": 5.0,
+    "angle": 0.0,
+    "left-turn": 3.0,
+    "sideswipe": 0.0,
+    "merge": 1.0,
+    "pedestrian": 8.0,
+    "bicycle": 0.0
+   },
+   "crashes": 17.0,
+   "hours": 3112.61328125,
+   "speed_kmh": 15.763041496276855,
+   "patched_step_share": 0.5576234459877014
+  },
+  "U0.7": {
+   "types": {
+    "rear-end": 9.0,
+    "angle": 0.0,
+    "left-turn": 2.0,
+    "sideswipe": 0.0,
+    "merge": 5.0,
+    "pedestrian": 14.0,
+    "bicycle": 0.0
+   },
+   "crashes": 30.0,
+   "hours": 3103.475341796875,
+   "speed_kmh": 15.734386444091797,
+   "patched_step_share": 0.5571463704109192
+  },
+  "U0.4": {
+   "types": {
+    "rear-end": 19.0,
+    "angle": 15.0,
+    "left-turn": 6.0,
+    "sideswipe": 0.0,
+    "merge": 52.0,
+    "pedestrian": 49.0,
+    "bicycle": 60.0
+   },
+   "crashes": 201.0,
+   "hours": 3142.679443359375,
+   "speed_kmh": 15.615976333618164,
+   "patched_step_share": 0.5549178719520569
+  },
+  "P": {
+   "types": {
+    "rear-end": 9.0,
+    "angle": 10.0,
+    "left-turn": 6.0,
+    "sideswipe": 0.0,
+    "merge": 23.0,
+    "pedestrian": 20.0,
+    "bicycle": 33.0
+   },
+   "crashes": 101.0,
+   "hours": 3125.690673828125,
+   "speed_kmh": 15.636459350585938,
+   "patched_step_share": 0.5616672039031982
+  }
+ },
+ "rates_per_1000_veh_h": {
+  "U1.0": 5.4616486096766055,
+  "U0.7": 9.666582362027198,
+  "U0.4": 63.95816169693099,
+  "P": 32.312858353415486
+ },
+ "H1_P_vs_U0.7": {
+  "rr": 3.3427386374266708,
+  "lo": 2.2047876330772453,
+  "hi": 5.206584289616702,
+  "p": 3.614382978017469e-10,
+  "n": 131
+ },
+ "S1_P_vs_mixture": {
+  "observed": 101.0,
+  "expected": 119.76778205672355,
+  "ratio": 0.8432985755064338,
+  "lo": 0.665991902037951,
+  "hi": 1.0678095113094273,
+  "p": 0.15700715686060326,
+  "p_holm": 0.15700715686060326
+ },
+ "S2_P_vs_U0.4": {
+  "rr": 0.5052186850918512,
+  "lo": 0.39377905448285355,
+  "hi": 0.6447986413450915,
+  "p": 9.351155074294994e-09,
+  "n": 302,
+  "p_holm": 1.8702310148589988e-08
+ },
+ "H1_pass": true
+}

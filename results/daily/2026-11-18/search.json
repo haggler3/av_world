@@ -1,0 +1,147 @@
+{
+ "date": "2026-11-18",
+ "rule": "Q = U R p / sqrt(b + e); select argmax Q + 1.2 p~ sqrt(N)/(1+n)",
+ "candidates": [
+  {
+   "candidate": "Per-street friction (patchy ice) in xnet, off by default",
+   "files": "xnet/sim.py, avlab/patchyice.py",
+   "build_min": 15,
+   "exp_min": 10,
+   "prior": 0.8,
+   "U": 5,
+   "R": 4,
+   "Q": 3.2,
+   "check": "grep: friction enters only through a_min (xnet/sim.py:231); a per-car a_min is elementwise everywhere it is used; 17 s quick run ran",
+   "outcome": "kept"
+  },
+  {
+   "candidate": "Per-crash event log (position, time, speeds, both IDs)",
+   "files": "xnet/sim.py",
+   "build_min": 30,
+   "exp_min": 10,
+   "prior": 0.5,
+   "U": 5,
+   "R": 4,
+   "Q": 1.581,
+   "check": "grep: crashes are counted in m only; a log needs a fixed-size ring buffer in State, which changes reset() and every caller",
+   "outcome": "dropped: build > 25 min and State change touches many callers"
+  },
+  {
+   "candidate": "Speed benchmark test (200 steps x 16 copies, fail at +5 %)",
+   "files": "tests/, avlab/speedcheck.py",
+   "build_min": 8,
+   "exp_min": 3,
+   "prior": 0.7,
+   "U": 3,
+   "R": 2,
+   "Q": 1.266,
+   "check": "wrote avlab/speedcheck.py (needed anyway for the xnet rule): median 2.31 s",
+   "outcome": "merged into the kept change as a tool, not a CI test (wall time varies with load)"
+  },
+  {
+   "candidate": "Visibility (rain, night) as a per-copy sight distance",
+   "files": "xnet/sim.py",
+   "build_min": 25,
+   "exp_min": 12,
+   "prior": 0.45,
+   "U": 4,
+   "R": 4,
+   "Q": 1.184,
+   "check": "grep: leader search has no range cut; adding one touches the sort/lead logic",
+   "outcome": "dropped: risky in the time"
+  },
+  {
+   "candidate": "AV sensor latency in the policy observation",
+   "files": "xnet/sim.py, avrl/",
+   "build_min": 25,
+   "exp_min": 12,
+   "prior": 0.4,
+   "U": 4,
+   "R": 3,
+   "Q": 0.789,
+   "check": "perception_noise exists; latency needs a history buffer in State",
+   "outcome": "dropped: State change"
+  },
+  {
+   "candidate": "Seeds on every AVBench row",
+   "files": "avlab/twins.py",
+   "build_min": 5,
+   "exp_min": 45,
+   "prior": 0.7,
+   "U": 3,
+   "R": 3,
+   "Q": 0.891,
+   "check": "carried over; ~45 min",
+   "outcome": "dropped: > 40 min"
+  },
+  {
+   "candidate": "Cross-entropy scenario generator for AV failures",
+   "files": "avlab/",
+   "build_min": 25,
+   "exp_min": 15,
+   "prior": 0.45,
+   "U": 5,
+   "R": 4,
+   "Q": 1.423,
+   "check": "no hook needed, but a 15 min search gives few failures at default rates",
+   "outcome": "dropped: b+e = 40 and low p"
+  },
+  {
+   "candidate": "Graded gap caution (gsc 1.25, 1.35) on ice",
+   "files": "avlab/",
+   "build_min": 3,
+   "exp_min": 12,
+   "prior": 0.5,
+   "U": 1,
+   "R": 3,
+   "Q": 0.387,
+   "check": "re-tests an old contrast",
+   "outcome": "dropped: not foundational"
+  },
+  {
+   "candidate": "Sixth knee stream at 0.9 / 0.95",
+   "files": "avlab/",
+   "build_min": 3,
+   "exp_min": 10,
+   "prior": 0.6,
+   "U": 1,
+   "R": 2,
+   "Q": 0.333,
+   "check": "re-run on new seeds",
+   "outcome": "dropped: not foundational"
+  },
+  {
+   "candidate": "One-line av_world API for patchy friction",
+   "files": "av_world/",
+   "build_min": 5,
+   "exp_min": 2,
+   "prior": 0.6,
+   "U": 3,
+   "R": 3,
+   "Q": 2.041,
+   "check": "depends on the kept change",
+   "outcome": "deferred to next"
+  }
+ ],
+ "rounds": [
+  {
+   "round": 1,
+   "picked": "Per-street friction (patchy ice) in xnet, off by default",
+   "check": "grep for friction hook",
+   "update": "p 0.8 -> 0.85"
+  },
+  {
+   "round": 2,
+   "picked": "Per-crash event log (position, time, speeds, both IDs)",
+   "check": "grep for crash bookkeeping",
+   "update": "p 0.5 -> 0.35 (State change)"
+  },
+  {
+   "round": 3,
+   "picked": "Per-street friction (patchy ice) in xnet, off by default",
+   "check": "quick run, 3 copies x 4 cells, 17 s; patched exposure share 0.49-0.53",
+   "update": "p 0.85 -> 0.9"
+  }
+ ],
+ "kept": "Per-street friction (patchy ice) in xnet, off by default"
+}

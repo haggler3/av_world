@@ -61,6 +61,9 @@ class Behaviour(NamedTuple):
     ped_scale: float = 1.0  # multiplier on the pedestrian rates
     p_bike: float = 0.03  # share of new trips that are cyclists (~20 km/h, in the lane)
     friction: float = 1.0  # road friction: the hardest possible braking is 9 m/s^2 x friction (wet ~0.6, snow ~0.3)
+    # patchy friction (1 = off): on links marked by the optional net["link_patch"] mask (xnet.sim.patch_links) the road
+    # friction is friction x patch_friction; with no mask in the network this field is never read
+    patch_friction: float = 1.0
     perception_noise: float = 0.0  # AVs see gaps x (1 + noise x N(0, 1)), clipped to +-3 sigma
     p_close_pass: float = 5e-4  # an aggressive or distracted human overtaking a cyclist clips them
     # the continuous tail of everyday human driving (0 = off): lognormal headways, acceleration noise, brake pulses; fitted to real logs by avlab.calibrate_drivers
@@ -174,6 +177,19 @@ def _ss(a, v):
     return jnp.searchsorted(a, v, method=SS_METHOD)
 
 
+def patch_links(net, share, seed=0, weight="length"):
+    """A boolean mask [L] marking a random set of links that covers `share` of the network's link length (weight "length")
+    or of its links ("count"). Put it in the jnp network as J["link_patch"] to give those links friction x patch_friction."""
+    rng = np.random.default_rng(seed)
+    L = len(net["link_len"])
+    order = rng.permutation(L)
+    w = np.asarray(net["link_len"], float)[order] if weight == "length" else np.ones(L)
+    take = np.cumsum(w) <= share * w.sum() + 1e-9
+    mask = np.zeros(L, bool)
+    mask[order[take]] = True
+    return mask
+
+
 def to_jnp(net):
     return {k: jnp.asarray(v) for k, v in net.items()}
 
@@ -239,6 +255,9 @@ def step(st: State, net, beh: Behaviour, nh, diag=False, rl=None):
     link = jnp.where(on_link, st.trk // 2, 0)
     lane = jnp.where(on_link, st.trk % 2, 0)
     mbox = jnp.where(on_link, 0, st.trk - 2 * L)
+    if "link_patch" in net:  # friction that varies by street; a car in a junction box reads its approach link
+        patched = net["link_patch"][jnp.where(on_link, link, net["mov_in"][mbox])]
+        a_min = a_min * jnp.where(patched, beh.patch_friction, 1.0)
     nlanes = net["link_lanes"][link]
     slot_ok = (net["succ_mov"][link, 0, jnp.maximum(st.nxt, 0)] >= 0) | (net["succ_mov"][link, 1, jnp.maximum(st.nxt, 0)] >= 0)
     nxt_ok = (st.nxt >= 0) & slot_ok  # otherwise the trip ends on this link (destination, map edge, dead end)
