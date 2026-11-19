@@ -406,6 +406,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="648" height="360" src="img/barrier_phase.gif" alt="Animation: road friction sweeps from 1.0 down to 0.3 on a phase diagram of friction against AV speed; below friction 2/3 the regions where the barrier asks for impossible braking and where it ends in contact grow; a side panel shows an AV whose real stopping distance overshoots the barrier's promise and hits a stopped car" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>A machine-checked limit of the AV barrier on ice</h3>
+          <p>First formal proofs in the repository (Lean 4 + Mathlib): the AV's braking barrier assumes 6&nbsp;m/s&sup2;, the road gives 9&times;friction. Then one pre-registered test of the fix the proof suggests.
+            <a href="https://github.com/haggler3/av_world/blob/main/formal/README.md">the theorems</a> &middot; <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the numbers</a> &middot; <a href="img/barrier_phase.png">phase diagram</a> &middot; <a href="img/barrierfriction.png">simulation</a>.</p></div>
+        <ul>
+          <li>Proved: the barrier can always be obeyed iff friction &ge; 2/3; below that it can ask for impossible braking above 27, 9 and 4.5&nbsp;m/s at friction 0.6, 0.5 and 0.4.</li>
+          <li>Tested: at friction 0.4 AVs spend 85&nbsp;% of moving time in that region, but a friction-aware barrier left AV crashes unchanged (0.98, 95&nbsp;% 0.62&ndash;1.53): the barrier rarely binds, and AV crashes on ice are mostly merges.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="864" height="456" src="img/frictionmerge.gif" alt="Animation: the same junction on ice replayed twice from the same moment; on the left a friction-blind AV merges into a short gap and crashes, on the right a gap-cautious AV waits and nothing happens" loading="lazy"></figure>
       <div class="text">
         <div><h3>Gap caution on ice</h3>
