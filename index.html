@@ -393,6 +393,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="648" height="360" src="img/icemap.gif" alt="Animation: crashes from 32 copies of a patchy-ice Oakland appear on one map as they happen; blue dots on the icy (blue) streets far outnumber orange diamonds on dry streets; a side chart tracks the running crash rate on icy and dry streets" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>A per-crash event log: where patchy-ice crashes happen</h3>
+          <p>New tool: every crash's time, place, impact speed, role and street, plus vehicle-hours per street (<code>avlab.crashlog</code>; the simulator is unchanged and the log matches its counters in every copy). First use: ice on half of Oakland's streets, 32 copies per city, one pre-registered test.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/icemap.png">figure</a>.</p></div>
+        <ul>
+          <li>A vehicle-hour on an icy street had 12.2x the crash rate of one on a dry street in the same city (95&nbsp;% 5.4&ndash;34.1, p 5e-17).</li>
+          <li>The icy streets crashed as often as in an all-ice city (1.01x, 0.75&ndash;1.37): the risk stays where the ice is. Spillover onto dry streets is suggestive only (6 vs 0 crashes, Holm p 0.063).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="864" height="456" src="img/frictionmerge.gif" alt="Animation: the same junction on ice replayed twice from the same moment; on the left a friction-blind AV merges into a short gap and crashes, on the right a gap-cautious AV waits and nothing happens" loading="lazy"></figure>
       <div class="text">
         <div><h3>Gap caution on ice</h3>
