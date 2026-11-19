@@ -25,3 +25,4 @@ results/notebooks/
 results/easy/
 results/brakedemand/quick.json
 results/*/*_quick.json
+formal/.lake/

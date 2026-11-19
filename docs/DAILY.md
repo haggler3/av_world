@@ -50,7 +50,89 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     crash sites. (c) Why the masked links are riskier when dry (10 vs 0 crashes): rank links by dry crash rate per vehicle-hour and
     check junction count and speed limit; then a mask matched on dry risk.
 
+22. **Formal methods** (2026-11-19, second run). `formal/` proves the AV barrier sound iff friction >= 2/3; the friction-aware fix
+    did nothing measurable (0.98). Next: prove the lane-change barriers and the junction margin; the human IDM's collision-freedom
+    condition (does it also break at 2/3?); a learned policy behind the barrier.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-19 (second run) - A machine-checked limit of the AV barrier on ice
+
+**What changed.** The repository has its first formal proofs. `formal/AvFormal/Barrier.lean` (Lean 4.25 + Mathlib) states the
+AVs' longitudinal barrier from `xnet.sim.cbf_bound` and proves, over the reals, when it can be obeyed on a road whose braking
+cap is $9\mu$. New: `formal/` (Lake project, README), `avlab/barrierfriction.py` (+ `_plot`), `tests/test_barrier_formal.py`
+(the Lean definitions checked against the code on random states). `xnet/` is untouched.
+
+**Why.** The barrier $h = g - d_0 - \tau v - (v^2 - v_l^2)/(2b)$ assumes braking $b = 6$ m/s$^2$ for the AV and the obstacle,
+while the road gives $9\mu$. ROADMAP item 4 asks for the braking assumption to adapt to the road; the proof says exactly when it must.
+
+**How it works.** With $B$ the road's braking, $\alpha \ge 0$, $a_l \ge -b$:
+
+| theorem | statement |
+|---|---|
+| `bound_feasible` | $B \ge b,\ h \ge 0 \Rightarrow$ cap $> -B$ |
+| `bound_infeasible` | $B < b,\ v > v_{feas} = B b \tau/(b - B) \Rightarrow$ on $h = 0$ with a stopped obstacle, cap $< -B$ |
+| `stop_gap_sound` | $B_f \ge b \ge B_l,\ h \ge 0 \Rightarrow$ gap after both stop $\ge d_0$ |
+| `stop_gap_unsound` | $B_f < b \Rightarrow \exists$ state with $h = 0$ ending in contact |
+| `friction_threshold` | $b = 6,\ \tau = 1/2,\ B = 9\mu$: feasible on every $h \ge 0$ state $\iff \mu \ge 2/3$ |
+
+$v_{feas}$ is 27, 9 and 4.5 m/s at $\mu$ = 0.6, 0.5, 0.4. Contact from $h = 0$ starts above the root of
+$k v^2 = \tau v + d_0$, $k = 1/(18\mu) - 1/12$: 12 m/s at $\mu = 0.4$.
+
+```
+avlab.barrierfriction: X.SHIELD = "cbf" (every AV filtered), half-AV Oakland, calibrated humans
+E1: b = 6, friction 1.0 / 0.8 / 0.7 / 0.6 / 0.5 / 0.4, 12 copies each, stream 21, warm 60 s, 300 s
+    per moving AV step (v > 2): inside = bar_h < 0; over = v > v_feas(mu)
+E2: friction 0.4, X.CBF["b"] = 6 vs 3.6 (= 9 mu), 40 copies each, stream 22, warm 120 s, 480 s, two compiles
+    AV crashes / AV-hours, exact conditional Poisson
+```
+
+**Experiment** ([predictions, written before the run](../results/daily/2026-11-19b/predictions.md)). H1: the friction-aware
+barrier ($b = 9\mu = 3.6$) has an AV crash rate ratio below 1 against $b = 6$ at friction 0.4, two-sided $p < 0.05$. About 35 AV
+crashes per arm give 80 % power only for RR $\le 0.51$. P1 (E1): the inside share is flat from 1.0 to 0.7 (ratio within
+0.67-1.5) and at 0.4 at least twice the 0.7 share (bar: copy-bootstrap interval of the ratio above 1). S2: speed cost under 15 %.
+One secondary (S1, inside share across arms) was dropped before the run because $h$ uses each arm's own $b$.
+
+**Result** ([barrierfriction.json](../results/barrierfriction/barrierfriction.json)).
+
+| friction | 1.0 | 0.8 | 0.7 | 0.6 | 0.5 | 0.4 |
+|---|---|---|---|---|---|---|
+| moving AV steps inside the barrier | 0.12 % | 0.15 % | 0.16 % | 0.19 % | 0.22 % | 0.28 % |
+| moving AV steps faster than $v_{feas}$ | 0 | 0 | 0 | 0 | 55 % | 85 % |
+
+| test | estimate (95 %) | p |
+|---|---|---|
+| **H1: AV crashes, b 3.6 / b 6 at friction 0.4** | **0.98 (0.62 to 1.53)**; 42 vs 43 crashes, 996 vs 998 AV-hours | **1.0** |
+| P1: inside share 0.7 / 1.0 | 1.30 | |
+| P1: inside share 0.4 / 0.7 | 1.73 (copy bootstrap 1.54 to 1.96) | |
+| S2: AV speed cost | 0.1 % (17.13 vs 17.14 km/h) | |
+| city crashes, b 3.6 / b 6 (not pre-registered) | 0.86 (0.66 to 1.13) | 0.26 |
+
+![barrier phase diagram](img/barrier_phase.png)
+
+![barrier GIF](img/barrier_phase.gif)
+
+![barrier in the simulator](img/barrierfriction.png)
+
+**The experiment failed.** The proof holds and the simulator shows its premise: at friction 0.4, 85 % of moving AV time is spent
+faster than the speed above which the barrier can demand impossible braking. But the friction-aware barrier changed nothing
+measurable (0.98) and cost no speed, so the barrier is rarely the binding constraint on these AVs: they are inside it for under
+0.3 % of moving steps, and their crashes on ice are mostly merges (2026-11-14), which a longitudinal barrier does not govern.
+P1 held on its bar but not on its "twice" wording (1.73), and the inside share rises smoothly with no bend at 2/3. The threshold
+$\mu^* = 2/3$ lies inside the humans-only friction knee's range (0.57-0.72); that is a coincidence of numbers here, since human
+drivers do not use this barrier.
+
+**Limits.** The theorems are kinematic (constant braking, no reaction lag beyond $\tau$, one dimension). The simulation filters the
+rule-based AV only; a learned policy that leans on the barrier may behave differently.
+
+**Next.** (1) Prove the lane-change barriers `h_b`, `h_f` (`xnet/sim.py:589`, they assume 3 and 6 m/s$^2$) and the junction
+time margin. (2) Re-run E2 with a learned policy behind the barrier (`SHIELD = "cbf"`, `rl=`). (3) A Lean proof that the IDM
+of the human drivers is collision-free iff its deceleration term stays above $-9\mu$, to test whether 2/3 is more than a coincidence.
+
+Commands: `python -m avlab.barrierfriction [--quick|--run]` (~8 min), `python -m avlab.barrierfriction_plot [--sim]`,
+`cd formal && lake build`.
 
 ---
 
