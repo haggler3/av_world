@@ -1,0 +1,155 @@
+{
+ "date": "2026-11-19",
+ "formula": "Q=U*R*p/sqrt(b+e); select argmax Q+1.2*p~*sqrt(N)/(1+n)",
+ "candidates": [
+  {
+   "id": "crashlog",
+   "idea": "Per-crash event log + per-link exposure (backlog 1), read-only over xnet.step(diag=True)",
+   "files": "avlab/crashlog.py",
+   "build_min": 15,
+   "exp_min": 8,
+   "prior": 0.75,
+   "U": 5,
+   "R": 4,
+   "Q": 3.128
+  },
+  {
+   "id": "speedtest",
+   "idea": "Speed regression test: fail if 200 steps x 16 Oakland copies >5% slower (backlog 5)",
+   "files": "tests/, avlab/speedcheck.py",
+   "build_min": 10,
+   "exp_min": 5,
+   "prior": 0.6,
+   "U": 3,
+   "R": 2,
+   "Q": 0.93
+  },
+  {
+   "id": "visibility",
+   "idea": "Per-copy sight distance (rain/night) limiting what drivers/AVs observe (backlog 3)",
+   "files": "xnet/sim.py",
+   "build_min": 30,
+   "exp_min": 12,
+   "prior": 0.45,
+   "U": 4,
+   "R": 4,
+   "Q": 1.111
+  },
+  {
+   "id": "sensornoise",
+   "idea": "AV observation noise + latency with fixed seed (backlog 4)",
+   "files": "xnet/sim.py, avrl/",
+   "build_min": 25,
+   "exp_min": 12,
+   "prior": 0.5,
+   "U": 4,
+   "R": 3,
+   "Q": 0.986
+  },
+  {
+   "id": "benchseeds",
+   "idea": "Seeds + 95% intervals on every AVBench row (backlog 6)",
+   "files": "avlab/twins.py",
+   "build_min": 10,
+   "exp_min": 45,
+   "prior": 0.6,
+   "U": 4,
+   "R": 4,
+   "Q": 1.294
+  },
+  {
+   "id": "cem",
+   "idea": "Cross-entropy scenario generator for AV failures with replay GIFs (backlog 7)",
+   "files": "avlab/",
+   "build_min": 25,
+   "exp_min": 15,
+   "prior": 0.45,
+   "U": 4,
+   "R": 5,
+   "Q": 1.423
+  },
+  {
+   "id": "icezones",
+   "idea": "Ice where it forms: contiguous zone vs random mask of equal length (next 20)",
+   "files": "avlab/",
+   "build_min": 10,
+   "exp_min": 10,
+   "prior": 0.5,
+   "U": 2,
+   "R": 3,
+   "Q": 0.671
+  },
+  {
+   "id": "patchyapi",
+   "idea": "One-line av_world option for patchy ice",
+   "files": "av_world/",
+   "build_min": 10,
+   "exp_min": 3,
+   "prior": 0.7,
+   "U": 2,
+   "R": 2,
+   "Q": 0.777
+  },
+  {
+   "id": "gradedgap",
+   "idea": "Graded AV gap scale 1.25/1.35 dose-response (next 16)",
+   "files": "avlab/",
+   "build_min": 8,
+   "exp_min": 12,
+   "prior": 0.4,
+   "U": 1,
+   "R": 2,
+   "Q": 0.179
+  },
+  {
+   "id": "knee6",
+   "idea": "Sixth stream at friction 0.9/0.95 (next 17)",
+   "files": "avlab/",
+   "build_min": 5,
+   "exp_min": 10,
+   "prior": 0.5,
+   "U": 1,
+   "R": 2,
+   "Q": 0.258
+  }
+ ],
+ "probes": [
+  {
+   "round": 1,
+   "id": "crashlog",
+   "check": "grep xnet/sim.py: step(diag=True) already returns per-vehicle crashed/rear/in_hit/ss/ped_hit masks; no xnet change needed",
+   "update": "prior 0.75 -> 0.85"
+  },
+  {
+   "round": 2,
+   "id": "crashlog",
+   "check": "5-line probe: Logger over 4 copies at friction 0.4, 300 s: final state bit-identical to a plain scan; exposure = veh_s to 1e-6; link-grouped events 10/17/14/9 vs counters 9/17/13/9",
+   "update": "prior 0.85 -> 0.8; grouping by a 25 m chain reproduces counters 9/17/13/9 exactly -> 0.9"
+  },
+  {
+   "round": 3,
+   "id": "speedtest",
+   "check": "avlab.speedcheck exists (2026-11-18); a wall-clock assert would be flaky on shared CI cores",
+   "update": "prior 0.6 -> 0.4"
+  }
+ ],
+ "N_final": {
+  "crashlog": 2,
+  "speedtest": 1
+ },
+ "kept": "crashlog",
+ "dropped": {
+  "visibility": "b+e within 40 but needs a default-off xnet change plus speed check; crashlog unlocks more today",
+  "sensornoise": "same reason; also needs avrl retraining to be meaningful",
+  "benchseeds": "e=45 min > 40",
+  "cem": "needs the crash log first (it is the failure detector); tomorrow",
+  "icezones": "an analysis, not a foundation; the crash log makes it sharper",
+  "patchyapi": "small usability, low unlock",
+  "gradedgap": "re-tests a shrinking contrast (docs say stop)",
+  "knee6": "re-run on new seeds (a failed day by the skill's rule)",
+  "speedtest": "wall-clock test flaky; probe lowered prior"
+ },
+ "prior_art": [
+  "https://www.eng.mu.edu/drakopoa/web_documents/Wet%20pavement%20MU%20report/PCC%20and%20asphalt%20pavement%20texture%20relation%20to%20accidents.pdf"
+ ]
+}

@@ -7,8 +7,9 @@ search behind each day's choice (candidates, probes, scores) is in `results/dail
 
 Changes that add a capability. Several earlier ideas were dropped because one of these was missing.
 
-1. **Per-crash event log**: position, time, speeds, crash type and both road users' IDs for every crash, off by default.
-   It unlocks crash maps, impact-speed analysis (next step 14) and "which merges does caution prevent" (next step 16).
+1. ~~**Per-crash event log**~~ (done 2026-11-19: `avlab.crashlog`, one row per vehicle that becomes a wreck, with time, place,
+   impact speed, role and link, plus vehicle-seconds per link; read-only over `xnet.sim.step(diag=True)`, no `xnet/` change).
+   Still open: the *other* party of a crash per row (today's rows are grouped into events by a 25 m chain instead).
 2. ~~**Friction that varies by street**~~ (done 2026-11-18: `xnet.sim.patch_links` + `Behaviour.patch_friction`; patchy ice at mean 0.7 gave 3.3x the crashes of uniform 0.7).
 3. **Visibility (rain, night)**: a per-copy sight distance that limits what drivers and AVs observe.
 4. **AV sensor noise and latency** in the policy observation, with a fixed seed.
@@ -44,7 +45,90 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     shaded or steep links, or one contiguous zone, against a random mask of the same length; and AVs that read the patch map
     (per-link `avlab.stopline.tomography`) and are gap-cautious only on icy links.
 
+21. **Use the crash log** (2026-11-19). (a) Next step 14, what capped braking fails to stop: impact speed of cap-braking cars
+    at friction 0.75 vs 0.6. (b) Next step 16, which merges caution prevents: log the gap and gap-cautious AV cells and compare
+    crash sites. (c) Why the masked links are riskier when dry (10 vs 0 crashes): rank links by dry crash rate per vehicle-hour and
+    check junction count and speed limit; then a mask matched on dry risk.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-19 - A per-crash event log, and where patchy-ice crashes happen
+
+**What changed.** The repository can now say where and when each crash happened. `avlab.crashlog.Logger` runs the unchanged
+simulator step with `diag=True` inside a scan and writes one row per vehicle that becomes a wreck: time, copy, slot, track,
+position, speed just before contact (impact speed), AV flag, kind, role (rear-end striker, junction conflict, lane change,
+pedestrian, other) and reference link. It also sums vehicle-seconds per link, so rates per street need no second run.
+`events()` groups rows of one copy and time step that are within a 25 m chain into one crash. New: `avlab/crashlog.py`,
+`avlab/icemap.py` (+ `_plot`), `tests/test_crashlog.py`. `xnet/` is untouched. This is foundations backlog item 1.
+
+**Why.** Crash counters per copy cannot test anything about place, and several open next steps (14, 16, 20) need it. Studies of
+real icy roads report crash risk per exposure on snow or ice about 15 to 20 times that on dry pavement
+([Marquette, wet-pavement report](https://www.eng.mu.edu/drakopoa/web_documents/Wet%20pavement%20MU%20report/PCC%20and%20asphalt%20pavement%20texture%20relation%20to%20accidents.pdf),
+per vehicle-mile; search snippet only), so a per-street rate is the quantity worth comparing.
+
+**How it works.**
+
+```
+log_step(state, net, beh):                         # vmapped over copies, scanned over steps
+    out, d = xnet.sim.step(state, net, beh, nh, diag=True)
+    link = state.trk // 2 if on a link else mov_in[box move]       # reference link
+    new = d.crashed & (state.wreck_t <= 0)                         # vehicles that become wrecks this step
+    role = pedestrian if d.ped_hit else lane_change if d.ss else junction if d.in_hit else rear if d.rear else other
+    rows[n : n + sum(new)] = (t, slot, trk, s, v, av, kind, role, link, link_patch[link])   # fixed capacity per copy
+    expo[link of every alive vehicle] += DT
+events(rows): union rows with the same copy and step whose positions are < 25 m apart
+```
+
+Checks (tests/test_crashlog.py): the final state of a logged run equals that of a plain run leaf by leaf; events per copy equal the
+simulator's crash counters summed over types; exposure equals `veh_s`. In today's run the events matched the counters in all
+96 copies (269 = 269) and exposure matched `veh_s` to 6e-5. The logged run took 14.3 s against 13.4 s for a plain run of 4 copies
+over 300 s (compile included); the simulator itself is unchanged.
+
+**Experiment** ([predictions, written before the run](../results/daily/2026-11-19/predictions.md)). Three cells, 32 copies each,
+humans-only Oakland, random stream 11, warm-up 120 s, 600 s logged, the 2026-11-18 mask (292 of 622 links, half the length):
+P (friction 1.0, x 0.4 on the mask), D (1.0 everywhere), I (0.4 everywhere). H1: inside P, the rate ratio
+$\mathrm{RR} = (k_{ice}/t_{ice}) / (k_{dry}/t_{dry}) > 1$, where $k$ is crash events and $t$ vehicle-hours on masked and unmasked
+links. Test: exact conditional Poisson, $k_{ice} \sim \mathrm{Bin}(k_{ice} + k_{dry},\, t_{ice}/(t_{ice} + t_{dry}))$, bar two-sided
+$p < 0.05$. Expected RR about 11; power above 0.9. Secondary (Holm, m = 2): S1, masked links P / I, predicted interval contains 1;
+S2, unmasked links P / D (spillover), low power.
+
+**Result** ([icemap.json](../results/icemap/icemap.json)).
+
+| cell | masked links: crashes, veh-h, per 1000 veh-h | other links: crashes, veh-h, per 1000 veh-h |
+|---|---|---|
+| D, dry everywhere | 10, 1401, 7.1 | 0, 1102, 0 |
+| P, ice on the mask | 91, 1382, 65.9 | 6, 1111, 5.4 |
+| I, ice everywhere | 87, 1337, 65.1 | 75, 1111, 67.5 |
+
+| test | estimate (95 %) | p |
+|---|---|---|
+| **H1: P, icy / dry links** | **12.2 (5.4 to 34.1)**; copy bootstrap 6.0 to 43.2 | **5e-17** |
+| S1: masked links, P / I | 1.01 (0.75 to 1.37) | 0.94 (Holm 0.94) |
+| S2: other links, P / D | 6 vs 0 crashes; lower bound 1.17 | 0.031 (Holm 0.063) |
+| post hoc: D, masked / other links | 10 vs 0 crashes; lower bound 1.76 | 0.003 |
+| post hoc: I, masked / other links | 0.96 (0.70 to 1.33) | 0.81 |
+
+![crash rates by street](img/icemap.png)
+
+![crash map GIF](img/icemap.gif)
+
+**The experiment succeeded.** In the patchy city, a vehicle-hour on an icy street carried 12 times the crash risk of one on a dry
+street, close to the 11.6 that the uniform cities of 2026-11-18 predicted. The icy streets in the patchy city crashed at the same
+rate as the same streets in an all-ice city (1.01), so the risk is local to the ice. The six crashes on dry streets of the patchy city
+against none in the dry city hint at spillover but do not pass Holm. Median impact speed of rear-end strikers was 8 km/h on ice
+against 18 km/h in the dry city: ice crashes here are more frequent and slower.
+
+**Limits.** The mask is not risk-neutral when dry: in the dry city all 10 crashes fell on masked links (p 0.003, post hoc), while at
+uniform ice the two link sets match (0.96). The dry-city rates are small (7 per 1000 veh-h) next to the icy rates (65), so this does
+not explain a 12x ratio, but a ratio adjusted for dry risk cannot be estimated with zero crashes. One mask, one stream, one network,
+and drivers do not see the ice.
+
+**Next.** (1) Use the log on next step 14 (what capped braking fails to stop) and 16 (which merges caution prevents). (2) Find why
+the masked links are riskier when dry, then repeat with a mask matched on dry risk. (3) Record the other party of each crash in the row.
+
+Commands: `python -m avlab.icemap [--quick|--run]` (~5 min run), `python -m avlab.icemap_plot [--no-gif]`.
 
 ---
 
