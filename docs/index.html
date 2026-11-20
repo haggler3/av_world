@@ -419,6 +419,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="648" height="360" src="img/teb_band.gif" alt="Animation: a space-time diagram of one lane; the AV's Timed Elastic Band, eight poses with optimised time gaps, is re-planned every 0.2 s as it follows a leader that brakes to a stop and then meets a red light; side panels compare its speed and acceleration with IDM" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Timed Elastic Band as an AV planner</h3>
+          <p>A 1-D Timed Elastic Band (Levenberg-Marquardt, as in <code>teb_local_planner</code>) in the AV policy slot, against IDM: 24 paired copies with the safety envelope, and AVBench without it.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/teb_bench.png">figure</a>.</p></div>
+        <ul>
+          <li>With the envelope: 10&nbsp;% faster than IDM (p 5e-16), 23&nbsp;% fewer hard brakes, 43&nbsp;% less jerk; too few crashes to judge safety (5 vs 3).</li>
+          <li>Without it: 0.4&ndash;2.3 crashes per AV-hour and an AVBench score near 0 (IDM 70). The envelope cut TEB's command in 12&nbsp;% of AV time, so the gains lean on the filter.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="864" height="456" src="img/frictionmerge.gif" alt="Animation: the same junction on ice replayed twice from the same moment; on the left a friction-blind AV merges into a short gap and crashes, on the right a gap-cautious AV waits and nothing happens" loading="lazy"></figure>
       <div class="text">
         <div><h3>Gap caution on ice</h3>

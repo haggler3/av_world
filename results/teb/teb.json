@@ -1,0 +1,280 @@
+{
+ "E1": {
+  "teb": {
+   "av_speed_kmh": 17.75084632519482,
+   "av_crash": 5.0,
+   "av_hours": 414.89183051215275,
+   "av_hard": 8925.0,
+   "av_jerk_rms": 2.2258380914075313,
+   "av_trips": 2246.0,
+   "city_crashes": 7.0,
+   "human_speed_kmh": 16.931980711405682,
+   "shield_share": 0.12559993968683966
+  },
+  "idm": {
+   "av_speed_kmh": 16.069614390865695,
+   "av_crash": 3.0,
+   "av_hours": 428.9291872829861,
+   "av_hard": 11912.0,
+   "av_jerk_rms": 3.876478738159881,
+   "av_trips": 1971.0,
+   "city_crashes": 6.0,
+   "human_speed_kmh": 16.514938539960745,
+   "shield_share": 0.001994501715817217
+  }
+ },
+ "H1_speed_diff_kmh": {
+  "mean": 1.6762618293016915,
+  "lo": 1.5029806724417363,
+  "hi": 1.8495429861616468,
+  "p": 4.775603608701081e-16,
+  "rel": 0.10423277988914921
+ },
+ "H2_crash_rr": {
+  "rr": 1.7230562913772218,
+  "lo": 0.3352344486177618,
+  "hi": 11.095608478437448,
+  "p": 0.5009641544066631,
+  "n": 8
+ },
+ "S1_hard_rr": {
+  "rr": 0.7745942276968623,
+  "lo": 0.7535449439634824,
+  "hi": 0.7962100001770123,
+  "p": 4.807093239872741e-75,
+  "n": 20837,
+  "p_holm": 9.614186479745481e-75
+ },
+ "S2_jerk_diff": {
+  "mean": -1.65313975872017,
+  "p": 4.869937994278443e-27,
+  "p_holm": 4.869937994278443e-27
+ },
+ "H1_pass": true,
+ "H2_pass": false,
+ "success": false,
+ "city_crash_rr": {
+  "rr": 1.1886968214519504,
+  "lo": 0.34206917929100533,
+  "hi": 4.2813825650958615,
+  "p": 0.7886790616302449,
+  "n": 13
+ },
+ "E2": {
+  "nominal": {
+   "teb": {
+    "av_score": 0.5260103893063606,
+    "crash_per_h_unaided": 0.7067199617986637,
+    "crash_per_h": 0.0,
+    "progress": 1.0319693099902518,
+    "speed_kmh": 16.899584802903732,
+    "comfort_pass": 0.8854648727937929,
+    "hard_brakes_per_h": 21.895648540643545,
+    "jerk_rms": 2.227278954583048,
+    "filter_share": 0.12288689591686239
+   },
+   "idm": {
+    "av_score": 81.037958225478,
+    "crash_per_h_unaided": 0.0,
+    "crash_per_h": 0.0,
+    "progress": 0.9554779464314813,
+    "speed_kmh": 15.557550852946095,
+    "comfort_pass": 0.8497569879677598,
+    "hard_brakes_per_h": 29.30487603884832,
+    "jerk_rms": 3.890899315465444,
+    "filter_share": 0.0019022463393638383
+   },
+   "rule": {
+    "av_score": 72.18342532503259,
+    "crash_per_h_unaided": 0.02518813137217566,
+    "crash_per_h": 0.02518813137217566,
+    "progress": 1.0611084903329584,
+    "speed_kmh": 17.330521999698213,
+    "comfort_pass": 0.9036508132483811,
+    "hard_brakes_per_h": 18.23620711345518,
+    "jerk_rms": 2.8138218938163417,
+    "filter_share": 0.0
+   }
+  },
+  "rush_hour": {
+   "teb": {
+    "av_score": 1.7211730961271905,
+    "crash_per_h_unaided": 0.41674598979207467,
+    "crash_per_h": 0.0,
+    "progress": 1.0330064978921123,
+    "speed_kmh": 14.069505816715324,
+    "comfort_pass": 0.9055027461901499,
+    "hard_brakes_per_h": 17.86769439742579,
+    "jerk_rms": 2.094150699346119,
+    "filter_share": 0.11771931543480683
+   },
+   "idm": {
+    "av_score": 84.09336127649767,
+    "crash_per_h_unaided": 0.0,
+    "crash_per_h": 0.0,
+    "progress": 0.9663362968269161,
+    "speed_kmh": 12.964526362830087,
+    "comfort_pass": 0.871992952134806,
+    "hard_brakes_per_h": 24.655308753606054,
+    "jerk_rms": 3.604584772593211,
+    "filter_share": 0.002023201623328081
+   },
+   "rule": {
+    "av_score": 67.99894269067782,
+    "crash_per_h_unaided": 0.0,
+    "crash_per_h": 0.0,
+    "progress": 1.053268712365391,
+    "speed_kmh": 14.339401906334691,
+    "comfort_pass": 0.9153465231196009,
+    "hard_brakes_per_h": 15.921462889560587,
+    "jerk_rms": 2.616124287175602,
+    "filter_share": 0.0
+   }
+  },
+  "red_runners": {
+   "teb": {
+    "av_score": 0.5664611295579787,
+    "crash_per_h_unaided": 0.8073851015722251,
+    "crash_per_h": 0.0,
+    "progress": 1.0053198715620217,
+    "speed_kmh": 16.569379527242138,
+    "comfort_pass": 0.8894539899481428,
+    "hard_brakes_per_h": 21.086549812972468,
+    "jerk_rms": 2.2115397770833085,
+    "filter_share": 0.11626356783243456
+   },
+   "idm": {
+    "av_score": 41.16702951424861,
+    "crash_per_h_unaided": 0.04736965179682274,
+    "crash_per_h": 0.023665133735545598,
+    "progress": 0.9367183677948656,
+    "speed_kmh": 15.251144174935565,
+    "comfort_pass": 0.8574234549584173,
+    "hard_brakes_per_h": 27.688206470588348,
+    "jerk_rms": 3.856599550305934,
+    "filter_share": 0.0018432509720686073
+   },
+   "rule": {
+    "av_score": 90.27557505013547,
+    "crash_per_h_unaided": 0.0,
+    "crash_per_h": 0.0,
+    "progress": 1.0580982948933366,
+    "speed_kmh": 17.180172182257635,
+    "comfort_pass": 0.9027557505013547,
+    "hard_brakes_per_h": 18.4145847952937,
+    "jerk_rms": 2.8264945857306376,
+    "filter_share": 0.0
+   }
+  },
+  "jaywalkers": {
+   "teb": {
+    "av_score": 0.23304100967752395,
+    "crash_per_h_unaided": 2.3150424631690085,
+    "crash_per_h": 0.04392830015793763,
+    "progress": 1.042491164979998,
+    "speed_kmh": 12.243581880991842,
+    "comfort_pass": 0.9219471710365174,
+    "hard_brakes_per_h": 14.628123952593231,
+    "jerk_rms": 1.9068699697656286,
+    "filter_share": 0.1478919438650567
+   },
+   "idm": {
+    "av_score": 70.7035159856535,
+    "crash_per_h_unaided": 0.02189108836738301,
+    "crash_per_h": 0.02187514108113043,
+    "progress": 0.9631974175027971,
+    "speed_kmh": 11.11065110018715,
+    "comfort_pass": 0.8966114756373544,
+    "hard_brakes_per_h": 19.643876690855123,
+    "jerk_rms": 3.3712600288207604,
+    "filter_share": 0.002085430116401101
+   },
+   "rule": {
+    "av_score": 24.116492345793564,
+    "crash_per_h_unaided": 0.04462644149343868,
+    "crash_per_h": 0.04462644149343868,
+    "progress": 1.0604795335008537,
+    "speed_kmh": 12.240623332024104,
+    "comfort_pass": 0.9407165260106726,
+    "hard_brakes_per_h": 11.000417828132635,
+    "jerk_rms": 2.3928523580852916,
+    "filter_share": 0.0
+   }
+  },
+  "wet_road": {
+   "teb": {
+    "av_score": 0.7446927153709988,
+    "crash_per_h_unaided": 0.733835561778023,
+    "crash_per_h": 0.04796493688168735,
+    "progress": 1.0227513164644797,
+    "speed_kmh": 16.793004239010592,
+    "comfort_pass": 0.8859352027667794,
+    "hard_brakes_per_h": 21.8000638127269,
+    "jerk_rms": 1.9628964533871034,
+    "filter_share": 0.11785917643381058
+   },
+   "idm": {
+    "av_score": 65.69635681316603,
+    "crash_per_h_unaided": 0.0,
+    "crash_per_h": 0.0,
+    "progress": 0.9533075512176454,
+    "speed_kmh": 15.497804969827982,
+    "comfort_pass": 0.8545236267294513,
+    "hard_brakes_per_h": 28.29800286676534,
+    "jerk_rms": 3.207903452625,
+    "filter_share": 0.0016487351810328264
+   },
+   "rule": {
+    "av_score": 89.59325900585698,
+    "crash_per_h_unaided": 0.0,
+    "crash_per_h": 0.0,
+    "progress": 1.0556176477456625,
+    "speed_kmh": 17.31975561598912,
+    "comfort_pass": 0.8959325900585698,
+    "hard_brakes_per_h": 19.7802185664746,
+    "jerk_rms": 2.492547178694262,
+    "filter_share": 0.0
+   }
+  },
+  "cut_in": {
+   "teb": {
+    "av_score": 0.8939644333233067,
+    "crash_per_h_unaided": 0.6343841498954944,
+    "crash_per_h": 0.0,
+    "progress": 1.0035146104882666,
+    "speed_kmh": 16.570581215862752,
+    "comfort_pass": 0.8854054940172017,
+    "hard_brakes_per_h": 21.907719644198885,
+    "jerk_rms": 2.2343520817024873,
+    "filter_share": 0.12353786011130945
+   },
+   "idm": {
+    "av_score": 79.70639446710379,
+    "crash_per_h_unaided": 0.0,
+    "crash_per_h": 0.0,
+    "progress": 0.9359239269247633,
+    "speed_kmh": 15.334760401344393,
+    "comfort_pass": 0.8532411667002425,
+    "hard_brakes_per_h": 28.568347880949265,
+    "jerk_rms": 3.8927698066918808,
+    "filter_share": 0.001884469612278363
+   },
+   "rule": {
+    "av_score": 60.542095590878844,
+    "crash_per_h_unaided": 0.0,
+    "crash_per_h": 0.0,
+    "progress": 1.0744443820439804,
+    "speed_kmh": 18.002994513300745,
+    "comfort_pass": 0.9009731014102876,
+    "hard_brakes_per_h": 18.770377674612106,
+    "jerk_rms": 2.908342628849199,
+    "filter_share": 0.0
+   }
+  }
+ },
+ "E2_mean_score": {
+  "teb": 0.7808904622272265,
+  "idm": 70.40076938035793,
+  "rule": 67.45163166806255
+ }
+}

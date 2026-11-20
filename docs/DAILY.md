@@ -54,7 +54,92 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     did nothing measurable (0.98). Next: prove the lane-change barriers and the junction margin; the human IDM's collision-freedom
     condition (does it also break at 2/3?); a learned policy behind the barrier.
 
+23. **Timed Elastic Band** (2026-11-20): with the envelope +10 % AV speed, -23 % hard brakes, -43 % jerk; unaided it crashes 0.4-2.3
+    per AV-hour (AVBench ~1). Next: crash log on unaided TEB; a hard feasibility check on the first pose; then a powered safety test.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-20 - Timed Elastic Band as an AV planning rule
+
+**What changed.** A new AV planner, `avlab/teb.py`: a one-dimensional Timed Elastic Band that runs in the simulator's policy slot
+with the same 28 features as the IDM baseline. `teb_policy` plans every row; `teb_policy_masked` plans only the AV rows (up to 256 per
+copy). New: `avlab/tebbench.py` (experiments), `avlab/teb_plot.py`, `tests/test_teb.py` (3 tests). `xnet/` is untouched.
+
+**Why.** TEB (Rösmann et al.: [ROBOTIK 2012](https://jake-ketchum.squarespace.com/s/06309484.pdf),
+[ECMR 2013](https://rst.etit.tu-dortmund.de/storages/rst-etit/r/Global/Paper/Roesmann/2013_Roesmann_ECMR.PDF),
+[ROS teb_local_planner](https://index.ros.org/p/teb_local_planner)) is a widely used local planner that optimises poses *and* the time
+between them, so it can trade travel time against comfort and obstacle limits. The question: does it plan better than IDM here?
+
+**How it works.** Band: $N = 8$ intervals with mean speeds $v_i \ge 0$ and durations $\Delta T_i \in [0.1, 1.5]$ s; positions
+$s_i = \sum_{j \le i} v_j \Delta T_j$, accelerations from consecutive $v_i$. Cost (sum of squared residuals, as in g2o):
+
+$$J = \sum \Delta T_i^2 + 0.5 (s_N - D)^2 + 20 \sum [v_i - v_0]_+^2 + 10 \sum ([a_i - 1.5]_+^2 + [-a_i - 3]_+^2)
+ + 60 \sum [s_i + 2.5 + 1.2 v_i - x_\text{lead}(t_i)]_+^2 + 60 \sum [s_i - (g_\text{stop} - 1)]_+^2 + 5 v_N^2 + 0.5 \sum (a_i - a_{i-1})^2$$
+
+where $D$ is the stop target minus 1 m (or $v_0 \cdot 4$ s), the leader moves at constant speed, and the stop terms apply only with an
+active stop target.
+
+```
+teb_policy(obs):
+    f = speeds, desired speed (junction cap included), leader gap and speed, stop-target gap   # same features as careful_idm
+    z = IDM rollout over 4 s                                  # warm start
+    repeat 10: Levenberg-Marquardt step on the residuals; keep it only if J falls
+    a = 2 (v_1 - v) / dT_1, clipped to [-8, 3]               # first command; u0 = a/3 or a/8
+```
+
+A first version used 30 Adam steps and did not converge (from rest a lone car stalled at 1.7 m/s). Levenberg-Marquardt, TEB's own
+solver, fixed it: a lone car reaches its 13 m/s desired speed, stops 1.0 m before a red line and 2.5 m behind a stopped car.
+
+**Experiment** ([predictions, written before the runs](../results/daily/2026-11-20/predictions.md)). E1: Oakland, half AVs, friction
+1.0, 24 copies per policy on the same keys (stream 31), 360 s, both policies under the usual envelope. H1: AV mean speed TEB > IDM,
+paired t-test, two-sided $p < 0.05$. H2: AV crash rate ratio, upper 95 % bound below 2. Success needs both. Secondary (Holm, m = 2):
+hard brakes, jerk. E2 (descriptive): AVBench scorecards on six scenarios, where safety is scored *without* the envelope.
+
+**Result** ([teb.json](../results/teb/teb.json)).
+
+| E1, with the envelope | IDM | TEB | TEB vs IDM |
+|---|---|---|---|
+| AV speed (km/h) | 16.1 | 17.8 | **+1.68 km/h (+1.50 to +1.85), p 5e-16** |
+| AV crashes / AV-hours | 3 / 429 | 5 / 415 | **1.72 (0.34 to 11.1)**, p 0.50 |
+| hard brakes per AV-hour | 27.8 | 21.5 | 0.77 (0.75 to 0.80), Holm p 1e-74 |
+| jerk RMS (m/s$^3$) | 3.88 | 2.23 | -1.65, Holm p 5e-27 |
+| AV trips finished | 1971 | 2246 | |
+| share of AV time the envelope cut the command | 0.2 % | 12.6 % | |
+
+| E2 AVBench scenario | rule-based AV | IDM | TEB | IDM crashes/AV-h unaided | TEB crashes/AV-h unaided | TEB envelope share |
+|---|---|---|---|---|---|---|
+| nominal | 72.2 | 81.0 | 0.5 | 0.000 | 0.707 | 12.3 % |
+| rush_hour | 68.0 | 84.1 | 1.7 | 0.000 | 0.417 | 11.8 % |
+| red_runners | 90.3 | 41.2 | 0.6 | 0.047 | 0.807 | 11.6 % |
+| jaywalkers | 24.1 | 70.7 | 0.2 | 0.022 | 2.315 | 14.8 % |
+| wet_road | 89.6 | 65.7 | 0.7 | 0.000 | 0.734 | 11.8 % |
+| cut_in | 60.5 | 79.7 | 0.9 | 0.000 | 0.634 | 12.4 % |
+
+![TEB band GIF](img/teb_band.gif)
+
+![TEB vs IDM](img/teb_bench.png)
+
+**The experiment failed (H1 held, H2 failed).** With the envelope, TEB AVs were 10 % faster than IDM AVs, finished 14 % more trips,
+braked hard 23 % less often and had 43 % less jerk. Crashes were too few to judge safety (5 against 3; the bound of 11 is far above
+the margin of 2, because I expected 15 to 30 crashes per arm and got 3 to 5). Without the envelope, TEB crashed 0.4 to 2.3 times per
+AV-hour, while IDM had none in four of six scenarios and at most 0.05 in the other two. Its AVBench score is near 0 (mean 0.8 against
+70.4 for IDM and 67.5 for the rule-based AV). The envelope cut TEB's command in 12 % of AV time.
+So TEB's gains come with the filter doing safety work. On its own it does not plan better here.
+
+A post-hoc check (labelled, not pre-registered; `--diag`, [diag.json](../results/teb/diag.json)): fixing the first interval at the
+0.2 s control step and raising the obstacle and stop weights tenfold left unaided crashes at 0.68 per AV-hour on nominal (score 0.7).
+Those two suspects are ruled out.
+
+**Limits.** The band is one-dimensional: crossing traffic at junctions, pedestrians and merges reach it only through the stop-target
+features, as for IDM. One tuning, one network, one stream for E1; AVBench uses 8 copies per scenario.
+
+**Next.** (1) Run the crash log (`avlab.crashlog`) on unaided TEB to see which crash types it causes. (2) Add hard feasibility (a
+stopping-distance check on the first pose, as `teb_local_planner` does) or the proved barrier condition from `formal/` as a
+constraint, then re-test unaided. (3) A powered safety test (about 120 copies per arm) if (2) fixes the unaided crashes.
+
+Commands: `python -m avlab.tebbench [--quick|--e1|--e2|--diag]`, `python -m avlab.teb_plot [--bench]`.
 
 ---
 
