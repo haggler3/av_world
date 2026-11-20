@@ -432,6 +432,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="518" height="316" src="img/sensornoise_lane.gif" alt="Animation: two AVs running the same IDM policy follow a leader that brakes to a stop; the AV with noisy sensors sees a dashed ghost of the leader that jumps and sometimes disappears, and while standing it creeps forward until it touches the leader at 31.6 s; the clean AV holds a 2.5 m gap" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>AV sensor noise and missed detections</h3>
+          <p>A perception error model in the AV policy slot: range error, leader-speed error and missed detections, while the safety envelope still sees the truth. Half-AV Oakland, 16 copies &times; 600&nbsp;s per cell.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/sensornoise_bench.png">figure</a>.</p></div>
+        <ul>
+          <li>Without the envelope, missing the leader in 15&nbsp;% of steps gave 453&times; the AV crashes (95&nbsp;% 177&ndash;1665): at standstill the noise can only push the car forward, so it creeps into the car ahead. Range or speed error alone did nothing measurable.</li>
+          <li>With the envelope: 3 crashes against 1842 (0.0014&times;, pre-registered), no loss of speed, but the envelope stepped in 19&times; as often.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="864" height="456" src="img/frictionmerge.gif" alt="Animation: the same junction on ice replayed twice from the same moment; on the left a friction-blind AV merges into a short gap and crashes, on the right a gap-cautious AV waits and nothing happens" loading="lazy"></figure>
       <div class="text">
         <div><h3>Gap caution on ice</h3>
