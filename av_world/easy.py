@@ -187,6 +187,13 @@ class drivers:  # noqa: N801  (a namespace of ready-made drivers)
         return cautious
 
     @staticmethod
+    def teb():
+        """A Timed Elastic Band planner (avlab.teb): plans 4 s ahead, minimising time under speed, comfort and gap limits.
+        Faster and smoother than IDM under the safety envelope, but it crashes without it (docs/DAILY.md, 2026-11-20)."""
+        from avlab.teb import teb_policy
+        return teb_policy
+
+    @staticmethod
     def load(path):
         from avrl import xppo as P
         return P.deterministic(P.load(path))

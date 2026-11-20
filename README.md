@@ -63,7 +63,7 @@ not each one tested. GPU: `pip install "jax[cuda12]"`.
 
 ## Try it in five minutes
 
-**Easy mode** ([docs/EASY.md](docs/EASY.md)): the common jobs in one line each, plus bridges to Gymnasium, PettingZoo,
+**Easy mode** ([docs/EASY.md](docs/EASY.md)): the common jobs in one line each (new: a crash log, a TEB planner and Lean proofs, [in plain words](docs/EASY.md#new-tools-in-plain-words-november-2026)), plus bridges to Gymnasium, PettingZoo,
 Stable-Baselines3, PyTorch, ONNX and pandas.
 
 ```python

@@ -42,3 +42,9 @@ def test_events_grouping():
     i = int(np.argmax(ev["size"]))
     assert ev["size"][i] == 2 and ev["patched"][i] == 1 and ev["max_v"][i] == 5.0
     assert len(CL.events(rows)["copy"]) == 4  # without positions: by link
+
+
+def test_quick_returns_tables():
+    crashes, exposure = CL.quick("oakland", copies=1, minutes=1.0, warm_minutes=1.0, friction=0.25)
+    assert list(crashes.columns) == ["copy", "time_s", "x", "y", "link", "vehicles", "impact_kmh", "av_involved", "kind"]
+    assert exposure.vehicle_hours.sum() > 0 and (crashes.time_s >= 0).all() and set(crashes.kind) <= set(CL.ROLES)

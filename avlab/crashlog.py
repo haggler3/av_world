@@ -160,3 +160,33 @@ def positions(net, geo, rows):
     tr = Tracks(net, geo)
     x, y, _ = tr.pose(rows["trk"], rows["s"], np.full(len(rows["s"]), 4.5))
     return np.asarray(x), np.asarray(y)
+
+
+def quick(city="oakland", copies=2, minutes=5.0, warm_minutes=1.0, seed=0, **knobs):
+    """One call: simulate `copies` copies of `city` (calibrated drivers, any xnet.sim.Behaviour knobs, e.g. friction=0.4,
+    p_av=0.5) and return (crashes, exposure) as pandas DataFrames. crashes: one row per crash event with copy, time (s after
+    the warm-up), x, y, link, vehicles, max impact speed (km/h), any AV, kind of crash. exposure: vehicle-hours per link."""
+    import jax
+    import jax.numpy as jnp
+    import pandas as pd
+    from examples import _common as C
+    from xnet import network as NW
+    from xnet import sim as X
+    net, geo, _ = NW.build(city)
+    J, nh = X.to_jnp(net), jnp.asarray(net["nh"])
+    B = jax.tree.map(lambda *x: jnp.asarray(x, jnp.float32), *[C.calibrated(**knobs)] * copies)
+    st = jax.vmap(X.reset, in_axes=(0, None, None))(jax.random.split(jax.random.PRNGKey(seed), copies), J, 1024)
+    lg = Logger(J, nh, B, cap=1024, chunk_s=60.0)
+    st, _ = lg.run(st, 60.0 * warm_minutes)
+    t0 = float(np.asarray(st.t)[0])
+    st, buf = lg.run(st, 60.0 * minutes)
+    rows = table(buf)
+    xy = positions(net, geo, rows)
+    ev = events(rows, xy)
+    first = [int(np.where((rows["copy"] == c) & (rows["t"] == t))[0][0]) for c, t in zip(ev["copy"], ev["t"])]
+    crashes = pd.DataFrame({"copy": ev["copy"].astype(int), "time_s": np.asarray(ev["t"]) - t0,
+                            "x": xy[0][first] if first else [], "y": xy[1][first] if first else [], "link": ev["link"].astype(int),
+                            "vehicles": ev["size"].astype(int), "impact_kmh": 3.6 * np.asarray(ev["max_v"]),
+                            "av_involved": ev["av"].astype(bool), "kind": [ROLES[int(r)] for r in ev["role"]]})
+    exposure = pd.DataFrame({"link": np.arange(np.asarray(buf.expo).shape[1]), "vehicle_hours": np.asarray(buf.expo).sum(0) / 3600})
+    return crashes, exposure
