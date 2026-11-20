@@ -49,7 +49,7 @@ is identical), and the crash count matches the simulator's own counters. Bigger 
 
 ```python
 from av_world import easy
-easy.compare({"TEB": easy.drivers.teb(), "IDM": easy.drivers.idm()}, scenarios=["nominal"])   # AVBench, ~2 min
+easy.compare({"TEB": easy.drivers.teb(), "IDM": easy.drivers.idm()}, scenarios=["nominal"])   # AVBench, ~15 min on 4 CPU cores
 ```
 
 TEB plans the next 4 s as 8 points and times between them, and picks the fastest plan that respects speed, comfort and the gap to
