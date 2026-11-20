@@ -1,0 +1,62 @@
+{
+ "mild": {
+  "t_s": [
+   8,
+   16,
+   24,
+   32,
+   40
+  ],
+  "noisy_gap_m": [
+   9.128,
+   2.434,
+   2.316,
+   2.263,
+   2.192
+  ],
+  "clean_gap_m": 2.499,
+  "contact_share": 0.0,
+  "seeds": 40,
+  "level": "mild"
+ },
+ "moderate": {
+  "t_s": [
+   8,
+   16,
+   24,
+   32,
+   40
+  ],
+  "noisy_gap_m": [
+   9.006,
+   2.331,
+   2.127,
+   1.983,
+   1.848
+  ],
+  "clean_gap_m": 2.499,
+  "contact_share": 0.0,
+  "seeds": 40,
+  "level": "moderate"
+ },
+ "severe": {
+  "t_s": [
+   8,
+   16,
+   24,
+   32,
+   40
+  ],
+  "noisy_gap_m": [
+   8.747,
+   2.055,
+   1.569,
+   1.094,
+   0.641
+  ],
+  "clean_gap_m": 2.499,
+  "contact_share": 0.05,
+  "seeds": 40,
+  "level": "severe"
+ }
+}

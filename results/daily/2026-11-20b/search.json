@@ -1,0 +1,133 @@
+{
+ "date": "2026-11-20 (second run)",
+ "formula": "Q=U*R*p/sqrt(b+e); PUCT=Q+1.2*p~*sqrt(N)/(1+n)",
+ "kept": "AV sensor noise and missed detections (policy-slot wrapper)",
+ "checks": [
+  "grep: xnet/sim.py:531 calls policy_fn(obs, s.key, mask) each step",
+  "probe: off/clean 0, off/moderate 0, off/severe 10, idm/severe 0 AV crashes in ~31 AV-h (8 copies, seed 77)",
+  "grep: SHIELD global read at trace time, 'off' disables the envelope",
+  "web: PEM perception error model (Piazzoni et al., arXiv 2302.11919)"
+ ],
+ "candidates": [
+  {
+   "candidate": "AV sensor noise and missed detections (policy-slot wrapper)",
+   "U": 5,
+   "R": 4,
+   "p": 0.7,
+   "b_min": 10,
+   "e_min": 12,
+   "Q": 2.985,
+   "n_checks": 2,
+   "note": "kept: hook exists (rl=(policy,key,mask), key per step); probe 8 copies: unaided severe 10 AV crashes vs clean 0, envelope on 0",
+   "puct": 3.123
+  },
+  {
+   "candidate": "Visibility (rain/night): per-copy sight distance in xnet",
+   "U": 5,
+   "R": 4,
+   "p": 0.4,
+   "b_min": 30,
+   "e_min": 12,
+   "Q": 1.234,
+   "n_checks": 1,
+   "note": "dropped: needs an xnet change + regression + speed check, >40 min total",
+   "puct": 1.353
+  },
+  {
+   "candidate": "Speed benchmark test (200 steps x 16 Oakland copies, fail at +5%)",
+   "U": 3,
+   "R": 2,
+   "p": 0.8,
+   "b_min": 8,
+   "e_min": 5,
+   "Q": 1.331,
+   "n_checks": 1,
+   "note": "dropped: timing noise on a shared 4-core box; low reader value",
+   "puct": 1.568
+  },
+  {
+   "candidate": "Seeds on every AVBench row (restream=1..N)",
+   "U": 4,
+   "R": 4,
+   "p": 0.6,
+   "b_min": 5,
+   "e_min": 45,
+   "Q": 1.358,
+   "n_checks": 0,
+   "note": "dropped: ~45 min compute",
+   "puct": 1.714
+  },
+  {
+   "candidate": "Cross-entropy scenario generator for AV failures",
+   "U": 5,
+   "R": 5,
+   "p": 0.35,
+   "b_min": 25,
+   "e_min": 15,
+   "Q": 1.383,
+   "n_checks": 1,
+   "note": "dropped: build + experiment ~40 min, risky today",
+   "puct": 1.487
+  },
+  {
+   "candidate": "Crash log on unaided TEB (why it crashes)",
+   "U": 2,
+   "R": 3,
+   "p": 0.7,
+   "b_min": 3,
+   "e_min": 10,
+   "Q": 1.165,
+   "n_checks": 0,
+   "note": "dropped: analysis of yesterday's result, not a new capability",
+   "puct": 1.58
+  },
+  {
+   "candidate": "Perception latency (delayed observations)",
+   "U": 5,
+   "R": 4,
+   "p": 0.3,
+   "b_min": 25,
+   "e_min": 12,
+   "Q": 0.986,
+   "n_checks": 1,
+   "note": "dropped: policy slot is stateless; needs a state buffer in xnet",
+   "puct": 1.075
+  },
+  {
+   "candidate": "Other party of each crash in avlab.crashlog",
+   "U": 3,
+   "R": 3,
+   "p": 0.5,
+   "b_min": 15,
+   "e_min": 8,
+   "Q": 0.938,
+   "n_checks": 1,
+   "note": "dropped: needs per-step pairing logic, lower reader value",
+   "puct": 1.086
+  },
+  {
+   "candidate": "Graded gap caution (gsc 1.25, 1.35)",
+   "U": 2,
+   "R": 3,
+   "p": 0.5,
+   "b_min": 3,
+   "e_min": 12,
+   "Q": 0.775,
+   "n_checks": 0,
+   "note": "dropped: re-tests an old contrast",
+   "puct": 1.072
+  },
+  {
+   "candidate": "Contiguous ice zone vs random patch mask",
+   "U": 3,
+   "R": 3,
+   "p": 0.5,
+   "b_min": 8,
+   "e_min": 12,
+   "Q": 1.006,
+   "n_checks": 0,
+   "note": "dropped: weaker unlock than sensor noise",
+   "puct": 1.303
+  }
+ ]
+}

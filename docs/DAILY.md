@@ -12,7 +12,8 @@ Changes that add a capability. Several earlier ideas were dropped because one of
    Still open: the *other* party of a crash per row (today's rows are grouped into events by a 25 m chain instead).
 2. ~~**Friction that varies by street**~~ (done 2026-11-18: `xnet.sim.patch_links` + `Behaviour.patch_friction`; patchy ice at mean 0.7 gave 3.3x the crashes of uniform 0.7).
 3. **Visibility (rain, night)**: a per-copy sight distance that limits what drivers and AVs observe.
-4. **AV sensor noise and latency** in the policy observation, with a fixed seed.
+4. ~~**AV sensor noise**~~ (done 2026-11-20, second run: `avlab.sensornoise`, range / speed error and missed detections on the leader,
+   per step, fixed seed; the envelope absorbs it). Still open: **latency and correlated misses** (need a per-AV state in the policy slot).
 5. **A speed benchmark** (timing tool `avlab.speedcheck` added 2026-11-18; still to do: the failing test) in `tests/` that fails when 200 steps of 16 Oakland copies get more than 5 % slower.
 6. **Seeds on every AVBench row**: the leaderboard with 95 % intervals from several random streams.
 7. **A scenario generator** that searches behaviour parameters for AV failures (cross-entropy method), with a replay GIF per failure.
@@ -57,7 +58,76 @@ Changes that add a capability. Several earlier ideas were dropped because one of
 23. **Timed Elastic Band** (2026-11-20): with the envelope +10 % AV speed, -23 % hard brakes, -43 % jerk; unaided it crashes 0.4-2.3
     per AV-hour (AVBench ~1). Next: crash log on unaided TEB; a hard feasibility check on the first pose; then a powered safety test.
 
+24. **Sensor noise** (2026-11-20, second run): missed detections make an unaided IDM AV creep into a stopped leader (453x the
+    crashes at 15 % misses); the envelope removes it. Next: a hold-last-detection tracker; Markov (bursty) misses; learned
+    policies behind the severe model on AVBench.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-20 (second run) - AV sensor noise and missed detections
+
+**What changed.** A perception error model for AV policies, `avlab/sensornoise.py`. `noisy(policy, SensorModel(...))` wraps any
+policy in the simulator's policy slot and corrupts what it sees of its leader: range error, leader-speed error and missed
+detections. The safety envelope inside `xnet.sim.step` still sees the truth. New: `avlab/sensorbench.py` (the experiment),
+`avlab/sensornoise_plot.py` (GIF, figure, standstill-creep check), `tests/test_sensornoise.py` (5 tests). `xnet/` is untouched.
+
+**Why.** Real AVs plan on detections, not on ground truth. Perception error models inject object-level errors into a simulator
+instead of simulating sensors (Piazzoni et al., [PEM, arXiv 2302.11919](https://arxiv.org/abs/2302.11919)). This was backlog item 4.
+
+**How it works.** Per AV and per 0.2 s step, independently, with the noise key `fold_in(step key, 0x5E05)`:
+
+$$\text{detected} = h \wedge (u \ge p_m),\quad g' = g\, e^{\sigma_r \varepsilon_1},\quad v_\ell' = \max(v_\ell + \sigma_v \varepsilon_2, 0),\quad u \sim U(0,1),\ \varepsilon_i \sim N(0,1)$$
+
+where $h$ says a leader exists, $g$ is the gap (m) and $v_\ell$ the leader's speed (m/s). Closing speed, needed deceleration and
+time headway are recomputed from $g'$ and $v_\ell'$ with the simulator's formulas. A missed leader looks like no leader.
+Levels $(\sigma_r, \sigma_v, p_m)$: mild (0.05, 0.25, 0.02), moderate (0.10, 0.5, 0.05), severe (0.20, 1.0, 0.15).
+
+```
+for cell in {envelope off} x {clean, mild, moderate, severe, range only, speed only, missed only} + {envelope on} x {clean, severe}:
+    X.SHIELD = "off" or "idm"
+    16 Oakland copies, keys 41000+i, half AVs, friction 1.0, AV policy = noisy(IDM, level)
+    run 120 s warm-up, then 600 s; save per-copy AV crashes, AV-seconds, envelope cuts
+```
+
+**Experiment** (pre-registered in `results/daily/2026-11-20b/predictions.md`). H1: with severe noise, the AV crash rate ratio
+$\mathrm{RR} = \lambda_\text{on} / \lambda_\text{off}$ is below 1; exact conditional Poisson test, two-sided $p < 0.05$. Secondary,
+Holm with $m = 3$, envelope off, each against clean: severe, missed only, range only. I expected ~63 AV-hours per cell; the runs
+had 496-575, so the test had more power than planned.
+
+**Result.**
+
+| cell | AV-hours | AV crashes | per AV-hour (95 %) | vs clean, envelope off |
+|---|---|---|---|---|
+| off, clean | 575.0 | 4 | 0.007 (0.002-0.018) | 1 |
+| off, mild | 573.6 | 4 | 0.007 | 1.00 (0.19-5.38) |
+| off, moderate | 570.3 | 92 | 0.161 | 23.2 (8.8-86.9) |
+| off, severe | 496.4 | 1842 | 3.71 | 533 (208-1960), Holm p < 1e-300 |
+| off, range only | 575.0 | 6 | 0.010 | 1.50 (0.36-7.23), Holm p 0.55 |
+| off, speed only | 575.1 | 5 | 0.009 | 1.25 (0.27-6.30) |
+| off, missed only | 508.5 | 1603 | 3.15 | 453 (177-1665), Holm p < 1e-300 |
+| on, clean | 572.1 | 4 | 0.007 | |
+| on, severe | 572.5 | 3 | 0.005 | |
+
+H1 holds: with severe noise the envelope cut the AV crash rate to 0.0014x (95 % 0.0003 to 0.0041; 3 vs 1842 crashes;
+$p$ below floating-point resolution). **Success.** Missed detections carry the effect; range and speed error alone do nothing
+measurable. With the envelope on, severe noise left crashes and AV speed unchanged (3 vs 4 crashes; 14.67 vs 14.58 km/h) but
+the envelope cut the AV's command 19x as often (3.3 % vs 0.17 % of AV time). The crashes are rear-ends (1623 of the typed AV
+crashes in the severe cell). The scripted lane (`python -m avlab.sensornoise_plot --creep`, `results/sensor/creep.json`) shows the
+mechanism: at standstill a too-short perceived gap cannot push a car back because speed is clipped at 0, while a missed leader
+or a too-long gap moves it forward, so the standing gap ratchets down: 2.06 m at 16 s to 0.64 m at 40 s (severe, mean of 40
+noise seeds; clean holds 2.50 m), with contact in 2 of 40 seeds.
+
+![sensor noise lane](img/sensornoise_lane.gif) ![sensor noise bench](img/sensornoise_bench.png)
+
+**Limits.** Errors are independent per step; real misses come in runs (tracks drop for seconds), which this model understates,
+and a tracker would smooth them away. Only the leader is corrupted; stop lines, signals and junction gaps are exact. The IDM policy
+has no filtering; a policy with memory would behave differently.
+
+**Next.** (1) Correlated misses (a two-state Markov dropout) and latency; both need a per-AV state, which the policy slot does not
+carry. (2) A tracker baseline: hold the last detection for $k$ steps; does it remove the creep? (3) Run AVBench's learned
+policies behind the severe model, unaided.
 
 ---
 
