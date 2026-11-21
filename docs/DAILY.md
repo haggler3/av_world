@@ -127,7 +127,7 @@ mean standing gap at 40 s was -0.06, 1.07 and 1.15 m.
 
 ![tracker lane](img/tracker_lane.gif) ![tracker bench](img/tracker_bench.png)
 
-**Limits.** The envelope is off in every cell; it would absorb most of these crashes, as it did yesterday. Only the leader is
+**Limits.** The envelope is off in every cell. Yesterday it absorbed independent misses; bursty misses with the envelope on are untested. Only the leader is
 corrupted, and the tracker holds the old leader even when a new car cuts in. Crashes remove AVs, so the bursty cells have
 fewer AV-hours.
 
