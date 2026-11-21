@@ -13,7 +13,7 @@ Changes that add a capability. Several earlier ideas were dropped because one of
 2. ~~**Friction that varies by street**~~ (done 2026-11-18: `xnet.sim.patch_links` + `Behaviour.patch_friction`; patchy ice at mean 0.7 gave 3.3x the crashes of uniform 0.7).
 3. **Visibility (rain, night)**: a per-copy sight distance that limits what drivers and AVs observe.
 4. ~~**AV sensor noise**~~ (done 2026-11-20, second run: `avlab.sensornoise`, range / speed error and missed detections on the leader,
-   per step, fixed seed; the envelope absorbs it). Still open: **latency and correlated misses** (need a per-AV state in the policy slot).
+   per step, fixed seed; the envelope absorbs it). ~~Correlated misses~~ (done 2026-11-21: `avlab.tracker`, memory in the policy slot through `aux`, Markov misses and a hold tracker). Still open: **latency**.
 5. **A speed benchmark** (timing tool `avlab.speedcheck` added 2026-11-18; still to do: the failing test) in `tests/` that fails when 200 steps of 16 Oakland copies get more than 5 % slower.
 6. **Seeds on every AVBench row**: the leaderboard with 95 % intervals from several random streams.
 7. **A scenario generator** that searches behaviour parameters for AV failures (cross-entropy method), with a replay GIF per failure.
@@ -62,7 +62,78 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     crashes at 15 % misses); the envelope removes it. Next: a hold-last-detection tracker; Markov (bursty) misses; learned
     policies behind the severe model on AVBench.
 
+25. **Perception memory** (2026-11-21): bursty misses at 15 % are 8x as dangerous as independent ones; a 1 s hold removes
+    the independent-miss crashes but only 44 % of the bursty ones. Next: latency in the same memory; a hold that never expires at
+    standstill; learned AVBench policies behind bursty misses.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-21 - AV perception with memory: bursty misses and a tracker
+
+**What changed.** AV policies can now carry memory from step to step without any change to `xnet/`. `avlab/tracker.py`
+returns the policy's new memory as `aux`; `xnet.sim.step` already hands `aux` back in the transition, and the driving loop
+`tracker.run` feeds it into the next step. On top of that memory: missed detections that come in runs (a two-state Markov
+chain) and a tracker that keeps predicting a lost leader for `hold_s` seconds. New: `avlab/trackerbench.py` (experiment),
+`avlab/tracker_plot.py` (GIF, figure, scripted-lane check), `tests/test_tracker.py` (4 tests, one shows the clean model
+reproduces a plain IDM run).
+
+**Why.** Real detection failures are correlated in time; perception error models treat "detected" as a hidden Markov state
+(Piazzoni et al., [PEM, arXiv 2302.11919](https://arxiv.org/abs/2302.11919)) or a continuous-time Markov chain
+([arXiv 2509.12137](https://arxiv.org/abs/2509.12137)). Yesterday's model drew misses independently and named this as its main limit.
+
+**How it works.** Per AV row and per 0.2 s step, with miss state $m_t$, mean burst $L = $ `burst_s` $/ 0.2$ steps and miss share $p$:
+
+$$P(m_t \mid m_{t-1}) = 1 - 1/L, \qquad P(m_t \mid \neg m_{t-1}) = q = \frac{p}{L(1-p)},$$
+
+so the long-run miss share is $q/(q + 1/L) = p$; `burst_s = 0.2` gives independent misses. The tracker:
+
+```
+if leader exists and not m_t:  show the true leader; store (g, v_lead); age = 0
+elif age < hold_s / 0.2:      g <- g - (v - v_lead) * 0.2; age += 1; show (g, v_lead) as a detected leader
+else:                          show "no leader"
+memory of rows that are not alive AVs is cleared after every step (a reused slot starts empty)
+```
+
+**Experiment** (pre-registered in `results/daily/2026-11-21/predictions.md`). Oakland, 16 copies per cell, keys 43000+i,
+half AVs, friction 1.0, envelope off, IDM policy, 120 s warm-up then 600 s. H1: with independent misses ($p = 0.15$) the 1 s
+hold lowers the AV crash rate, $\mathrm{RR} = \lambda_\text{hold} / \lambda_\text{none} < 1$; exact conditional Poisson test,
+two-sided $p < 0.05$. Power: an RR of 0.8 needs 315 crashes per arm; yesterday's comparable cell had 1603. Secondary (Holm,
+$m = 2$): S1 bursty (mean 1 s) vs independent misses at the same share; S2 the 1 s hold under bursty misses.
+
+**Result.**
+
+| cell | AV-hours | AV crashes | per AV-hour (95 %) |
+|---|---|---|---|
+| clean sensors | 582.4 | 5 | 0.009 (0.003-0.020) |
+| independent misses | 532.1 | 1293 | 2.43 |
+| independent + 1 s hold | 582.9 | 2 | 0.003 (0.0004-0.012) |
+| bursty misses (1 s) | 276.4 | 5336 | 19.3 |
+| bursty + 1 s hold | 384.8 | 4159 | 10.8 |
+| bursty + 2 s hold (exploratory) | 502.2 | 2179 | 4.34 |
+
+| test | RR (95 %) | p |
+|---|---|---|
+| H1 hold vs none, independent | 0.0014 (0.0002-0.0051) | < 1e-300 |
+| S1 bursty vs independent | 7.95 (7.48-8.45) | Holm < 1e-300 |
+| S2 hold vs none, bursty | 0.56 (0.54-0.58) | Holm 8e-175 |
+
+H1 holds: a 1 s hold removed the independent-miss crashes (2 vs 1293), back to the clean rate. **Success.** The same 15 % miss
+share is 8x as dangerous when misses come in 1 s runs, and the same tracker then removes only 44 % of the crashes; a 2 s hold
+removes 78 %. In the scripted lane (`python -m avlab.tracker_plot --creep`, 40 noise seeds, `results/tracker/creep.json`)
+85 % of bursty followers touched the stopped leader by 40 s, 37.5 % with the 1 s hold and none with independent misses; the
+mean standing gap at 40 s was -0.06, 1.07 and 1.15 m.
+
+![tracker lane](img/tracker_lane.gif) ![tracker bench](img/tracker_bench.png)
+
+**Limits.** The envelope is off in every cell. Yesterday it absorbed independent misses; bursty misses with the envelope on are untested. Only the leader is
+corrupted, and the tracker holds the old leader even when a new car cuts in. Crashes remove AVs, so the bursty cells have
+fewer AV-hours.
+
+**Next.** (1) Latency: a ring buffer of the last $d$ leader observations in the same memory. (2) A tracker that does not
+creep: hold the last gap at standstill indefinitely (the creep survives because the hold expires). (3) Learned policies
+behind bursty misses on AVBench, unaided and with the envelope.
 
 ---
 

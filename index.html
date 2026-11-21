@@ -445,6 +445,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="518" height="331" src="img/tracker_lane.gif" alt="Animation: three AVs running the same IDM policy stop behind a leader while missing it in 15 percent of steps; with independent misses the AV holds about a 1 m gap, with misses in 1 s runs it creeps into the leader at 17.2 s, and with a 1 s tracker hold it touches the leader at 35.6 s" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Bursty missed detections and a tracker</h3>
+          <p>AV policies now carry memory between steps (returned as <code>aux</code>, no simulator change): missed detections that come in runs, and a tracker that keeps predicting a lost leader. Half-AV Oakland, envelope off, 16 copies &times; 600&nbsp;s per cell.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/tracker_bench.png">figure</a>.</p></div>
+        <ul>
+          <li>The same 15&nbsp;% miss share in 1&nbsp;s runs gave 7.95&times; the AV crashes of independent misses (95&nbsp;% 7.48&ndash;8.45).</li>
+          <li>A 1&nbsp;s hold cut independent-miss crashes from 1293 to 2 (pre-registered), but bursty ones only to 0.56&times;; a 2&nbsp;s hold, 0.22&times;.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="864" height="456" src="img/frictionmerge.gif" alt="Animation: the same junction on ice replayed twice from the same moment; on the left a friction-blind AV merges into a short gap and crashes, on the right a gap-cautious AV waits and nothing happens" loading="lazy"></figure>
       <div class="text">
         <div><h3>Gap caution on ice</h3>
