@@ -13,7 +13,7 @@ Changes that add a capability. Several earlier ideas were dropped because one of
 2. ~~**Friction that varies by street**~~ (done 2026-11-18: `xnet.sim.patch_links` + `Behaviour.patch_friction`; patchy ice at mean 0.7 gave 3.3x the crashes of uniform 0.7).
 3. **Visibility (rain, night)**: a per-copy sight distance that limits what drivers and AVs observe.
 4. ~~**AV sensor noise**~~ (done 2026-11-20, second run: `avlab.sensornoise`, range / speed error and missed detections on the leader,
-   per step, fixed seed; the envelope absorbs it). ~~Correlated misses~~ (done 2026-11-21: `avlab.tracker`, memory in the policy slot through `aux`, Markov misses and a hold tracker). Still open: **latency**.
+   per step, fixed seed; the envelope absorbs it). ~~Correlated misses~~ (done 2026-11-21: `avlab.tracker`, memory in the policy slot through `aux`, Markov misses and a hold tracker). ~~Latency~~ (done 2026-11-22: `avlab.latency`, a ring of delayed leader observations plus constant-velocity prediction). Backlog 4 is closed.
 5. **A speed benchmark** (timing tool `avlab.speedcheck` added 2026-11-18; still to do: the failing test) in `tests/` that fails when 200 steps of 16 Oakland copies get more than 5 % slower.
 6. **Seeds on every AVBench row**: the leaderboard with 95 % intervals from several random streams.
 7. **A scenario generator** that searches behaviour parameters for AV failures (cross-entropy method), with a replay GIF per failure.
@@ -66,7 +66,76 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     the independent-miss crashes but only 44 % of the bursty ones. Next: latency in the same memory; a hold that never expires at
     standstill; learned AVBench policies behind bursty misses.
 
+26. **Perception latency** (2026-11-22): forward prediction cut 1.0 s-delay crashes 53-fold, but a predicted 2 s delay
+    still crashes 55x as often as clean sensors. Next: latency with the envelope on; predict the leader with its last
+    acceleration (constant-acceleration model) and test whether the residual at 1.4-2.0 s comes from braking leaders;
+    latency on every feature (signals, stop line), not only the leader.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-22 - AV perception latency and forward prediction
+
+**What changed.** AV policies can now see their leader late. `avlab/latency.py` keeps a ring of the last
+$D = d / 0.2\,\mathrm{s}$ leader observations in the policy memory (carried through `aux`, as in `avlab.tracker`) and shows
+the policy the leader from $d$ seconds ago, optionally predicted forward to now. `avlab.tracker.run` now takes any stateful
+perception model (`perceive_fn`, `init_fn`), and `avlab.tracker.leader_cols` computes the leader features once for both
+modules. New: `avlab/latencybench.py` (experiment), `avlab/latency_plot.py` (GIF, figure), `tests/test_latency.py`
+(4 tests; one shows delay 0 reproduces the clean tracker run). `xnet/` is untouched.
+
+**Why.** Perception latency of a few hundred milliseconds already breaks closed-loop lane keeping in simulation
+([arXiv 2603.06850](https://arxiv.org/abs/2603.06850)), and delay-compensating car-following controllers predict the state
+forward to restore stability ([arXiv 2604.05667](https://arxiv.org/abs/2604.05667)). This closes backlog item 4.
+
+**How it works.** Per AV row and per 0.2 s step, with the ring holding steps $t-D, \dots, t-1$, gap $g$ (m), leader speed
+$v_\ell$ and own speed $v$ (m/s):
+
+$$\hat g_t = g_{t-D} - 0.2 \sum_{j=t-D}^{t-1} \left(v_j - v_{\ell,\,t-D}\right) \quad\text{(compensated)}, \qquad \hat g_t = g_{t-D} \quad\text{(raw)}$$
+
+```
+show leader exists, gap g_hat, leader speed v_l(t-D); recompute closing speed, needed decel and headway
+push (exists, g, v_l, v) of step t; drop step t-D
+a fresh ring (new AV, reused slot) is filled with the current observation, which is shown as it is
+```
+
+The prediction assumes the leader kept its delayed speed; own speed is known without delay.
+
+**Experiment** (pre-registered in `results/daily/2026-11-22/predictions.md`). Oakland, 16 copies per cell, keys 43000+i,
+half AVs, friction 1.0, envelope off, IDM policy, 120 s warm-up then 600 s. H1: at 1.0 s delay, prediction lowers the AV crash
+rate, $\mathrm{RR} = \lambda_\text{comp} / \lambda_\text{raw} < 1$; exact conditional Poisson test, two-sided $p < 0.05$.
+Power: the probe implied ~900 raw crashes; an RR of 0.8 needs 315 per arm. Secondary (Holm, $m = 2$): S1 raw 1.0 s vs clean;
+S2 compensated 2.0 s vs clean (expected: not rejected).
+
+**Result.**
+
+| delay | raw: AV crashes / AV-hours | per AV-hour (95 %) | predicted: AV crashes / AV-hours | per AV-hour (95 %) |
+|---|---|---|---|---|
+| 0 (clean) | 5 / 582.4 | 0.009 (0.003-0.020) | | |
+| 0.6 s | 10 / 582.3 | 0.017 (0.008-0.032) | 7 / 581.2 | 0.012 (0.005-0.025) |
+| 1.0 s | 1832 / 490.3 | 3.74 (3.57-3.91) | 41 / 583.2 | 0.070 (0.050-0.095) |
+| 1.4 s | 5780 / 207.8 | 27.8 (27.1-28.5) | 73 / 581.6 | 0.126 (0.098-0.158) |
+| 2.0 s | 6171 / 172.4 | 35.8 (34.9-36.7) | 272 / 576.7 | 0.472 (0.417-0.531) |
+
+| test | RR (95 %) | p |
+|---|---|---|
+| H1 predicted / raw, 1.0 s | 0.019 (0.013-0.026) | < 1e-300 |
+| S1 raw 1.0 s / clean | 435 (186-1342) | Holm < 1e-300 |
+| S2 predicted 2.0 s / clean | 54.9 (23.3-171) | Holm 2e-74 |
+
+H1 holds: prediction cut crashes at a 1.0 s delay 53-fold. **Success.** The raw IDM AV tolerates 0.6 s and fails sharply
+between 0.6 and 1.0 s. S2 went against my expectation: prediction does not restore the clean rate, and the residual grows with
+delay (0.07, 0.13, 0.47 per AV-hour at 1.0, 1.4, 2.0 s), as expected when leaders change speed during the blind interval.
+In the scripted lane (`python -m avlab.latency_plot`) a leader braking at 6 m/s^2 is hit at 19 km/h with a raw 1.4 s delay;
+with prediction the AV stops 2.5 m behind, as with clean sensors.
+
+![latency lane](img/latency_lane.gif) ![latency bench](img/latency_bench.png)
+
+**Limits.** The envelope is off in every cell. Only the leader is delayed; signals and the stop line are seen at once.
+Crashes remove AVs, so raw cells at 1.4 and 2.0 s have under 40 % of the AV-hours, and the survivors drive faster.
+
+**Next.** (1) Latency with the envelope on. (2) A constant-acceleration prediction, to test whether braking leaders explain
+the residual. (3) Delay on every observation feature.
 
 ---
 

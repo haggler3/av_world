@@ -53,6 +53,17 @@ def onset_prob(m: Perception):
     return min(m.p_miss / (L * (1.0 - m.p_miss)), 1.0)
 
 
+def leader_cols(v, seen, g, vl, dtype=jnp.float32):
+    """Leader feature columns {8, 9, 10, 11, 25, 26} of the observation for a leader shown at gap g [m] and speed vl [m/s]
+    (rows with seen = False show "no leader"), with the simulator's scalings."""
+    f = seen.astype(dtype)
+    closing = jnp.clip((v - vl) / 10.0, -2.0, 2.0) * f
+    dec = jnp.clip(jnp.maximum(v - vl, 0.0) ** 2 / (2.0 * jnp.maximum(g - 2.0, 0.5)) / 8.0, 0.0, 2.0) * f
+    hw = jnp.clip(g / jnp.maximum(v, 1.0) / 3.0, 0.0, 2.0) * f
+    return {8: f, 9: jnp.where(seen, jnp.clip(g / 50.0, -0.1, 3.0), 3.0), 10: jnp.where(seen, vl / 15.0, 0.0),
+            11: closing, 25: dec, 26: hw}
+
+
 def perceive(obs, key, mem: Mem, m: Perception):
     """(observation the policy sees [N, 28], new memory). Only the leader features (8-11, 25, 26) change."""
     n = obs.shape[0]
@@ -71,12 +82,7 @@ def perceive(obs, key, mem: Mem, m: Perception):
     vl_new = jnp.where(det, vl, jnp.where(held, mem.vl, 0.0))
     age = jnp.where(det, 0, jnp.minimum(mem.age, 10 ** 6 - 1) + 1)
     seen = det | held
-    f = seen.astype(obs.dtype)
-    closing = jnp.clip((v - vl_new) / 10.0, -2.0, 2.0) * f
-    dec = jnp.clip(jnp.maximum(v - vl_new, 0.0) ** 2 / (2.0 * jnp.maximum(g_new - 2.0, 0.5)) / 8.0, 0.0, 2.0) * f
-    hw = jnp.clip(g_new / jnp.maximum(v, 1.0) / 3.0, 0.0, 2.0) * f
-    new = {8: f, 9: jnp.where(seen, jnp.clip(g_new / 50.0, -0.1, 3.0), 3.0), 10: jnp.where(seen, vl_new / 15.0, 0.0),
-           11: closing, 25: dec, 26: hw}
+    new = leader_cols(v, seen, g_new, vl_new, obs.dtype)
     out = obs
     for j, col in new.items():
         # a detected leader is shown as it is; a missed or held one replaces the features; with no tracker and no miss, unchanged
@@ -94,8 +100,13 @@ def stateful(policy, m: Perception):
 
 
 def run(m: Perception, E=16, seed=43, warm_s=120.0, seconds=600.0, chunk_s=40.0, p_av=0.5, friction=1.0, shield="off",
-        area="oakland", n_slots=1024):
-    """E copies of `area` with half AVs driven by the IDM baseline behind `m`. Returns per-copy counters after the warm-up."""
+        area="oakland", n_slots=1024, perceive_fn=None, init_fn=None):
+    """E copies of `area` with half AVs driven by the IDM baseline behind `m`. Returns per-copy counters after the warm-up.
+
+    `perceive_fn(obs, key, mem, m) -> (obs', mem')` and `init_fn(n) -> mem` swap in another stateful perception model
+    (default: this module's `perceive` and `init_mem`; `avlab.latency` uses its own)."""
+    perceive_fn = perceive_fn or perceive
+    init_fn = init_fn or init_mem
     from examples import _common as C
     from avlab import teb as T
     from xnet import network as NW
@@ -105,14 +116,17 @@ def run(m: Perception, E=16, seed=43, warm_s=120.0, seconds=600.0, chunk_s=40.0,
     J, nh = X.to_jnp(net), jnp.asarray(net["nh"])
     beh = C.calibrated(friction=friction, p_av=p_av)
     st = jax.vmap(X.reset, in_axes=(0, None, None))(jnp.stack([jax.random.PRNGKey(seed * 1000 + i) for i in range(E)]), J, n_slots)
-    mem = jax.vmap(lambda _: init_mem(n_slots))(jnp.arange(E))
-    f = stateful(T.idm_policy_masked, m)
+    mem = jax.vmap(lambda _: init_fn(n_slots))(jnp.arange(E))
+
+    def f(o, k, mask, mi):
+        o2, mi2 = perceive_fn(o, k, mi, m)
+        return T.idm_policy_masked(o2, k, mask)[0], mi2
     n = int(round(chunk_s / X.DT))
 
     def one(si, mi):
         s2, tr = X.step(si, J, beh, nh, rl=(lambda o, k, mask: f(o, k, mask, mi), si.key, True))
         keep = s2.alive & s2.av
-        mi2 = jax.tree.map(lambda new, z: jnp.where(keep, new, z), tr["aux"], init_mem(n_slots))
+        mi2 = jax.tree.map(lambda new, z: jnp.where(keep, new, z), tr["aux"], init_fn(n_slots))
         return s2, mi2
 
     @jax.jit
