@@ -458,6 +458,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="518" height="331" src="img/latency_lane.gif" alt="Animation: three AVs with the same IDM policy follow a leader that brakes to a stop; with clean sensors and with a 1.4 s delay plus forward prediction the AV stops 2.5 m behind; with the raw 1.4 s delay it hits the leader at 19 km/h" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Perception latency and forward prediction</h3>
+          <p>AVs can now see their leader late (a ring of past detections in the policy memory, no simulator change), and optionally predict it forward with their own speed. Half-AV Oakland, envelope off, 16 copies &times; 600&nbsp;s per cell.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/latency_bench.png">figure</a>.</p></div>
+        <ul>
+          <li>A 0.6&nbsp;s delay changed little; 1.0&nbsp;s gave 435&times; the clean crash rate.</li>
+          <li>Prediction cut 1.0&nbsp;s-delay crashes from 1832 to 41 (pre-registered), but a predicted 2&nbsp;s delay still crashed 55&times; as often as clean sensors.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="864" height="456" src="img/frictionmerge.gif" alt="Animation: the same junction on ice replayed twice from the same moment; on the left a friction-blind AV merges into a short gap and crashes, on the right a gap-cautious AV waits and nothing happens" loading="lazy"></figure>
       <div class="text">
         <div><h3>Gap caution on ice</h3>
