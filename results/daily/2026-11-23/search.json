@@ -1,0 +1,24 @@
+{
+ "date": "2026-11-23",
+ "rule": "Q = U*R*p/sqrt(b+e); select argmax Q + 1.2*p_norm*sqrt(N)/(1+n), 3 rounds; keep one foundational change",
+ "candidates": [
+  {"id": "visibility", "idea": "AV sight distance (fog/night) in the policy slot, plus a phantom obstacle at the edge of sight", "files": "avlab/visibility.py", "b": 10, "e": 15, "p": 0.7, "U": 4, "R": 4, "Q": 2.24, "n": 2,
+   "checks": ["hook exists: avlab.tracker.run(perceive_fn, init_fn)", "probe 2 copies x 80 s: sight 20 m blind 0 AV crashes 19.4 km/h (no effect); sight 8 m blind 3 crashes in 2.45 AV-h; phantom 8 m 0 crashes at 7.9 km/h -> test at 6-14 m"], "kept": true},
+  {"id": "speed_test", "idea": "failing speed benchmark test (200 steps x 16 Oakland copies, >5% slower fails)", "files": "tests/test_speed.py", "b": 8, "e": 5, "p": 0.6, "U": 3, "R": 1, "Q": 0.50, "n": 0, "dropped": "low reader value; wall-clock on shared CI is noisy"},
+  {"id": "bench_seeds", "idea": "AVBench rows with 95% intervals over random streams", "files": "avlab/twins.py", "b": 5, "e": 45, "p": 0.6, "U": 3, "R": 3, "Q": 0.76, "n": 0, "dropped": "b+e > 40 min"},
+  {"id": "cem_falsify", "idea": "cross-entropy scenario search for AV failures with a replay GIF", "files": "avlab/cem.py", "b": 25, "e": 15, "p": 0.4, "U": 5, "R": 4, "Q": 1.26, "n": 1, "checks": ["no ready per-scenario parameterisation of Oakland behaviours in the policy slot; build > 25 min"], "dropped": "build too long for today"},
+  {"id": "latency_ca", "idea": "constant-acceleration prediction for latency", "files": "avlab/latency.py", "b": 5, "e": 10, "p": 0.6, "U": 2, "R": 3, "Q": 0.93, "n": 0, "dropped": "an extension of yesterday, not a new capability"},
+  {"id": "latency_envelope", "idea": "latency with the envelope on", "files": "-", "b": 1, "e": 10, "p": 0.7, "U": 1, "R": 2, "Q": 0.42, "n": 0, "dropped": "re-run of an existing tool"},
+  {"id": "crash_partner", "idea": "other party per crash row in avlab.crashlog", "files": "avlab/crashlog.py", "b": 20, "e": 5, "p": 0.5, "U": 4, "R": 2, "Q": 0.80, "n": 0, "dropped": "needs diag fields xnet may not expose; lower Q"},
+  {"id": "ice_bridges", "idea": "ice mask on bridges / one contiguous zone vs random mask", "files": "avlab/icemask.py", "b": 10, "e": 15, "p": 0.5, "U": 2, "R": 3, "Q": 0.60, "n": 0, "dropped": "analysis on existing feature"},
+  {"id": "teb_feasibility", "idea": "hard feasibility check on TEB first pose", "files": "avlab/teb.py", "b": 15, "e": 15, "p": 0.35, "U": 2, "R": 2, "Q": 0.26, "n": 0, "dropped": "low prior; post-hoc fixes failed before"},
+  {"id": "wild_fog_pedestrian", "idea": "visibility for human drivers too (xnet change, default off)", "files": "xnet/sim.py", "b": 30, "e": 15, "p": 0.3, "U": 5, "R": 4, "Q": 0.89, "n": 0, "dropped": "needs an xnet change with regression + speed checks; > 40 min; next step after today's AV-only version"}
+ ],
+ "rounds": [
+  {"round": 1, "picked": "visibility", "check": "grep: tracker.run takes perceive_fn/init_fn -> p 0.6 -> 0.7"},
+  {"round": 2, "picked": "cem_falsify", "check": "grep for a scenario parameterisation: none ready -> p 0.4 -> 0.3, build 25 -> 35"},
+  {"round": 3, "picked": "visibility", "check": "probe at 20 / 12 / 8 m: effect only below ~10 m -> grid 6-14 m"}
+ ],
+ "kept": "visibility",
+ "prior_art": ["https://arxiv.org/abs/1807.01262", "https://arxiv.org/abs/2306.07004", "https://arxiv.org/abs/2607.03155"]
+}
