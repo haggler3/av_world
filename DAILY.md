@@ -11,7 +11,9 @@ Changes that add a capability. Several earlier ideas were dropped because one of
    impact speed, role and link, plus vehicle-seconds per link; read-only over `xnet.sim.step(diag=True)`, no `xnet/` change).
    Still open: the *other* party of a crash per row (today's rows are grouped into events by a 25 m chain instead).
 2. ~~**Friction that varies by street**~~ (done 2026-11-18: `xnet.sim.patch_links` + `Behaviour.patch_friction`; patchy ice at mean 0.7 gave 3.3x the crashes of uniform 0.7).
-3. **Visibility (rain, night)**: a per-copy sight distance that limits what drivers and AVs observe.
+3. **Visibility (rain, night)**: a per-copy sight distance that limits what drivers and AVs observe. AV half done 2026-11-23
+   (`avlab.visibility`, the AV's leader is hidden beyond sight, optional phantom obstacle at the sight edge; no `xnet/` change).
+   Still open: human drivers (needs a default-off `xnet/` change), and sight limits on signals, stop lines and pedestrians.
 4. ~~**AV sensor noise**~~ (done 2026-11-20, second run: `avlab.sensornoise`, range / speed error and missed detections on the leader,
    per step, fixed seed; the envelope absorbs it). ~~Correlated misses~~ (done 2026-11-21: `avlab.tracker`, memory in the policy slot through `aux`, Markov misses and a hold tracker). ~~Latency~~ (done 2026-11-22: `avlab.latency`, a ring of delayed leader observations plus constant-velocity prediction). Backlog 4 is closed.
 5. **A speed benchmark** (timing tool `avlab.speedcheck` added 2026-11-18; still to do: the failing test) in `tests/` that fails when 200 steps of 16 Oakland copies get more than 5 % slower.
@@ -71,7 +73,80 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     acceleration (constant-acceleration model) and test whether the residual at 1.4-2.0 s comes from braking leaders;
     latency on every feature (signals, stop line), not only the leader.
 
+27. **Limited sight** (2026-11-23): an IDM AV that is blind beyond 14 m already crashes ~250x as often as with clear sight;
+    the phantom brings it back to the clear-day rate at a 31-51 % speed cost. Next: a phantom that knows the leader's last
+    seen speed (less slowing); sight limits for human drivers (default-off `xnet/` field + regression + speed check);
+    the envelope with limited sight; sight per street (fog banks) with `xnet.sim.patch_links`.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-23 - AV sight distance and a phantom obstacle
+
+**What changed.** AV policies can now have a limited sight distance (fog, night, heavy rain). `avlab/visibility.py` hides the
+AV's leader when it is farther than $s$ metres, and can instead show a stopped *phantom* obstacle at distance $s$ whenever no
+leader is seen. It plugs into the stateful policy loop of `avlab.tracker.run`. New: `avlab/visibilitybench.py` (experiment),
+`avlab/visibility_plot.py` (GIF, figure), `tests/test_visibility.py` (5 tests; one shows unlimited sight reproduces the clean
+tracker run). `xnet/` is untouched; human drivers see as before.
+
+**Why.** Planners for automated driving treat the edge of what the sensors can see as a possible obstacle, so that the car can
+always stop within the visible range (Orzechowski et al., [arXiv 1807.01262](https://arxiv.org/abs/1807.01262), which covers
+both occlusion and sensor range; phantom agents set speed limits in Park et al., [arXiv 2306.07004](https://arxiv.org/abs/2306.07004)).
+This is the AV half of backlog item 3.
+
+**How it works.** Per AV row and per 0.2 s step, with sight $s$ (m), true leader gap $g$ (m) and leader speed $v_\ell$ (m/s):
+
+```
+seen = has_leader and g <= s
+if seen:        show the leader exactly as the simulator gives it
+elif phantom:   show a leader at gap s with speed 0; recompute closing speed, needed decel and headway
+else:           show "no leader"
+```
+
+The IDM policy then follows what it is shown. With the phantom it settles at the speed where IDM's desired gap to a stopped
+object equals $s$.
+
+**Experiment** (pre-registered in `results/daily/2026-11-23/predictions.md`). Oakland, 16 copies per cell, keys 44000+i
+(new stream), half AVs, friction 1.0, envelope off, IDM policy, 120 s warm-up then 600 s. H1: at $s = 8$ m the phantom
+lowers the AV crash rate, $\mathrm{RR} = \lambda_\text{phantom} / \lambda_\text{blind} < 1$, with $\lambda = k / t$ (AV crashes per
+AV-hour); exact conditional Poisson test, two-sided $p < 0.05$. Power: the probe implied ~700 blind crashes; an RR of 0.5
+needs ~33 per arm. Secondary (Holm, $m = 2$): S1 blind 8 m vs clear (expected $> 1$); S2 phantom 8 m vs clear (expected not
+rejected).
+
+**Result.**
+
+| cell | AV crashes / AV-hours | per AV-hour (95 %) | AV speed (km/h) | per 1000 AV-km |
+|---|---|---|---|---|
+| clear sight | 1 / 585.2 | 0.002 (0.000-0.010) | 14.32 | 0.12 |
+| blind, 14 m | 243 / 571.9 | 0.425 (0.373-0.482) | 14.30 | 29.7 |
+| blind, 10 m | 630 / 551.3 | 1.14 (1.06-1.24) | 13.95 | 81.9 |
+| blind, 8 m | 2064 / 485.8 | 4.25 (4.07-4.44) | 13.57 | 313 |
+| blind, 6 m | 3007 / 430.7 | 6.98 (6.73-7.24) | 13.45 | 519 |
+| phantom, 14 m | 4 / 680.4 | 0.006 (0.002-0.015) | 9.84 | 0.60 |
+| phantom, 8 m | 5 / 721.0 | 0.007 (0.002-0.016) | 7.02 | 0.99 |
+
+| test | RR (95 %) | p |
+|---|---|---|
+| **H1: phantom / blind, 8 m** | **0.0016 (0.0005-0.0038)** | **< 1e-300** |
+| S1: blind 8 m / clear | 2486 (446-98249) | Holm < 1e-300 |
+| S2: phantom 8 m / clear | 4.06 (0.45-192) | Holm 0.23 |
+
+**Success**: H1 met its bar, S1 was rejected and S2 was not, as written in advance. An AV blind beyond its sight crashes into
+stopped or slower cars it sees too late: even at 14 m it crashes about 250 times as often as with clear sight, and its speed barely
+drops (14.30 vs 14.32 km/h), so it does not slow down for fog. The phantom returns the crash rate to the clear-day range, but
+it halves the AV's speed at 8 m (7.02 km/h) and cuts it by 31 % at 14 m. In the scripted lane (GIF), the blind AV at 8 m hits a
+stopped car at 17 km/h; the phantom AV creeps at about 2 m/s and stops in time.
+
+**Limits.** Only the AV's leader is hidden; signals, stop lines and pedestrians are still seen at any distance, and human
+drivers see everything. The envelope is off in every cell. Phantom cells have more AV-hours because slow AVs stay in the city
+longer; per AV-km the phantom is still 300x safer than blind at 8 m (0.99 vs 313 per 1000 km) and 8x the clear rate per AV-km, a
+comparison of 5 crashes with 1 that is too small to test.
+
+**Next.** A phantom that remembers the last seen leader speed; sight limits for humans in `xnet/` (default off); the envelope
+with limited sight.
+
+Figures: `docs/img/visibility_lane.gif`, `docs/img/visibility_bench.png`. Results: `results/visibility/`.
 
 ---
 

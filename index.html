@@ -468,6 +468,20 @@
           <li>Prediction cut 1.0&nbsp;s-delay crashes from 1832 to 41 (pre-registered), but a predicted 2&nbsp;s delay still crashed 55&times; as often as clean sensors.</li>
         </ul>
       </div>
+
+    </div>
+
+    <div class="result">
+      <figure><img width="518" height="331" src="img/visibility_lane.gif" alt="Animation: three AVs with the same IDM policy approach a car stopped 60 m ahead; with clear sight the AV stops 2.5 m behind; seeing only 8 m it hits the car at 17 km/h; with a phantom obstacle at the edge of its 8 m sight it creeps at about 2 m/s and does not hit" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Fog: limited sight and a phantom obstacle</h3>
+          <p>AVs can now see their leader only within a sight distance, and optionally treat the edge of sight as a stopped car (no simulator change). Half-AV Oakland, envelope off, 16 copies &times; 600&nbsp;s per cell.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/visibility_bench.png">figure</a>.</p></div>
+        <ul>
+          <li>Blind beyond 14&nbsp;m, AVs crashed about 250&times; as often as with clear sight and barely slowed down.</li>
+          <li>At 8&nbsp;m the phantom cut AV crashes from 2064 to 5 (pre-registered), at half the speed.</li>
+        </ul>
+      </div>
     </div>
 
     <div class="result">
