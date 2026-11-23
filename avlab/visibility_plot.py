@@ -113,7 +113,7 @@ def bench_fig(src="results/visibility/visibility.json", path="docs/img/visibilit
     res = json.load(open(src))
     cells = res["cells"]
     fig, (ax, bx) = plt.subplots(1, 2, figsize=(8.4, 4.0), facecolor=BG, gridspec_kw={"width_ratios": [1.6, 1]})
-    floor = 1e-3
+    floor = 5e-4
     for phantom, c, lab in ((False, "#E69F00", "AV blind beyond sight"), (True, "#56B4E9", "with phantom at sight edge")):
         rs = sorted((r for r in cells.values() if r["phantom"] == phantom and r["sight_m"] < 1e3), key=lambda r: r["sight_m"])
         if not rs:
@@ -125,16 +125,16 @@ def bench_fig(src="results/visibility/visibility.json", path="docs/img/visibilit
             ax.plot([ss, ss], [max(r["ci"][0], floor), r["ci"][1]], color=c, lw=2)
             ax.plot(ss, y, "o", ms=7, color=c, mfc=c if r["av_crash"] > 0 else BG, mew=2)
             ax.text(ss + 0.3, y, f"{r['av_crash']:.0f}", color=c, fontsize=7.5, va="center")
-        ax.text(s[0] - 0.2, rate[0] * (2.2 if not phantom else 0.4), lab, color=c, fontsize=8.5, weight="bold")
+        ax.text(s[0] - 0.2, rate[0] * (2.2 if not phantom else 5.0), lab, color=c, fontsize=8.5, weight="bold")
         bx.plot(s, [r["av_speed_kmh"] for r in rs], "o-", color=c, lw=1.6)
     if "clear" in cells:
         r = cells["clear"]
         ax.axhspan(max(r["ci"][0], floor), r["ci"][1], color="#8b949e", alpha=0.18, lw=0)
-        ax.text(9.5, r["ci"][1] * 1.4, f"clear sight: {r['av_crash']:.0f} crashes, {r['rate_per_h']:.3f} / AV-h",
+        ax.text(9.5, floor * 1.3, f"clear sight: {r['av_crash']:.0f} crash{'es' * (r['av_crash'] != 1)}, {r['rate_per_h']:.3f} / AV-h",
                 color="#8b949e", fontsize=8)
         bx.axhline(r["av_speed_kmh"], color="#8b949e", lw=1, ls="--")
-        bx.text(14.3, r["av_speed_kmh"] + 0.4, "clear", color="#8b949e", fontsize=8, ha="right")
-    ax.set_yscale("log"); ax.set_ylim(3e-3, 100); ax.set_xlim(5, 16)
+        bx.text(14.3, r["av_speed_kmh"] - 0.5, "clear sight", color="#8b949e", fontsize=8, ha="right")
+    ax.set_yscale("log"); ax.set_ylim(floor, 100); ax.set_xlim(5, 16)
     ax.set_xticks([6, 8, 10, 14])
     ax.set_xlabel("AV sight distance (m)", color=MUTED, fontsize=9)
     ax.set_ylabel("AV crashes per AV-hour (95 %)", color=MUTED, fontsize=9)
