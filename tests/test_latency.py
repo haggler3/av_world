@@ -49,3 +49,38 @@ def test_zero_delay_run_matches_clean_tracker():
     b = TR.run(TR.Perception(), E=1, seed=7, warm_s=0.0, seconds=8.0, chunk_s=8.0)
     for k in ("av_veh_s", "av_veh_m", "veh_s", "crashes"):
         assert np.allclose(a[k], b[k]), k
+
+
+def test_constant_acceleration_prediction_is_exact_for_a_braking_leader():
+    # follower at 10 m/s, leader at 9 m/s braking at 2 m/s^2 (0.4 m/s per step); delay 0.6 s = 3 steps
+    n, key, dt = 2, jax.random.PRNGKey(0), 0.2
+    m = LT.Latency(delay_s=0.6, compensate=True, accel=True)
+    mem = LT.init_mem_for(m)(n)
+    gap, vl, shown = 40.0, 9.0, []
+    for k in range(10):
+        out, mem = LT.perceive(_obs(n, gap=gap, v=10.0, vl=vl), key, mem, m)
+        shown.append((50 * float(out[0, 9]), 15 * float(out[0, 10]), gap, vl))
+        gap -= (10.0 - vl) * dt
+        vl -= 2.0 * dt
+    # from step 4 on, two delayed observations exist: the prediction recovers the true gap and leader speed
+    for g_s, vl_s, g, v in shown[4:]:
+        assert abs(g_s - g) < 1e-3 and abs(vl_s - v) < 1e-3
+    # constant velocity (accel=False) overestimates the gap of a braking leader
+    m0 = LT.Latency(delay_s=0.6, compensate=True)
+    mem0, gap, vl = LT.init_mem_for(m0)(n), 40.0, 9.0
+    for k in range(6):
+        out, mem0 = LT.perceive(_obs(n, gap=gap, v=10.0, vl=vl), key, mem0, m0)
+        gap -= (10.0 - vl) * dt
+        vl -= 2.0 * dt
+    assert 50 * float(out[0, 9]) > gap + (10.0 - vl - 2 * dt) * dt + 0.05  # shown gap > the true gap at that step
+
+
+def test_accel_false_keeps_the_constant_velocity_path():
+    o = _obs(4, gap=25.0)
+    a = LT.Latency(delay_s=0.4, compensate=True)
+    b = LT.Latency(delay_s=0.4, compensate=True, accel=False)
+    ma, mb = LT.init_mem_for(a)(4), LT.init_mem_for(b)(4)
+    for _ in range(4):
+        oa, ma = LT.perceive(o, None, ma, a)
+        ob, mb = LT.perceive(o, None, mb, b)
+    assert np.array_equal(np.asarray(oa), np.asarray(ob))

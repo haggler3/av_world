@@ -78,7 +78,81 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     seen speed (less slowing); sight limits for human drivers (default-off `xnet/` field + regression + speed check);
     the envelope with limited sight; sight per street (fog banks) with `xnet.sim.patch_links`.
 
+28. **Latency residual** (2026-11-24): constant-acceleration prediction did not remove the 2.0 s residual (RR 0.87,
+    0.73-1.04, p 0.11) and added 24 % hard brakes. Next: crash log on the 2.0 s CV cell, split by leader change in the delay
+    window (cut-ins, junctions); a filtered acceleration estimate. The memory phantom (`avlab.sightmemory`) is a null:
+    the fog speed cost comes from empty road ahead, so the lever is sight distance itself (or a speed-dependent phantom).
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-24 - constant-acceleration prediction for perception latency
+
+**What changed.** `avlab.latency.Latency` has a new option `accel=True`. With it, the forward prediction of a delayed leader
+also uses the leader's last measured acceleration, not only its last speed. New: `avlab/latency_accel_plot.py` (GIF, figure),
+two cells `ca1.4` and `ca2.0` in `avlab/latencybench.py`, two tests in `tests/test_latency.py` (the prediction is exact for a
+leader braking at a constant rate; `accel=False` keeps the old path). Also new and kept as a null tool: `avlab/sightmemory.py`
+(a phantom that remembers the last seen leader speed) with `tests/test_sightmemory.py`. `xnet/` is untouched.
+
+**Why.** On 2026-11-22 constant-velocity prediction cut 1.0 s-delay crashes 53-fold, but at 2.0 s the AV still crashed 55x
+as often as with clean sensors. Leaders that brake during the delay are the obvious suspect. Predictor feedback for delayed
+car following usually propagates the full model state over the delay ([arXiv 2404.15958](https://arxiv.org/abs/2404.15958),
+[arXiv 2603.24566](https://arxiv.org/abs/2603.24566)); sensing delay in cut-ins is studied in
+[arXiv 2411.13456](https://arxiv.org/abs/2411.13456).
+
+**How it works.** Per AV row and per 0.2 s step, with delay $D$ steps, delayed gap $g_{t-D}$, delayed leader speeds
+$v_{\ell,t-D}$ and $v_{\ell,t-D-1}$, and own speeds $v_j$:
+
+$$a = \mathrm{clip}\!\left(\frac{v_{\ell,t-D} - v_{\ell,t-D-1}}{0.2},\,-9,\,3\right),\qquad u_k = \max(v_{\ell,t-D} + a\,k\,0.2,\;0),\quad k = 0..D-1$$
+$$\hat g_t = g_{t-D} - 0.2\sum_{k=0}^{D-1}\left(v_{t-D+k} - u_k\right),\qquad \hat v_{\ell,t} = \max(v_{\ell,t-D} + a\,D\,0.2,\;0)$$
+
+```
+a = 0 when step t-D or t-D-1 had no leader, or the ring is fresh
+memory adds (v_l of step t-D-1, has_leader of step t-D-1): the observation dropped from the ring last step
+```
+
+**Experiment** (pre-registered in `results/daily/2026-11-24/predictions.md`). Same setup and keys as 2026-11-22 (Oakland,
+16 copies, keys 43000+i, half AVs, friction 1.0, envelope off, IDM policy, 120 s warm-up then 600 s), so the saved
+constant-velocity cells are the comparison. H1: at 2.0 s delay $\mathrm{RR} = \lambda_\text{CA} / \lambda_\text{CV} < 1$,
+$\lambda$ = AV crashes per AV-hour; exact conditional Poisson test, two-sided $p < 0.05$. Power: about 270 crashes in the
+reference arm; an RR of 0.7 needs about 123 per arm. Expected RR about 0.6. Secondary (Holm, $m = 2$): S1 the same ratio at
+1.4 s; S2 CA at 2.0 s vs clean (expected $> 1$).
+
+**Result** (`results/latency/accel.json`).
+
+| cell | AV crashes / AV-hours | per AV-hour (95 %) | AV speed (km/h) | hard brakes |
+|---|---|---|---|---|
+| clean sensors | 5 / 582.4 | 0.009 (0.003-0.020) | 14.44 | 15080 |
+| 1.4 s, constant velocity | 73 / 581.6 | 0.126 (0.098-0.158) | 14.07 | 13521 |
+| 1.4 s, constant acceleration | 78 / 583.0 | 0.134 (0.106-0.167) | 14.11 | 15824 |
+| 2.0 s, constant velocity | 272 / 576.7 | 0.472 (0.417-0.531) | 13.67 | 13190 |
+| 2.0 s, constant acceleration | 236 / 576.9 | 0.409 (0.359-0.465) | 13.90 | 16391 |
+
+| test | RR (95 %) | p |
+|---|---|---|
+| **H1: CA / CV, 2.0 s** | **0.87 (0.73-1.04)** | **0.11** |
+| S1: CA / CV, 1.4 s | 1.07 (0.76-1.49) | Holm 0.74 |
+| S2: CA 2.0 s / clean | 47.7 (20.1-148) | Holm 1.5e-63 |
+
+**Not successful**: H1 missed its bar. The point estimate is a 13 % cut at 2.0 s, and the interval allows anything from a 27 %
+cut to a 4 % rise; at 1.4 s there is no sign of an effect. Leaders that change speed during the delay are therefore not the
+main source of the residual: the expected RR of 0.6 is outside the interval. Acceleration prediction also made the AV
+brake hard 24 % more often at 2.0 s (16391 vs 13190), because a single 0.2 s speed difference is a noisy acceleration
+estimate. In the scripted lane (GIF), where the leader brakes at a constant 6 m/s^2, it works as intended: the AV keeps 2.55 m
+instead of 1.45 m.
+
+**Also tried (null, dropped in the search).** A phantom that remembers the last seen leader speed (`avlab.sightmemory`).
+Quick probe at 8 m sight, 2 copies x 80 s: AV speed 7.91 km/h with a stopped phantom and 7.97 km/h even with perfect memory
+($b_\text{ph} = 0$). The phantom's speed cost comes from roads with no leader in sight, which memory cannot help.
+
+**Limits.** One random stream; the acceleration estimate uses one difference with no filter; leader changes (a new car
+cutting in) produce acceleration spikes that the clip only bounds.
+
+**Next.** Find what the 2.0 s residual is: run `avlab.crashlog` on the CV 2.0 s cell and split crashes by whether the leader
+changed (cut-in, junction) during the delay window; a filtered acceleration (mean over 3-5 delayed steps).
+
+Figures: `docs/img/latency_accel_lane.gif`, `docs/img/latency_accel.png`. Results: `results/latency/accel.json`, `ca1.4.json`, `ca2.0.json`.
 
 ---
 

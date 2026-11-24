@@ -1,0 +1,163 @@
+{
+ "date": "2026-11-24",
+ "rule": "Q = novelty*relevance*visual*p / sqrt(compute min); pick argmax Q + 1.2 P_norm sqrt(N)/(1+n), 3 rounds",
+ "candidates": [
+  {
+   "id": "ca_latency",
+   "idea": "constant-acceleration leader prediction for perception latency (avlab.latency accel=True); tests whether the 2.0 s residual comes from braking leaders",
+   "artefact": "lane GIF, bench figure, 2 tests",
+   "compute_min": 10,
+   "P": 0.55,
+   "Q_final": 1.1,
+   "N": 2,
+   "probes": [
+    "grep: latency ring has the delayed leader speeds, one extra slot needed for v_l(t-D-1)",
+    "scripted lane (leader brakes 6 m/s^2) at 2.0 s: min gap CV 1.45 m vs CA 2.55 m; 4 copies x 120 s: 0 vs 0 crashes (smoke only)"
+   ],
+   "kept": true
+  },
+  {
+   "id": "phantom_memory",
+   "idea": "phantom at the sight edge that moves at the last seen leader speed minus b_ph t (sound lower bound at b_ph = 9 m/s^2)",
+   "artefact": "avlab.sightmemory, tests",
+   "compute_min": 10,
+   "P": 0.5,
+   "Q_final": 0.05,
+   "N": 2,
+   "probes": [
+    "2 copies x 80 s at 8 m sight: AV speed stopped phantom 7.91, b_ph 9 / 4.5 7.91, b_ph 1 7.93, b_ph 0 (perfect memory) 7.97 km/h; 0 crashes in every cell",
+    "=> the phantom's speed cost does not come from lost leaders; memory cannot recover it"
+   ],
+   "kept": false,
+   "dropped": "probe: even perfect memory recovers < 1 % of the speed; module and tests kept as a null tool"
+  },
+  {
+   "id": "speed_test",
+   "idea": "failing speed regression test (backlog 5)",
+   "artefact": "tests/test_speed.py",
+   "compute_min": 8,
+   "P": 0.5,
+   "Q_final": 0.35,
+   "N": 0,
+   "dropped": "wall-clock noise on shared CPU; low reader value (as 2026-11-23)"
+  },
+  {
+   "id": "bench_seeds",
+   "idea": "AVBench rows with 95 % intervals over random streams",
+   "artefact": "table",
+   "compute_min": 45,
+   "P": 0.6,
+   "Q_final": 0.3,
+   "N": 0,
+   "dropped": "> 12 min compute"
+  },
+  {
+   "id": "cem_falsify",
+   "idea": "cross-entropy scenario search for AV failures",
+   "artefact": "tool + GIF",
+   "compute_min": 40,
+   "P": 0.3,
+   "Q_final": 0.5,
+   "N": 0,
+   "dropped": "build > 25 min (no scenario parameterisation; checked 2026-11-23)"
+  },
+  {
+   "id": "human_fog",
+   "idea": "sight limits for human drivers (default-off xnet field)",
+   "artefact": "xnet change + regression",
+   "compute_min": 40,
+   "P": 0.3,
+   "Q_final": 0.4,
+   "N": 0,
+   "dropped": "xnet change + speed check > budget"
+  },
+  {
+   "id": "latency_envelope",
+   "idea": "latency with the envelope on",
+   "artefact": "table",
+   "compute_min": 10,
+   "P": 0.7,
+   "Q_final": 0.3,
+   "N": 0,
+   "dropped": "re-run of an existing tool; predictable (envelope absorbed noise 2026-11-20)"
+  },
+  {
+   "id": "fog_bank",
+   "idea": "sight per street with patch_links (fog banks)",
+   "artefact": "GIF",
+   "compute_min": 20,
+   "P": 0.3,
+   "Q_final": 0.2,
+   "N": 0,
+   "dropped": "likely needs a link id in the policy observation (not checked today); > budget"
+  },
+  {
+   "id": "crash_partner",
+   "idea": "other party per crash in avlab.crashlog",
+   "artefact": "tool",
+   "compute_min": 20,
+   "P": 0.4,
+   "Q_final": 0.3,
+   "N": 0,
+   "dropped": "needs diag fields; lower Q"
+  },
+  {
+   "id": "ca_lane_sweep",
+   "idea": "child of ca_latency: scripted-lane sweep of leader braking 2-8 m/s^2 x delay, min gap CV vs CA",
+   "artefact": "heatmap",
+   "compute_min": 2,
+   "P": 0.6,
+   "Q_final": 0.6,
+   "N": 0,
+   "dropped": "merged into ca_latency's lane GIF; time"
+  },
+  {
+   "id": "ice_mask",
+   "idea": "ice on bridges / one contiguous zone vs random mask",
+   "artefact": "figure",
+   "compute_min": 15,
+   "P": 0.5,
+   "Q_final": 0.3,
+   "N": 0,
+   "dropped": "analysis on existing feature; > budget with two jobs"
+  },
+  {
+   "id": "wild_rl_fog",
+   "idea": "wild card: PPO policy trained behind fog",
+   "artefact": "curve",
+   "compute_min": 60,
+   "P": 0.2,
+   "Q_final": 0.05,
+   "N": 0,
+   "dropped": "> 12 min compute"
+  }
+ ],
+ "rounds": [
+  {
+   "round": 1,
+   "picked": "phantom_memory",
+   "probe": "quick runs b_ph inf/9/4.5: identical 7.91 km/h -> Q 0.9 -> 0.2"
+  },
+  {
+   "round": 2,
+   "picked": "phantom_memory",
+   "probe": "b_ph 1 and 0 (perfect memory): 7.93 / 7.97 km/h -> nothing happens, dropped"
+  },
+  {
+   "round": 3,
+   "picked": "ca_latency",
+   "probe": "scripted lane + 4-copy smoke run: CA keeps 2.55 m vs CV 1.45 m in the lane -> kept"
+  }
+ ],
+ "kept": [
+  "ca_latency"
+ ],
+ "health_check": "27 passed, 1 skipped",
+ "prior_art": [
+  "https://arxiv.org/abs/2404.15958",
+  "https://arxiv.org/abs/2603.24566",
+  "https://arxiv.org/abs/2411.13456",
+  "https://arxiv.org/abs/1807.01262",
+  "https://arxiv.org/abs/2607.03155"
+ ]
+}

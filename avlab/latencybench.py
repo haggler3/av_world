@@ -5,6 +5,7 @@ Pre-registration: results/daily/2026-11-22/predictions.md
     python -m avlab.latencybench --quick          # 2 copies, 40 s, two cells (a smoke test)
     python -m avlab.latencybench --cell raw1.0    # one cell -> results/latency/raw1.0.json (~2 min)
     python -m avlab.latencybench                  # analysis of the saved cells -> results/latency/latency.json
+                                                  # and the constant-acceleration tests -> results/latency/accel.json
 """
 import argparse
 import json
@@ -13,10 +14,13 @@ import os
 OUT = "results/latency"
 DELAYS = (0.6, 1.0, 1.4, 2.0)
 CELLS = {"clean": (0.0, False), **{f"raw{d}": (d, False) for d in DELAYS}, **{f"comp{d}": (d, True) for d in DELAYS}}
+CELLS.update({f"ca{d}": (d, True, True) for d in (1.4, 2.0)})  # 2026-11-24: constant-acceleration prediction
 TESTS = {"H1": ("comp1.0", "raw1.0"), "S1": ("raw1.0", "clean"), "S2": ("comp2.0", "clean")}
+# 2026-11-24 pre-registration: results/daily/2026-11-24/predictions.md -> results/latency/accel.json
+TESTS_CA = {"H1": ("ca2.0", "comp2.0"), "S1": ("ca1.4", "comp1.4"), "S2": ("ca2.0", "clean")}
 
 
-def analyse(cells):
+def analyse(cells, tests_def=None):
     from avlab.sensorbench import _poisson_ci
     from avlab.whocrashes import holm, rate_ratio
     h = lambda c: sum(cells[c]["av_veh_s"]) / 3600  # noqa: E731
@@ -26,7 +30,7 @@ def analyse(cells):
                 "av_speed_kmh": 3.6 * sum(cells[c]["av_veh_m"]) / sum(cells[c]["av_veh_s"]),
                 "av_hard": sum(cells[c]["av_hard"]), "city_crashes": sum(cells[c]["crashes"])} for c in cells}
     tests = {}
-    for name, (a, b) in TESTS.items():
+    for name, (a, b) in (tests_def or TESTS).items():
         if a in cells and b in cells:
             tests[name] = {"cells": [a, b], **rate_ratio(k(a), h(a), k(b), h(b))}
     sec = [n for n in ("S1", "S2") if n in tests]
@@ -55,8 +59,14 @@ def main():
         print(a.cell, "AV crashes", sum(r["av_crash"]), "AV-hours %.1f" % (sum(r["av_veh_s"]) / 3600), flush=True)
         return
     cells = {c: json.load(open(f"{OUT}/{c}.json")) for c in CELLS if os.path.exists(f"{OUT}/{c}.json")}
-    res = analyse(cells)
+    old = {c: v for c, v in cells.items() if not c.startswith("ca")}
+    res = analyse(old)
     json.dump(res, open(f"{OUT}/latency.json", "w"), indent=1)
+    if any(c.startswith("ca") for c in cells):
+        ca = analyse(cells, TESTS_CA)
+        json.dump(ca, open(f"{OUT}/accel.json", "w"), indent=1)
+        for n, t in ca["tests"].items():
+            print("accel", n, t)
     for c, r in res["cells"].items():
         print(f"{c:8s} {r['av_hours']:7.1f} h {r['av_crash']:6.0f} crashes {r['rate_per_h']:.3f}/h  {r['av_speed_kmh']:.2f} km/h")
     for n, t in res["tests"].items():
