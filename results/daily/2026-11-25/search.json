@@ -1,0 +1,128 @@
+{
+ "date": "2026-11-25",
+ "candidates": [
+  {
+   "idea": "crash partner fields in avlab.crashlog (backlog 1 open part)",
+   "build_min": 8,
+   "exp_min": 8,
+   "prior": 0.7,
+   "U": 3,
+   "R": 4,
+   "Q": 2.1
+  },
+  {
+   "idea": "speed regression test, backlog 5",
+   "build_min": 8,
+   "exp_min": 2,
+   "prior": 0.8,
+   "U": 3,
+   "R": 2,
+   "Q": 1.518
+  },
+  {
+   "idea": "human-driver sight limits in xnet (backlog 3)",
+   "build_min": 25,
+   "exp_min": 12,
+   "prior": 0.4,
+   "U": 4,
+   "R": 4,
+   "Q": 1.052
+  },
+  {
+   "idea": "seeds on AVBench rows (backlog 6)",
+   "build_min": 10,
+   "exp_min": 45,
+   "prior": 0.6,
+   "U": 4,
+   "R": 3,
+   "Q": 0.971
+  },
+  {
+   "idea": "CEM scenario generator (backlog 7)",
+   "build_min": 25,
+   "exp_min": 12,
+   "prior": 0.4,
+   "U": 4,
+   "R": 4,
+   "Q": 1.052
+  },
+  {
+   "idea": "filtered acceleration estimate for latency (next 28)",
+   "build_min": 10,
+   "exp_min": 10,
+   "prior": 0.4,
+   "U": 2,
+   "R": 3,
+   "Q": 0.537
+  },
+  {
+   "idea": "speed-dependent phantom for limited sight (next 27)",
+   "build_min": 10,
+   "exp_min": 10,
+   "prior": 0.5,
+   "U": 2,
+   "R": 3,
+   "Q": 0.671
+  },
+  {
+   "idea": "crash log on latency CV cell split by leader change",
+   "build_min": 8,
+   "exp_min": 10,
+   "prior": 0.6,
+   "U": 2,
+   "R": 3,
+   "Q": 0.849
+  },
+  {
+   "idea": "graded gap scale 1.25/1.35 (next 16)",
+   "build_min": 5,
+   "exp_min": 12,
+   "prior": 0.5,
+   "U": 2,
+   "R": 2,
+   "Q": 0.485
+  },
+  {
+   "idea": "fog banks via patch_links + visibility",
+   "build_min": 15,
+   "exp_min": 12,
+   "prior": 0.5,
+   "U": 3,
+   "R": 4,
+   "Q": 1.155
+  }
+ ],
+ "checks": [
+  {
+   "round": 1,
+   "idea": 0,
+   "check": "grep xnet/sim.py diag: exposes lead and rear but not junction/lane-change partner indices",
+   "update": "prior 0.7 -> 0.7; rear-end partner exact, others post hoc by distance"
+  },
+  {
+   "round": 2,
+   "idea": 0,
+   "check": "60 s probe, 8 copies x 5 min at friction 1.0 / 0.6: 0 and 1 crashes; at 0.4: 15 rows, 4 rear, 2 struck AVs",
+   "update": "experiment needs friction 0.4 and ~96 copies"
+  },
+  {
+   "round": 3,
+   "idea": 4,
+   "check": "grep avlab/adversary.py: ES search over adv_* multipliers already exists",
+   "update": "prior 0.4 -> 0.25 (overlaps existing tool)"
+  }
+ ],
+ "N": 3,
+ "n": {
+  "0": 2,
+  "4": 1
+ },
+ "kept": "crash partner fields + who rear-ends whom in a half-AV city",
+ "dropped": {
+  "speed regression test": "low reader value; kept in backlog",
+  "human sight limits": "xnet change + regression + speed check do not fit with a powered experiment today",
+  "AVBench seeds": "45 min compute > 40",
+  "CEM generator": "overlaps avlab.adversary search",
+  "others": "re-run old analyses (forbidden kind of day) or lower Q"
+ }
+}
