@@ -9,7 +9,7 @@ Changes that add a capability. Several earlier ideas were dropped because one of
 
 1. ~~**Per-crash event log**~~ (done 2026-11-19: `avlab.crashlog`, one row per vehicle that becomes a wreck, with time, place,
    impact speed, role and link, plus vehicle-seconds per link; read-only over `xnet.sim.step(diag=True)`, no `xnet/` change).
-   Still open: the *other* party of a crash per row (today's rows are grouped into events by a 25 m chain instead).
+   ~~Other party per row~~ (done 2026-11-25: rear-end partner from the step, other roles paired post hoc by distance).
 2. ~~**Friction that varies by street**~~ (done 2026-11-18: `xnet.sim.patch_links` + `Behaviour.patch_friction`; patchy ice at mean 0.7 gave 3.3x the crashes of uniform 0.7).
 3. **Visibility (rain, night)**: a per-copy sight distance that limits what drivers and AVs observe. AV half done 2026-11-23
    (`avlab.visibility`, the AV's leader is hidden beyond sight, optional phantom obstacle at the sight edge; no `xnet/` change).
@@ -83,7 +83,69 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     window (cut-ins, junctions); a filtered acceleration estimate. The memory phantom (`avlab.sightmemory`) is a null:
     the fog speed cost comes from empty road ahead, so the lever is sight distance itself (or a speed-dependent phantom).
 
+29. **Who rear-ends whom** (2026-11-25): in half-AV Oakland at friction 0.4 the AV is struck in 50 % of mixed rear-ends
+    (17 / 34), not the field's ~70 %. Next: friction 1.0 with the envelope on via `avlab.rare`; where AV-strikes-human pairs happen.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-25 - the crash log names the other car in a rear-end
+
+**What changed.** `avlab.crashlog` rows now carry the other party of each crash: `partner` (the slot of the leader for a
+rear-end striker, of the striker for the struck car, -2 for a pedestrian strike, -1 otherwise), and that vehicle's AV flag
+`p_av`, kind `p_kind`, speed before contact `p_v` and `p_wreck` (it was already a wreck). Two helpers: `pair_rest` pairs the
+remaining rows (junction, lane change) post hoc with the nearest crash row of the same copy and step, and `rear_pairs` returns
+striker / struck pairs. New: `avlab/rearpartner.py` (experiment), `avlab/rearpartner_plot.py` (figure, GIF), two tests in
+`tests/test_crashlog.py`. `xnet/` is untouched; the log still reads `xnet.sim.step(diag=True)` only.
+
+**Why.** Foundations backlog 1 left the other party open, so no one could ask *who hit whom*. In California's AV collision
+reports, AVs are most often the car struck from behind ([Favaro et al. 2017, PLOS ONE](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0184952);
+[US DOT HASS COE 2024](https://www.transportation.gov/sites/dot.gov/files/2024-10/HASS_COE_Understanding_Safety_Challenges_of_Vehicles_Equipped_with_ADS_Aug2024_rev.pdf)), so that is the first question.
+
+**How it works.** At step $t$, with diag masks `rear` (a striker), `lead` (its leader) and `ped_hit`:
+
+```
+struck_by[lead[i]] = i      for every striker i
+partner[i] = lead[i] if rear[i] else struck_by[i]       (-1 if none)
+partner[i] = -2 if ped_hit[i]
+p_av, p_kind, p_v = av, kind, v of partner (state before the step); p_wreck = partner.wreck_t > 0
+```
+
+**Experiment** (pre-registered in `results/daily/2026-11-25/predictions.md`). Oakland, 96 copies (3 x 32, stream 51), half AVs
+(IDM policy, envelope off), friction 0.4, 120 s warm-up then 600 s. H1: among rear-end pairs with exactly one AV (struck car
+not already a wreck), the share $q$ with the AV struck is above 0.5; exact two-sided binomial test, bar $p < 0.05$. Expected
+$q \approx 0.8$; power 0.97 at $n = 30$ for $q = 0.8$. Secondary (Holm, $m = 2$): S1 the AV share among cars hit by a human
+against the AV share of live vehicles; S2 the human striker's closing speed, AV vs human in front (Mann-Whitney).
+
+**Result** (`results/rearpartner/run.json`). 682 crash rows; all 259 rear-end strikers named a partner; 9 hit a car that was
+already a wreck, leaving 250 pairs.
+
+| striker -> struck | pairs |
+|---|---|
+| human -> human | 199 |
+| human -> AV | 17 |
+| AV -> human | 17 |
+| AV -> AV | 17 |
+
+| test | estimate (95 %) | p |
+|---|---|---|
+| **H1: AV struck, share of mixed pairs** | **0.50 (0.32-0.68), 17 / 34** | **1.0** |
+| S1: AV share among cars a human hit | 0.079 (0.047-0.123), 17 / 216, vs 0.43 of live vehicles | Holm 3e-30 |
+| S2: closing speed, human striker (median) | 13.6 km/h with an AV in front vs 7.5 km/h with a human | Holm 1.4e-6 |
+
+**Not successful**: H1 missed its bar. In a mixed pair the AV is the striker as often as the struck car, unlike the field
+reports (most AV rear-ends there are humans striking the AV). AVs in front are hit far less than their share of the traffic (S1), but when a human does hit an AV the closing speed is
+higher (S2). S1's reference share is a crude snapshot of live vehicles at the end of each batch, not the exposure of being a
+leader, so it is indicative only.
+
+**Limits.** No GIF today: `python -m avlab.rearpartner_plot gif` hunted 12 seeds (8 copies x 300 s each) for a human-on-AV
+rear-end and found none, which fits their rarity (17 in 96 copy-runs). Friction 0.4 everywhere, one city, the IDM AV policy without the envelope. Junction and lane-change partners come
+from distance, not from the step. The field share of AVs struck from behind (about 64-73 % in the studies above) includes many AVs stopped at junctions, where this simulator's queues may
+differ.
+
+**Next.** (1) Repeat at friction 1.0 with the envelope on (needs ~10x the copies, or `avlab.rare`). (2) Where do the 17 AV-strikes-
+human pairs happen, and do they need the latency/sensor models to appear? (3) Export the partner in `crashlog.quick()`.
 
 ---
 

@@ -22,7 +22,11 @@ from typing import NamedTuple
 
 import numpy as np
 
-FIELDS = ("t", "copy", "slot", "trk", "s", "v", "av", "kind", "role", "link", "patched")
+FIELDS = ("t", "copy", "slot", "trk", "s", "v", "av", "kind", "role", "link", "patched", "partner", "p_av", "p_kind", "p_v", "p_wreck")
+# partner: slot of the other vehicle in a rear-end (the leader for the striker, the striker for the struck car), -2 for a
+# pedestrian strike, -1 when the step does not name one (junction, lane change, close pass: see `pair_rest`).
+# p_av, p_kind, p_v: the partner's AV flag, kind and speed before contact (-1 when partner < 0); p_wreck: the partner was
+# already a wreck (a car driving into a crash scene).
 ROLES = ("other", "rear", "junction", "lane_change", "pedestrian")
 
 
@@ -48,8 +52,20 @@ def log_step(st, net, beh, nh, buf_rows, n, expo):
     new = d["crashed"] & (st.wreck_t <= 0)
     role = jnp.where(d["ped_hit"], 4, jnp.where(d["ss"], 3, jnp.where(d["in_hit"], 2, jnp.where(d["rear"], 1, 0))))
     patched = net["link_patch"][link] if "link_patch" in net else jnp.zeros_like(new)
-    vals = jnp.stack([jnp.broadcast_to(st.t, st.v.shape), jnp.arange(st.v.shape[0], dtype=jnp.float32), st.trk, st.s, st.v,
-                      st.av, st.kind, role, link, patched], 1).astype(jnp.float32)
+    N = st.v.shape[0]
+    slots = jnp.arange(N)
+    rear = d["rear"] & (d["lead"] >= 0)
+    struck_by = jnp.full(N, -1).at[jnp.where(rear, d["lead"], N)].set(slots, mode="drop")  # the striker of each struck car
+    partner = jnp.where(rear, d["lead"], struck_by)
+    partner = jnp.where(d["ped_hit"], -2, partner)
+    pi = jnp.maximum(partner, 0)
+    has = partner >= 0
+    p_av = jnp.where(has, st.av[pi].astype(jnp.float32), -1.0)
+    p_kind = jnp.where(has, st.kind[pi].astype(jnp.float32), -1.0)
+    p_v = jnp.where(has, st.v[pi], -1.0)
+    p_wreck = jnp.where(has, (st.wreck_t[pi] > 0).astype(jnp.float32), 0.0)
+    vals = jnp.stack([jnp.broadcast_to(st.t, st.v.shape), slots.astype(jnp.float32), st.trk, st.s, st.v,
+                      st.av, st.kind, role, link, patched, partner, p_av, p_kind, p_v, p_wreck], 1).astype(jnp.float32)
     idx = jnp.where(new, n + jnp.cumsum(new) - 1, buf_rows.shape[0])
     buf_rows = buf_rows.at[idx].set(vals, mode="drop")
     expo = expo.at[jnp.where(st.alive, link, expo.shape[0])].add(X.DT, mode="drop")
@@ -111,9 +127,40 @@ def table(buf):
     cols = {"copy": e.astype(int)}
     for i, f in enumerate([f for f in FIELDS if f != "copy"]):
         cols[f] = r[:, i]
-    for f in ("slot", "trk", "av", "kind", "role", "link", "patched"):
+    for f in ("slot", "trk", "av", "kind", "role", "link", "patched", "partner", "p_av", "p_kind", "p_wreck"):
         cols[f] = cols[f].astype(int)
     return cols
+
+
+def pair_rest(rows, xy, radius=25.0):
+    """Post hoc partners for rows the step did not pair (partner == -1): the nearest other row of the same copy and time
+    step within `radius` metres (xy = positions(net, geo, rows)). Returns a copy of rows with partner, p_av, p_kind, p_v
+    filled where a match exists and a boolean column `paired_by` (0 = from the step, 1 = by distance, -1 = none)."""
+    out = {k: np.array(v, copy=True) for k, v in rows.items()}
+    n = len(out["t"])
+    out["paired_by"] = np.where(out["partner"] != -1, 0, -1)
+    step = np.round(out["t"] * 10).astype(int)
+    for i in np.where(out["partner"] == -1)[0]:
+        same = np.where((out["copy"] == out["copy"][i]) & (step == step[i]) & (np.arange(n) != i))[0]
+        if len(same) == 0:
+            continue
+        dist = np.hypot(xy[0][same] - xy[0][i], xy[1][same] - xy[1][i])
+        j = same[np.argmin(dist)]
+        if dist.min() < radius:
+            out["partner"][i] = out["slot"][j]
+            out["p_av"][i], out["p_kind"][i], out["p_v"][i] = out["av"][j], out["kind"][j], out["v"][j]
+            out["paired_by"][i] = 1
+    return out
+
+
+def rear_pairs(rows, fresh=True):
+    """Rear-end striker rows as (striker AV flag, struck AV flag, striker kind, struck kind) arrays. fresh=True drops pairs
+    whose struck car was already a wreck."""
+    m = (rows["role"] == 1) & (rows["partner"] >= 0)
+    if fresh:
+        m &= rows["p_wreck"] == 0
+    return {"striker_av": rows["av"][m], "struck_av": rows["p_av"][m], "striker_kind": rows["kind"][m],
+            "struck_kind": rows["p_kind"][m], "striker_v": rows["v"][m], "struck_v": rows["p_v"][m], "copy": rows["copy"][m]}
 
 
 def events(rows, xy=None, radius=25.0):
