@@ -1,0 +1,162 @@
+{
+ "date": "2026-11-26",
+ "score": "Q=U*R*p/sqrt(minutes); 3 PUCT rounds c=1.2",
+ "rounds": [
+  {
+   "round": 1,
+   "pick": 0,
+   "probe": "grep avlab/latency.py: perceive receives true obs -> truth comparison possible"
+  },
+  {
+   "round": 2,
+   "pick": 0,
+   "probe": "quick run 2 copies x 80 s: per-state seconds sum 8888 = av_veh_s; 0 crashes (too short)"
+  },
+  {
+   "round": 3,
+   "pick": 2,
+   "probe": "merged: leader-change split is the 'new'/'over' states"
+  }
+ ],
+ "candidates": [
+  {
+   "idea": "latency crash attribution (avlab.latencyattr): label each AV step by delayed view vs truth, tally time and crashes",
+   "minutes": 6,
+   "p": 0.75,
+   "U": 4,
+   "R": 4,
+   "Q": 4.9,
+   "p_norm": 0.134,
+   "N": 2,
+   "outcome": "kept: grep confirmed truth obs available in perceive; quick probe 12 s, tallies equal av_veh_s"
+  },
+  {
+   "idea": "filtered acceleration estimate (mean of 3-5 delayed diffs)",
+   "minutes": 6,
+   "p": 0.3,
+   "U": 2,
+   "R": 3,
+   "Q": 0.73,
+   "p_norm": 0.054,
+   "N": 0,
+   "outcome": "dropped: 11-24 showed CA prediction barely helps; attribution first"
+  },
+  {
+   "idea": "crashlog on CV 2.0 s cell split by leader change",
+   "minutes": 10,
+   "p": 0.5,
+   "U": 3,
+   "R": 4,
+   "Q": 1.9,
+   "p_norm": 0.089,
+   "N": 1,
+   "outcome": "merged into kept idea (state labels answer it without the 25 m chain)"
+  },
+  {
+   "idea": "worst-case (reachable-set) gap under delay",
+   "minutes": 8,
+   "p": 0.4,
+   "U": 3,
+   "R": 3,
+   "Q": 1.27,
+   "p_norm": 0.071,
+   "N": 0,
+   "outcome": "dropped: needs attribution to know whether braking leaders matter"
+  },
+  {
+   "idea": "speed-dependent phantom for limited sight",
+   "minutes": 8,
+   "p": 0.35,
+   "U": 3,
+   "R": 3,
+   "Q": 1.11,
+   "p_norm": 0.062,
+   "N": 0,
+   "outcome": "dropped: time"
+  },
+  {
+   "idea": "sight limits for human drivers (xnet default-off field)",
+   "minutes": 35,
+   "p": 0.4,
+   "U": 5,
+   "R": 4,
+   "Q": 1.35,
+   "p_norm": 0.071,
+   "N": 0,
+   "outcome": "dropped: >12 min compute + regression + speed check"
+  },
+  {
+   "idea": "speed benchmark failing test (backlog 5)",
+   "minutes": 10,
+   "p": 0.6,
+   "U": 3,
+   "R": 2,
+   "Q": 1.14,
+   "p_norm": 0.107,
+   "N": 0,
+   "outcome": "dropped: low reader interest today"
+  },
+  {
+   "idea": "seeds on every AVBench row (backlog 6)",
+   "minutes": 45,
+   "p": 0.6,
+   "U": 4,
+   "R": 3,
+   "Q": 1.07,
+   "p_norm": 0.107,
+   "N": 0,
+   "outcome": "dropped: >12 min compute"
+  },
+  {
+   "idea": "CEM scenario generator for AV failures (backlog 7)",
+   "minutes": 40,
+   "p": 0.4,
+   "U": 5,
+   "R": 4,
+   "Q": 1.26,
+   "p_norm": 0.071,
+   "N": 0,
+   "outcome": "dropped: build too large for today"
+  },
+  {
+   "idea": "latency on signals and stop lines",
+   "minutes": 25,
+   "p": 0.3,
+   "U": 3,
+   "R": 3,
+   "Q": 0.54,
+   "p_norm": 0.054,
+   "N": 0,
+   "outcome": "dropped: unknown hook cost"
+  },
+  {
+   "idea": "README/doc cleanup of latency rows",
+   "minutes": 3,
+   "p": 0.8,
+   "U": 1,
+   "R": 2,
+   "Q": 0.92,
+   "p_norm": 0.143,
+   "N": 0,
+   "outcome": "done as part of kept idea"
+  },
+  {
+   "idea": "wild card: delay-randomised training robustness",
+   "minutes": 60,
+   "p": 0.2,
+   "U": 4,
+   "R": 4,
+   "Q": 0.41,
+   "p_norm": 0.036,
+   "N": 0,
+   "outcome": "dropped: needs training"
+  }
+ ],
+ "kept": [
+  "latency crash attribution"
+ ],
+ "prior_art": [
+  "https://arxiv.org/abs/2411.13456",
+  "https://arxiv.org/abs/2510.07749"
+ ]
+}

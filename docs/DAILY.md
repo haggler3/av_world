@@ -83,7 +83,80 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     window (cut-ins, junctions); a filtered acceleration estimate. The memory phantom (`avlab.sightmemory`) is a null:
     the fog speed cost comes from empty road ahead, so the lever is sight distance itself (or a speed-dependent phantom).
 
+29. **Which wrong view causes long-delay crashes** (2026-11-26): over-estimated gaps are 2.7 % of AV time and 38 % of crashes
+    (18x the right-view rate); unseen new leaders 3.5x but only 26 of 272. Next: leader identity in `avlab.latencyattr`
+    (swap vs braking); look-back window for `ok` crashes; a delay-aware guard on downward gap jumps.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-26 - where long perception-delay crashes come from
+
+**What changed.** New `avlab/latencyattr.py`: it runs the `avlab.latency` AV and, at every 0.2 s step, compares the delayed view
+of the leader with the truth. Each AV step goes into one of five states, and the step's AV-seconds and AV crashes are added to that
+state. New: `avlab/latencyattr_plot.py` (cut-in GIF, figure), `tests/test_latencyattr.py` (3 tests; per-state crashes equal the
+simulator's `av_crash` counter). `xnet/` is untouched and the AV drives exactly as in `avlab.latency.run`.
+
+**Why.** On 2026-11-24 constant-acceleration prediction did not remove the 2.0 s residual, so braking leaders seemed not to be the
+cause. Cut-ins with a sensing delay are a known failure of car following ([arXiv 2411.13456](https://arxiv.org/abs/2411.13456));
+injected latency raises collision risk in a full stack ([arXiv 2510.07749](https://arxiv.org/abs/2510.07749)). We needed a tool
+that says which kind of wrong view precedes the crashes.
+
+**How it works.** With $e = \hat g - g$, the shown gap minus the true gap (m), and TOL = 2 m:
+
+```
+for each step, for each alive non-wrecked AV row:
+    obs_shown, mem = latency.perceive(obs_true, mem)       # the AV acts on obs_shown
+    state = none   if no true leader and none shown
+            ok     if true leader shown and |e| <= 2
+            new    if true leader, none shown              (leader arrived during the delay)
+            over   if true leader shown and e > 2          (gap over-estimated)
+            other  otherwise
+    seconds[state] += 0.2;  crashes[state] += 1 if the row becomes a wreck in this step
+```
+
+$\lambda_s = k_s / t_s$ (AV crashes per AV-hour in state $s$).
+
+**Experiment** (pre-registered in `results/daily/2026-11-26/predictions.md`). Same keys and setup as 2026-11-22 (Oakland, 16 copies,
+keys 43000+i, half AVs, friction 1.0, envelope off, IDM, constant-velocity prediction, 120 s warm-up, 600 s). H1: at 2.0 s,
+$\lambda_\text{new}/\lambda_\text{ok} > 1$, exact conditional Poisson test, two-sided $p < 0.05$. Secondary (Holm, $m = 3$): S1 the share of
+`new` among `new`+`over` crashes differs from 0.5 (expected above 0.5); S2 $\lambda_\text{over}/\lambda_\text{ok} > 1$; S3 H1 at 1.4 s.
+Power: ~270 crashes in the cell; 30 per state detect an RR of 3 with power above 0.95.
+
+**Result** (`results/latencyattr/attr.json`). Both cells reproduce the saved 2026-11-22 counts (272 and 73 AV crashes), and the
+per-state crashes equal the simulator's counter in every copy.
+
+| state (2.0 s) | share of AV time | AV crashes | per AV-hour (95 %) |
+|---|---|---|---|
+| none | 41.3 % | 11 | 0.046 |
+| ok | 45.9 % | 97 | 0.366 |
+| new | 3.5 % | 26 | 1.28 |
+| over | 2.7 % | 104 | 6.70 |
+| other | 6.6 % | 34 | 0.89 |
+
+| test | estimate (95 %) | p |
+|---|---|---|
+| **H1: new / ok, 2.0 s** | **RR 3.50 (2.18-5.44)** | **4.8e-7** |
+| S1: share new among new+over | 0.20 (0.14-0.28) | Holm 6.1e-12 |
+| S2: over / ok, 2.0 s | RR 18.3 (13.7-24.4) | Holm 4.2e-74 |
+| S3: new / ok, 1.4 s | RR 3.34 (1.36-7.16) | Holm 0.005 |
+
+**Successful**: H1 met its bar and the tool check holds. The direction of S1 was wrong: an unseen new leader explains only 26 of
+272 crashes. The largest share, 104 (38 %), comes from steps where the AV believes the gap is more than 2 m larger than it is,
+which is 2.7 % of AV time. A cut-in shows up in this state, not in `new`, because the delayed view still shows the old, farther
+leader (GIF). Since constant-acceleration prediction did not help on 2026-11-24, these over-estimates are more likely leader swaps
+than braking leaders. This does not prove that: the states do not record whether the shown car is the current leader.
+97 crashes (36 %) happen while the view is right within 2 m, likely when it became right too late.
+
+**Limits.** One random stream (the saved one). The state at the crash step only; a crash right after a wrong view counts as `ok`.
+The 2 m tolerance is a choice; leader identity is not tracked.
+
+**Next.** Record leader identity in the state (swap vs braking) via `diag=True`; count `ok` crashes that had an `over`/`new`
+step in the previous 2 s; a delay-aware guard: when the shown gap jumps down in the delayed stream, assume the jump happened
+D steps ago and brake on the predicted gap.
+
+Figures: `docs/img/latencyattr_cutin.gif`, `docs/img/latencyattr.png`. Results: `results/latencyattr/attr.json`, `cv2.0.json`, `cv1.4.json`.
 
 ---
 
