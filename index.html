@@ -485,6 +485,20 @@
     </div>
 
     <div class="result">
+      <figure><img width="518" height="259" src="img/latencyattr_cutin.gif" alt="Animation: a car cuts in 7 m ahead of two AVs; the AV with clean sensors slows in time, the AV with a 2.0 s perception delay still believes its old leader is far ahead and makes contact at 26 km/h" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Latency: where the long-delay crashes come from</h3>
+          <p>Every AV step is labelled by how the delayed view of the leader compares with the truth (no simulator change). Half-AV Oakland, 2.0&nbsp;s delay with prediction, envelope off, 16 copies &times; 600&nbsp;s, pre-registered.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/DAILY.md">the tests and numbers</a> &middot; <a href="img/latencyattr.png">figure</a>.</p></div>
+        <ul>
+          <li>Gap over-estimated by more than 2&nbsp;m: 2.7&nbsp;% of AV time, 38&nbsp;% of AV crashes (18&times; the rate when the view is right).</li>
+          <li>A leader not yet seen: 3.5&times; (95&nbsp;% 2.2&ndash;5.4, p 5e-7), but only 26 of 272 crashes. A cut-in looks like an over-estimated gap, not a missing leader.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="result">
       <figure><img width="518" height="331" src="img/visibility_lane.gif" alt="Animation: three AVs with the same IDM policy approach a car stopped 60 m ahead; with clear sight the AV stops 2.5 m behind; seeing only 8 m it hits the car at 17 km/h; with a phantom obstacle at the edge of its 8 m sight it creeps at about 2 m/s and does not hit" loading="lazy"></figure>
       <div class="text">
         <div><h3>Fog: limited sight and a phantom obstacle</h3>
