@@ -19,9 +19,10 @@ COLS = {"segment": ["id", "names", "subtype", "class", "subclass", "connectors",
         "connector": ["id", "geometry", "bbox"]}
 
 
-def fetch(kind, out, bbox=BBOX):
+def fetch(kind, out, bbox=BBOX, release=RELEASE):
+    """`release`: the Overture release to read, e.g. "2026-11-18.0"."""
     fs = pafs.S3FileSystem(anonymous=True, region="us-west-2")
-    d = ds.dataset(f"{BUCKET}/release/{RELEASE}/theme=transportation/type={kind}/", filesystem=fs, format="parquet")
+    d = ds.dataset(f"{BUCKET}/release/{release}/theme=transportation/type={kind}/", filesystem=fs, format="parquet")
     w, s, e, n = bbox
     f = ((pc.field("bbox", "xmax") >= w) & (pc.field("bbox", "xmin") <= e) & (pc.field("bbox", "ymax") >= s)
          & (pc.field("bbox", "ymin") <= n))

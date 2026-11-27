@@ -512,6 +512,32 @@
     </div>
 
     <div class="result">
+      <figure><img width="691" height="309" src="img/simagents_rollout.gif" alt="Animation: from one shared start in Oakland, three 20-second futures; with the real drivers and with the DAgger-trained model a queue flows normally; with the imitation-only model the queue piles up in a chain of crashes" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Learned sim agents for a whole city</h3>
+          <p>A next-token model of every vehicle's acceleration (as in MotionLM and SMART) drives all of Oakland in closed loop, scored with a WOSAC-style realism metric against the simulator's humans. 8 copies &times; 600&nbsp;s per cell, pre-registered.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/WORLD_MODELS.md">the method and numbers</a> &middot; <a href="img/simagents.png">figure</a> &middot; <a href="https://github.com/haggler3/av_world/blob/main/docs/WORLD_MODELS_RESEARCH.md">research map</a>.</p></div>
+        <ul>
+          <li>93&nbsp;% of held-out steps right, yet 3875 crashes in closed loop against 2 for the real drivers: errors compound. It scored below the IDM rule (0.104 vs 0.113): the test failed.</li>
+          <li>One DAgger round (post hoc) cut crashes to 11 and restored speed (15.2 vs 15.5&nbsp;km/h).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
+      <figure><img width="756" height="594" src="img/city_san_francisco.png" alt="Map of SoMa and the Financial District, San Francisco, with every simulated vehicle after five minutes, coloured by speed" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Five more cities: San Francisco, Phoenix, Austin, Los Angeles, Paris</h3>
+          <p>Built from Overture Maps (release 2026-11-18.0) like New York, Chicago and Boston; each about the size of Oakland and bundled with the package. <code>av_world.make("san_francisco")</code>.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/CITIES.md">what is real and what is inferred</a>.</p></div>
+        <ul>
+          <li>Four robotaxi cities and one European city; lanes, signals and demand are inferred from road class.</li>
+          <li>Left-hand traffic (London, Tokyo) is not supported yet.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="518" height="331" src="img/visibility_lane.gif" alt="Animation: three AVs with the same IDM policy approach a car stopped 60 m ahead; with clear sight the AV stops 2.5 m behind; seeing only 8 m it hits the car at 17 km/h; with a phantom obstacle at the edge of its 8 m sight it creeps at about 2 m/s and does not hit" loading="lazy"></figure>
       <div class="text">
         <div><h3>Fog: limited sight and a phantom obstacle</h3>

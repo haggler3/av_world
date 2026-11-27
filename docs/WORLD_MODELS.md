@@ -140,3 +140,59 @@ python -m dwm.explore                             # 60 s architecture experiment
 python -m dwm.gifs2d                              # diffusion bases vs flow matching (add max_steps for equal training)
 python -m dwm.benchmark                           # world models on the 64-trip benchmark, planner and learned driver; 2D car GIFs
 ```
+
+
+## 3. Learned sim agents for a whole city (`dwm/simagents.py`, 2026-11-27)
+
+Sections 1 and 2 predict one AV's future. Current traffic simulation instead learns a behaviour model for *every* road user and
+runs it in closed loop. It treats motion as tokens ([MotionLM](https://arxiv.org/abs/2309.16534),
+[SMART](https://arxiv.org/abs/2405.15677)) and scores how likely the real logs are under the simulated distribution
+([WOSAC](https://arxiv.org/abs/2305.12032)). Here the simulator's calibrated human drivers play the part of the real logs, so
+realism is measured against a known truth. The wider research map is in [`WORLD_MODELS_RESEARCH.md`](WORLD_MODELS_RESEARCH.md).
+
+```
+data    : 8 copies of Oakland x 600 s, calibrated humans only; every 5th step, every live vehicle:
+          28 observation features o -> the acceleration a it applied; a -> token (32 bins on [-8, 3] m/s^2)
+model   : MLP 28-256-256-32, cross-entropy, 6000 AdamW steps (2.1 M pairs, 137 s on 4 CPU cores)
+rollout : every vehicle flagged as policy-driven (p_av = 1, envelope off); each step it samples a token from p(. | o)
+          (+ uniform jitter inside the bin) or takes the arg-max; routes, lane changes and junction entry stay the rules
+realism : L_f = exp(mean log q_f(x)), x = held-out real samples, q_f = the rollout's histogram, f in
+          {speed, acceleration, jerk, gap to leader, time headway}; meta = mean_f L_f
+DAgger  : (post hoc) run the sampled model, label the states it visits with the rule driver's action, retrain on both
+```
+
+Held out, the model predicts the next token well: negative log-likelihood 0.21 nats against 2.17 for the marginal token
+distribution, top-1 accuracy 93 %. In closed loop it fails (`results/simagents/realism.json`; 8 copies x 600 s per cell):
+
+| who drives every vehicle | meta (relative to rerun) | crashes / 1000 veh-h | speed (km/h) | trips / veh-h |
+|---|---|---|---|---|
+| real drivers, held-out run | (reference) | 8.3 (5 crashes) | 15.95 | 6.08 |
+| real drivers, rerun (ceiling) | 0.117 (1.00) | 3.2 (2) | 15.49 | 5.80 |
+| IDM rule | 0.113 (0.96) | 1.5 (1) | 13.07 | 4.58 |
+| learned, sampled | 0.104 (0.89) | 5712 (3875) | 7.25 | 2.09 |
+| learned, arg-max | 0.068 (0.58) | 1375 (883) | 4.67 | 1.29 |
+| learned + 1 DAgger round (post hoc) | 0.097 (0.83) | 17.2 (11) | 15.22 | 5.68 |
+
+* **Pre-registered H1 failed** (`results/daily/2026-11-27/predictions_simagents.md`). Sampled agents score below the IDM rule
+  on the realism meta-metric: difference -0.0082 (95 % -0.0086 to -0.0079, permutation p 0.0003). As predicted, sampling beat
+  arg-max (+0.037, Holm p 0.0006), and the model stayed below the rerun ceiling (Holm p 0.0006).
+* **Good open-loop accuracy did not carry over to closed loop.** The 7 % of wrong tokens push vehicles into states the training data
+  never shows (a queue closing too fast), and the errors compound into chain crashes (GIF). This is the covariate shift that
+  closed-loop training ([CAT-K](https://arxiv.org/abs/2412.05334), [DAgger](https://arxiv.org/abs/1011.0686)) addresses.
+* **One DAgger round removed most of it.** Crashes fell from 3875 to 11, speed came back to 15.22 km/h (rerun 15.49) and trips to 5.68 per vehicle-hour (rerun 5.80).
+  But the meta-metric fell further (0.097), mostly on jerk: sampling a fresh token each 0.2 s step adds step-to-step noise.
+  A kinematic meta-metric alone misses the failure that matters. WOSAC also scores collisions, and this one should too.
+* **Limits.** Policy-driven rows that spawn during a run get the AV's driver parameters (headway 1.3 s, no aggressive drivers),
+  not the humans' mix, and the model sees only the 28 features, not the hidden traits.
+  The arg-max cell shows that a deterministic model also stalls the city. One random stream for each cell.
+
+![three futures](img/simagents_rollout.gif)
+
+![sim agents](img/simagents.png)
+
+```bash
+python -m dwm.simagents --quick                 # 2 copies, smoke test (~1 min)
+python -m dwm.simagents                         # data, train, the four cells, analysis (~9 min)
+python -m dwm.simagents --stage dagger && python -m dwm.simagents --stage cell:dagger && python -m dwm.simagents --stage analyse
+python -m dwm.simagents_plot && python -m dwm.simagents_plot --bench
+```

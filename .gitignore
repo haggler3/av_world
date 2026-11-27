@@ -26,3 +26,7 @@ results/easy/
 results/brakedemand/quick.json
 results/*/*_quick.json
 formal/.lake/
+
+# dwm.simagents training pairs (80 MB; rebuilt by `python -m dwm.simagents --stage data`)
+results/simagents/train_data.npz
+results/simagents_quick/

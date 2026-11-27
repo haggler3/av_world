@@ -1,0 +1,1 @@
+{"n_added": 1212806, "n_total": 3366456, "note": "states visited by the sampled model (seed 14, 8 copies x 600 s, every 5th step), labelled with the simulator rule action a_rule; added to the 2153650 original pairs; 6000 Adam steps. Rebuilt from the run log after the original file was overwritten."}

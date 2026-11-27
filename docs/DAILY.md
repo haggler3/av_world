@@ -90,7 +90,68 @@ Changes that add a capability. Several earlier ideas were dropped because one of
 30. **Reflex sensor** (2026-11-27): a perfect 10 m zero-delay sensor cut 2.0 s-delay crashes 272 -> 7. Next: give the reflex
     noise and misses; map the smallest range that matches clean sensors per delay; extend it to pedestrians and junctions.
 
+31. **Sim agents** (2026-11-27, second run): imitation alone crashes the city (3875 vs 2); DAgger fixes most of it. Next: a
+    collision term in the realism metric; closed-loop fine-tuning (CAT-K); token patches; run the sim agents in the new cities.
+    See the roadmap in [WORLD_MODELS_RESEARCH.md](WORLD_MODELS_RESEARCH.md).
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-27 (second run) - learned sim agents, five new cities, a research map
+
+**What changed.** New `dwm/simagents.py`: a next-token behaviour model for every vehicle in a city, run in closed loop inside
+the simulator and scored with a WOSAC-style realism metric. New: `dwm/simagents_plot.py` (GIF, figure),
+`tests/test_simagents.py` (5 tests). Five more cities from Overture release 2026-11-18.0 in `xnet/cities.py`: San Francisco,
+Phoenix, Austin, Los Angeles, Paris (`tests/test_cities.py`, [CITIES.md](CITIES.md)). A cited research map,
+[WORLD_MODELS_RESEARCH.md](WORLD_MODELS_RESEARCH.md). `xnet/` simulation code is untouched.
+
+**Why.** Learned traffic simulation now models every agent with next-token prediction ([MotionLM](https://arxiv.org/abs/2309.16534),
+[SMART](https://arxiv.org/abs/2405.15677)) and scores it in closed loop ([WOSAC](https://arxiv.org/abs/2305.12032)). av_world has
+a calibrated simulator, so it can measure a learned model's realism against a known truth.
+
+**How it works.** With $o$ the 28 observation features of a vehicle and $a$ the acceleration it applied:
+
+```
+data    : 8 Oakland copies x 600 s, humans only (seed 11), every 5th step: (o, token(a)), 32 bins on [-8, 3] m/s^2
+model   : MLP 28-256-256-32, cross-entropy, 6000 AdamW steps
+rollout : every vehicle policy-driven (p_av = 1, envelope off); sample a token (or arg-max) each 0.2 s step
+realism : L_f = exp(mean_x log q_f(x)) over held-out real samples x (seed 12), q_f the rollout histogram;
+          meta = mean of L_f over speed, acceleration, jerk, gap, headway
+```
+
+**Experiment** (pre-registered in `results/daily/2026-11-27/predictions_simagents.md`). Cells on seed 13, 8 copies x 600 s
+each. H1: meta(sampled) > meta(IDM rule), difference of per-copy means, bootstrap 95 % interval, permutation p < 0.05.
+Secondary (Holm, $m = 2$): S1 sampled > arg-max; S2 rerun of the real drivers > sampled.
+
+**Result** (`results/simagents/realism.json`).
+
+| who drives every vehicle | meta | crashes (per 1000 veh-h) | speed (km/h) |
+|---|---|---|---|
+| real drivers, rerun | 0.117 | 2 (3.2) | 15.49 |
+| IDM rule | 0.113 | 1 (1.5) | 13.07 |
+| learned, sampled | 0.104 | 3875 (5712) | 7.25 |
+| learned, arg-max | 0.068 | 883 (1375) | 4.67 |
+| learned + DAgger (added after the run) | 0.097 | 11 (17.2) | 15.22 |
+
+| test | difference (95 %) | p |
+|---|---|---|
+| **H1: sampled - IDM** | **-0.0082 (-0.0086 to -0.0079)** | **0.0003** |
+| S1: sampled - arg-max | +0.0365 (+0.0350 to +0.0381) | Holm 0.0006 |
+| S2: rerun - sampled | +0.0127 (+0.0124 to +0.0131) | Holm 0.0006 |
+
+**Not successful**: H1 went the wrong way. The model predicts held-out steps well (93 % top-1, 0.21 vs 2.17 nats for the
+marginal), but in closed loop its errors compound into chain crashes in queues. One DAgger round (states the sampled model
+visits, labelled with the rule's action) cut crashes from 3875 to 11 and restored speed, but lowered the meta-metric through
+jerk. So the kinematic meta-metric does not see the failure that matters; it needs a collision term.
+
+**Limits.** Policy-driven rows that spawn mid-run get the AV's driver parameters. One random stream per cell. The DAgger cell
+was not pre-registered.
+
+**Next.** Add collision and time-to-collision terms to the meta-metric and rescore the saved cells; CAT-K-style closed-loop
+fine-tuning; predict 5-step token patches (BehaviorGPT) to cut the jerk.
+
+Figures: `docs/img/simagents_rollout.gif`, `docs/img/simagents.png`, `docs/img/city_{san_francisco,phoenix,austin,los_angeles,paris}.png`.
 
 ---
 

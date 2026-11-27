@@ -1,11 +1,14 @@
-"""More cities: Midtown Manhattan, the Chicago Loop and central Boston, from the same open data as Pittsburgh (Overture Maps,
-built largely from OpenStreetMap). Each is about the size of the Oakland area.
+"""More cities from the same open data as Pittsburgh (Overture Maps, built largely from OpenStreetMap): Midtown Manhattan, the Chicago
+Loop, central Boston, San Francisco, Phoenix, Austin, Los Angeles and Paris. Each is about the size of the Oakland area.
 
     from xnet import cities
-    net, geo, info = cities.build("new_york")            # also "chicago", "boston"; av_world.make("new_york") works too
-    python -m xnet.cities fetch                           # refresh data/cities/*.parquet from Overture's public bucket (~10 s each)
+    net, geo, info = cities.build("new_york")            # any name in CITIES; av_world.make("new_york") works too
+    python -m xnet.cities fetch [names...]                # refresh data/cities/*.parquet from Overture's public bucket
+    python -m xnet.cities bundle [names...]               # trim them into av_world/_data
+    python -m xnet.cities survey [names...]               # the table in docs/CITIES.md
 
 The road segments are bundled with the package (av_world/_data), so nothing needs fetching. The metre grid is centred on each city.
+Each city records the Overture release its map came from. Every city must drive on the right: the simulator assumes right-hand traffic.
 """
 import os
 import sys
@@ -17,10 +20,16 @@ from pgh import mine
 from . import network as NW
 from . import osm
 
+OLD, NEW = "2026-09-23.1", "2026-11-18.0"  # Overture releases
 CITIES = {  # (west, south, east, north)
-    "new_york": dict(bbox=(-73.997, 40.748, -73.972, 40.763), name="Midtown Manhattan, New York (Times Square to Grand Central)"),
-    "chicago": dict(bbox=(-87.640, 41.874, -87.618, 41.889), name="the Loop, Chicago"),
-    "boston": dict(bbox=(-71.078, 42.345, -71.055, 42.360), name="Back Bay to Downtown Crossing, Boston"),
+    "new_york": dict(bbox=(-73.997, 40.748, -73.972, 40.763), name="Midtown Manhattan, New York (Times Square to Grand Central)", release=OLD),
+    "chicago": dict(bbox=(-87.640, 41.874, -87.618, 41.889), name="the Loop, Chicago", release=OLD),
+    "boston": dict(bbox=(-71.078, 42.345, -71.055, 42.360), name="Back Bay to Downtown Crossing, Boston", release=OLD),
+    "san_francisco": dict(bbox=(-122.417, 37.779, -122.389, 37.795), name="SoMa and the Financial District, San Francisco", release=NEW),
+    "phoenix": dict(bbox=(-112.087, 33.442, -112.060, 33.458), name="downtown Phoenix", release=NEW),
+    "austin": dict(bbox=(-97.756, 30.260, -97.730, 30.276), name="downtown Austin", release=NEW),
+    "los_angeles": dict(bbox=(-118.264, 34.039, -118.236, 34.055), name="downtown Los Angeles", release=NEW),
+    "paris": dict(bbox=(2.321, 48.863, 2.355, 48.879), name="Opéra and the Grands Boulevards, Paris", release=NEW),
 }
 COLS = ["id", "names", "class", "subclass", "connectors", "access_restrictions", "speed_limits", "geometry", "bbox"]
 
@@ -55,16 +64,17 @@ def build(name, **kw):
 
 
 def fetch(names=None):
+    """Download the named cities (default all) from the Overture release each one records."""
     from pgh import fetch as F
     os.makedirs("data/cities", exist_ok=True)
     for n in names or CITIES:
-        F.fetch("segment", f"data/cities/{n}_segments.parquet", CITIES[n]["bbox"])
+        F.fetch("segment", f"data/cities/{n}_segments.parquet", CITIES[n]["bbox"], release=CITIES[n]["release"])
 
 
-def bundle():
-    """Trim each city's file to the columns and rows the builder reads, into av_world/_data."""
+def bundle(names=None):
+    """Trim the named cities' files (default all) to the columns and rows the builder reads, into av_world/_data."""
     import pyarrow as pa
-    for n in CITIES:
+    for n in names or CITIES:
         keep = {r["id"] for r in rows(n)}
         t = pq.read_table(f"data/cities/{n}_segments.parquet", columns=COLS)
         t = t.filter(pa.array([i in keep for i in t["id"].to_pylist()]))
@@ -112,8 +122,9 @@ def snapshot(name, out, seconds=300.0, seed=0):
     return out
 
 
-def survey(n_envs=8, warm=300.0, seconds=600.0):
-    """Every city (and Oakland for reference): network size, throughput, and crashes by type with calibrated humans and 25 % rule-based AVs."""
+def survey(names=None, n_envs=8, warm=300.0, seconds=600.0, out_file=None):
+    """The named cities (default Oakland for reference and every city): network size, throughput, and crashes by type with calibrated
+    humans and 25 % rule-based AVs. Writes results/cities/survey.json, or `out_file` when given."""
     import json
     import time
 
@@ -125,7 +136,7 @@ def survey(n_envs=8, warm=300.0, seconds=600.0):
     knobs = json.load(open(data_path("calibration.json")))["calibrated"]
     beh = X.Behaviour(**knobs, p_av=0.25)
     out = {}
-    for name in ["oakland"] + list(CITIES):
+    for name in names or ["oakland"] + list(CITIES):
         net, geo, info = NW.build(name) if name == "oakland" else build(name)
         sim = X.Sim(net, n_envs=n_envs, beh=beh, seed=1, reroute_s=300)
         sim.run(warm)
@@ -142,14 +153,16 @@ def survey(n_envs=8, warm=300.0, seconds=600.0):
                      "crashes_per_area_hour": {c: d[c] / hours for c in X.CRASH_NAMES}, "av_crashes": d["av_crash"], "av_hours": d["av_veh_s"] / 3600}
         print(name, {k: (round(v, 1) if isinstance(v, float) else v) for k, v in out[name].items() if k != "crashes_per_area_hour"}, flush=True)
     os.makedirs("results/cities", exist_ok=True)
-    json.dump(out, open("results/cities/survey.json", "w"), indent=1, default=float)
+    json.dump(out, open(out_file or "results/cities/survey.json", "w"), indent=1, default=float)
     return out
 
 
 if __name__ == "__main__":
-    cmd = sys.argv[1]
+    cmd, names = sys.argv[1], sys.argv[2:] or None
     if cmd == "snapshots":
-        for n in CITIES:
+        for n in names or CITIES:
             print(snapshot(n, f"docs/img/city_{n}.png"))
+    elif cmd == "survey" and names:  # a subset goes to its own file so the full survey.json is kept
+        survey(names, out_file=f"results/cities/survey_{'_'.join(names)}.json")
     else:
-        {"fetch": fetch, "bundle": bundle, "survey": survey}[cmd]()
+        {"fetch": fetch, "bundle": bundle, "survey": survey}[cmd](names)
