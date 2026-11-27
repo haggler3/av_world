@@ -15,7 +15,7 @@ Changes that add a capability. Several earlier ideas were dropped because one of
    (`avlab.visibility`, the AV's leader is hidden beyond sight, optional phantom obstacle at the sight edge; no `xnet/` change).
    Still open: human drivers (needs a default-off `xnet/` change), and sight limits on signals, stop lines and pedestrians.
 4. ~~**AV sensor noise**~~ (done 2026-11-20, second run: `avlab.sensornoise`, range / speed error and missed detections on the leader,
-   per step, fixed seed; the envelope absorbs it). ~~Correlated misses~~ (done 2026-11-21: `avlab.tracker`, memory in the policy slot through `aux`, Markov misses and a hold tracker). ~~Latency~~ (done 2026-11-22: `avlab.latency`, a ring of delayed leader observations plus constant-velocity prediction). Backlog 4 is closed.
+   per step, fixed seed; the envelope absorbs it). ~~Correlated misses~~ (done 2026-11-21: `avlab.tracker`, memory in the policy slot through `aux`, Markov misses and a hold tracker). ~~Latency~~ (done 2026-11-22: `avlab.latency`, a ring of delayed leader observations plus constant-velocity prediction). Backlog 4 is closed. Short-range zero-delay fusion added 2026-11-27 (`avlab.reflex`).
 5. **A speed benchmark** (timing tool `avlab.speedcheck` added 2026-11-18; still to do: the failing test) in `tests/` that fails when 200 steps of 16 Oakland copies get more than 5 % slower.
 6. **Seeds on every AVBench row**: the leaderboard with 95 % intervals from several random streams.
 7. **A scenario generator** that searches behaviour parameters for AV failures (cross-entropy method), with a replay GIF per failure.
@@ -87,7 +87,70 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     (18x the right-view rate); unseen new leaders 3.5x but only 26 of 272. Next: leader identity in `avlab.latencyattr`
     (swap vs braking); look-back window for `ok` crashes; a delay-aware guard on downward gap jumps.
 
+30. **Reflex sensor** (2026-11-27): a perfect 10 m zero-delay sensor cut 2.0 s-delay crashes 272 -> 7. Next: give the reflex
+    noise and misses; map the smallest range that matches clean sensors per delay; extend it to pedestrians and junctions.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-27 - a zero-delay short-range sensor fused with a delayed view
+
+**What changed.** New `avlab/reflex.py`: a second, short-range sensor for the AV's leader with no delay, fused with the delayed
+long-range view of `avlab.latency`. The fused view keeps the smaller of the two gaps. New: `avlab/reflexbench.py` (cells and
+tests), `avlab/reflex_plot.py` (cut-in GIF, figure), `tests/test_reflex.py` (3 tests: range 0 equals `avlab.latency`, a cut-in
+inside the range is seen at once, a farther true leader is ignored). `xnet/` is untouched.
+
+**Why.** On 2026-11-26, 38 % of the crashes under a 2.0 s delay came from steps where the delayed view over-estimated the gap,
+mostly after cut-ins. Real stacks pair slow long-range perception with fast short-range sensing; latency-aware fusion of a slow
+and a fast sensor is standard in tracking ([arXiv 2505.20043](https://arxiv.org/abs/2505.20043)), and collision avoidance needs a
+high detection rate to leave reaction time ([arXiv 1807.10573](https://arxiv.org/abs/1807.10573)).
+
+**How it works.** Per AV row and per 0.2 s step, with true leader gap $g$ and speed $v_\ell$, and the delayed, predicted view
+$(\hat g, \hat v_\ell)$ from `avlab.latency`:
+
+```
+obs_lr, mem = latency.perceive(obs_true, mem)        # 2.0 s delay, constant-velocity prediction
+use = true leader exists and g <= R and (obs_lr shows no leader or g < g_hat)
+leader columns (8-11, 25, 26) = simulator formulas for (g, v_l) where use, else obs_lr's columns
+```
+
+With $R = 0$ the AV sees exactly what `avlab.latency` shows (test, and the full run `rf0` reproduces the saved 272 crashes).
+
+**Experiment** (pre-registered in `results/daily/2026-11-27/predictions.md`). Same setup and keys as 2026-11-22 (Oakland,
+16 copies, keys 43000+i, half AVs, friction 1.0, envelope off, IDM, 120 s warm-up, 600 s), so the saved cells `comp2.0` and
+`clean` are the comparisons. $\lambda$ = AV crashes per AV-hour. H1: with $R = 10$ m, $\mathrm{RR} = \lambda_{R=10} / \lambda_\text{no reflex} < 1$,
+exact conditional Poisson test, two-sided $p < 0.05$; expected RR about 0.4. Power: the reference arm has 272 crashes; RR 0.5
+needs about 33 per arm. Secondary (Holm, $m = 2$): S1 $R = 20$ vs $R = 10$ below 1; S2 $R = 10$ vs clean sensors above 1.
+
+**Result** (`results/reflex/reflex.json`).
+
+| cell | AV crashes / AV-hours | per AV-hour (95 %) | AV speed (km/h) |
+|---|---|---|---|
+| clean sensors (saved) | 5 / 582.4 | 0.009 (0.003-0.020) | 14.44 |
+| 2.0 s delay, no reflex (saved; `rf0` identical) | 272 / 576.7 | 0.472 (0.417-0.531) | 13.67 |
+| + 5 m reflex (added after the pre-registered runs) | 45 / 585.1 | 0.077 (0.056-0.103) | 14.12 |
+| + 10 m reflex | 7 / 587.1 | 0.012 (0.005-0.025) | 14.13 |
+| + 20 m reflex | 0 / 586.7 | 0 (0-0.006) | 14.14 |
+
+| test | RR (95 %) | p |
+|---|---|---|
+| **H1: 10 m reflex / no reflex** | **0.025 (0.010-0.053)** | **2.5e-72** |
+| S1: 20 m / 10 m | 0 (0-0.69) | Holm 0.031 |
+| S2: 10 m / clean | 1.39 (0.38-5.55) | Holm 0.77 |
+
+**Successful**: H1 met its bar, `rf0` reproduces the saved cell exactly, and the tests pass. A 10 m reflex removed 97.5 % of the
+long-delay crashes, and AVs drove faster than without it, likely because fewer wrecks block the road. S2 was predicted wrong:
+with 10 m of reflex the AV is not distinguishable from one with clean sensors, though 12 crashes in the two arms cannot rule
+out a ratio up to 5.5. The 5 m cell (45 crashes) shows that the benefit grows steeply with range.
+
+**Limits.** The reflex sensor is perfect inside its range (no noise, no misses) and covers only the same-lane leader. One random
+stream. The 2.0 s delay applies to the leader only, not to signals or pedestrians.
+
+**Next.** A noisy, missing reflex sensor (combine with `avlab.sensornoise` / `avlab.tracker`); the smallest range that matches
+clean sensors at 1.0 and 1.4 s delays (a range-delay map); the reflex for pedestrians and junction conflicts.
+
+Figures: `docs/img/reflex_cutin.gif`, `docs/img/reflex.png`. Results: `results/reflex/*.json`.
 
 ---
 

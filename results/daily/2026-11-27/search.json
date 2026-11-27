@@ -1,0 +1,160 @@
+{
+ "date": "2026-11-27",
+ "rule": "Q=U*R*p/sqrt(b+e); pick argmax Q+1.2*p~*sqrt(N)/(1+n); 3 rounds",
+ "rounds": [
+  "1: reflex (grep hook)",
+  "2: cem_falsify (web prior art + grep -> b ~30, p 0.45)",
+  "3: reflex (quick run ok)"
+ ],
+ "kept": "reflex",
+ "candidates": [
+  {
+   "name": "reflex",
+   "idea": "Zero-delay short-range reflex sensor fused with the 2 s delayed view (avlab.reflex)",
+   "U": 3,
+   "R": 4,
+   "p": 0.8,
+   "b_min": 10,
+   "e_min": 8,
+   "Q": 2.263,
+   "checks": [
+    "grep: avlab.latency.perceive receives the true obs, so a fused view is a wrapper (hook exists)",
+    "30 s quick run: both cells compile and run, 0 crashes in 2 copies x 40 s (smoke)"
+   ],
+   "n": 2,
+   "dropped": null,
+   "puct": 2.376
+  },
+  {
+   "name": "cem_falsify",
+   "idea": "Cross-entropy scenario generator over behaviour parameters (backlog 7)",
+   "U": 5,
+   "R": 4,
+   "p": 0.45,
+   "b_min": 30,
+   "e_min": 10,
+   "Q": 1.423,
+   "checks": [
+    "web: O'Kelly et al. 2018 arXiv 1811.00145 CE importance sampling; Corso et al. 2004.06801 AST survey",
+    "grep: Behaviour has ~40 fields; a per-copy parameter vmap needs plumbing in examples/_common -> b ~30 min"
+   ],
+   "n": 2,
+   "dropped": "lower Q",
+   "puct": 1.486
+  },
+  {
+   "name": "speed_test",
+   "idea": "Speed benchmark test that fails when 200 steps x 16 copies get 5 % slower (backlog 5)",
+   "U": 3,
+   "R": 2,
+   "p": 0.9,
+   "b_min": 8,
+   "e_min": 3,
+   "Q": 1.628,
+   "checks": [],
+   "n": 0,
+   "dropped": "lower Q",
+   "puct": 2.008
+  },
+  {
+   "name": "leader_id",
+   "idea": "Leader identity in avlab.latencyattr (swap vs braking)",
+   "U": 2,
+   "R": 3,
+   "p": 0.7,
+   "b_min": 12,
+   "e_min": 5,
+   "Q": 1.019,
+   "checks": [],
+   "n": 0,
+   "dropped": "lower Q",
+   "puct": 1.315
+  },
+  {
+   "name": "lookback",
+   "idea": "Look-back window for 'ok' crashes in latencyattr",
+   "U": 1,
+   "R": 3,
+   "p": 0.8,
+   "b_min": 6,
+   "e_min": 5,
+   "Q": 0.724,
+   "checks": [],
+   "n": 0,
+   "dropped": "lower Q",
+   "puct": 1.062
+  },
+  {
+   "name": "jump_guard",
+   "idea": "Delay-aware guard on downward gap jumps in the delayed stream",
+   "U": 2,
+   "R": 3,
+   "p": 0.4,
+   "b_min": 10,
+   "e_min": 8,
+   "Q": 0.566,
+   "checks": [
+    "reasoning: the jump is only visible after D steps, the over-estimate window is before it; low p"
+   ],
+   "n": 1,
+   "dropped": "lower Q",
+   "puct": 0.651
+  },
+  {
+   "name": "human_sight",
+   "idea": "Sight limits for human drivers (default-off xnet field)",
+   "U": 4,
+   "R": 4,
+   "p": 0.5,
+   "b_min": 25,
+   "e_min": 10,
+   "Q": 1.352,
+   "checks": [],
+   "n": 0,
+   "dropped": "lower Q",
+   "puct": 1.563
+  },
+  {
+   "name": "seeds_board",
+   "idea": "Seeds with intervals on every AVBench row (backlog 6)",
+   "U": 4,
+   "R": 3,
+   "p": 0.8,
+   "b_min": 10,
+   "e_min": 45,
+   "Q": 1.294,
+   "checks": [],
+   "n": 0,
+   "dropped": "b+e > 40 min",
+   "puct": 1.632
+  },
+  {
+   "name": "fog_banks",
+   "idea": "Sight per street with patch_links (fog banks)",
+   "U": 3,
+   "R": 4,
+   "p": 0.5,
+   "b_min": 20,
+   "e_min": 10,
+   "Q": 1.095,
+   "checks": [],
+   "n": 0,
+   "dropped": "lower Q",
+   "puct": 1.306
+  },
+  {
+   "name": "ice_bridges",
+   "idea": "Ice on bridges/steep links vs random mask of same length",
+   "U": 2,
+   "R": 4,
+   "p": 0.5,
+   "b_min": 15,
+   "e_min": 10,
+   "Q": 0.8,
+   "checks": [],
+   "n": 0,
+   "dropped": "lower Q",
+   "puct": 1.011
+  }
+ ]
+}
