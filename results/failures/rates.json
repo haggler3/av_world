@@ -1,0 +1,1073 @@
+{
+ "settings": {
+  "p_av": 0.25,
+  "warm_s": 120.0,
+  "seconds": 600.0,
+  "E": 16,
+  "av_policy": "rule-based AV with the safety envelope (xnet.sim)",
+  "humans": "calibrated (avrl.ladder.knobs)",
+  "conditions": {
+   "dry": {
+    "friction": 1.0
+   },
+   "wet": {
+    "friction": 0.5
+   }
+  },
+  "window_s": [
+   8.0,
+   3.0
+  ],
+  "track_radius_m": 60.0,
+  "map_radius_m": 120.0
+ },
+ "rates": [
+  {
+   "city": "austin",
+   "name": "downtown Austin",
+   "condition": "dry",
+   "veh_hours": 1129.6,
+   "av_hours": 243.5,
+   "crashes": 44,
+   "per_1000_veh_h": 38.95,
+   "ci": [
+    28.3,
+    52.29
+   ],
+   "av_crashes": 14,
+   "av_per_1000_av_h": 57.5,
+   "av_ci": [
+    31.44,
+    96.48
+   ],
+   "types": {
+    "rear-end": 19,
+    "angle": 1,
+    "left-turn": 2,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 20,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 21.9,
+   "mean_speed_kmh": 15.93,
+   "sim_crashes": 44,
+   "sim_types": {
+    "rear-end": 19,
+    "angle": 1,
+    "left-turn": 2,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 20,
+    "bicycle": 0
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 44,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "boston",
+   "name": "Back Bay to Downtown Crossing, Boston",
+   "condition": "dry",
+   "veh_hours": 646.4,
+   "av_hours": 140.8,
+   "crashes": 17,
+   "per_1000_veh_h": 26.3,
+   "ci": [
+    15.32,
+    42.11
+   ],
+   "av_crashes": 2,
+   "av_per_1000_av_h": 14.2,
+   "av_ci": [
+    1.72,
+    51.31
+   ],
+   "types": {
+    "rear-end": 0,
+    "angle": 0,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 3,
+    "pedestrian": 14,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 24.6,
+   "mean_speed_kmh": 14.13,
+   "sim_crashes": 17,
+   "sim_types": {
+    "rear-end": 0,
+    "angle": 0,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 3,
+    "pedestrian": 14,
+    "bicycle": 0
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 17,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "chicago",
+   "name": "the Loop, Chicago",
+   "condition": "dry",
+   "veh_hours": 845.7,
+   "av_hours": 184.3,
+   "crashes": 5,
+   "per_1000_veh_h": 5.91,
+   "ci": [
+    1.92,
+    13.8
+   ],
+   "av_crashes": 2,
+   "av_per_1000_av_h": 10.85,
+   "av_ci": [
+    1.31,
+    39.2
+   ],
+   "types": {
+    "rear-end": 0,
+    "angle": 0,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 0,
+    "pedestrian": 5,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 35.6,
+   "mean_speed_kmh": 15.54,
+   "sim_crashes": 5,
+   "sim_types": {
+    "rear-end": 0,
+    "angle": 0,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 0,
+    "pedestrian": 5,
+    "bicycle": 0
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 5,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "downtown",
+   "name": "Downtown, Pittsburgh",
+   "condition": "dry",
+   "veh_hours": 522.9,
+   "av_hours": 109.5,
+   "crashes": 11,
+   "per_1000_veh_h": 21.03,
+   "ci": [
+    10.5,
+    37.64
+   ],
+   "av_crashes": 3,
+   "av_per_1000_av_h": 27.4,
+   "av_ci": [
+    5.65,
+    80.08
+   ],
+   "types": {
+    "rear-end": 3,
+    "angle": 0,
+    "left-turn": 4,
+    "sideswipe": 0,
+    "merge": 3,
+    "pedestrian": 1,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 22.1,
+   "mean_speed_kmh": 13.41,
+   "sim_crashes": 11,
+   "sim_types": {
+    "rear-end": 3,
+    "angle": 0,
+    "left-turn": 4,
+    "sideswipe": 0,
+    "merge": 3,
+    "pedestrian": 1,
+    "bicycle": 0
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 11,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "los_angeles",
+   "name": "downtown Los Angeles",
+   "condition": "dry",
+   "veh_hours": 1879.0,
+   "av_hours": 411.4,
+   "crashes": 81,
+   "per_1000_veh_h": 43.11,
+   "ci": [
+    34.23,
+    53.58
+   ],
+   "av_crashes": 27,
+   "av_per_1000_av_h": 65.64,
+   "av_ci": [
+    43.25,
+    95.5
+   ],
+   "types": {
+    "rear-end": 28,
+    "angle": 8,
+    "left-turn": 7,
+    "sideswipe": 0,
+    "merge": 3,
+    "pedestrian": 34,
+    "bicycle": 1
+   },
+   "median_impact_kmh": 23.3,
+   "mean_speed_kmh": 14.64,
+   "sim_crashes": 84,
+   "sim_types": {
+    "rear-end": 30,
+    "angle": 8,
+    "left-turn": 7,
+    "sideswipe": 0,
+    "merge": 3,
+    "pedestrian": 35,
+    "bicycle": 1
+   },
+   "type_mismatch": 3,
+   "scenarios_cut": 81,
+   "lost_at_edges": 3
+  },
+  {
+   "city": "new_york",
+   "name": "Midtown Manhattan, New York (Times Square to Grand Central)",
+   "condition": "dry",
+   "veh_hours": 640.5,
+   "av_hours": 137.1,
+   "crashes": 7,
+   "per_1000_veh_h": 10.93,
+   "ci": [
+    4.39,
+    22.52
+   ],
+   "av_crashes": 3,
+   "av_per_1000_av_h": 21.88,
+   "av_ci": [
+    4.51,
+    63.95
+   ],
+   "types": {
+    "rear-end": 2,
+    "angle": 0,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 2,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 20.1,
+   "mean_speed_kmh": 18.55,
+   "sim_crashes": 8,
+   "sim_types": {
+    "rear-end": 3,
+    "angle": 0,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 2,
+    "bicycle": 0
+   },
+   "type_mismatch": 1,
+   "scenarios_cut": 7,
+   "lost_at_edges": 1
+  },
+  {
+   "city": "oakland",
+   "name": "Oakland, Pittsburgh",
+   "condition": "dry",
+   "veh_hours": 1253.6,
+   "av_hours": 270.7,
+   "crashes": 9,
+   "per_1000_veh_h": 7.18,
+   "ci": [
+    3.28,
+    13.63
+   ],
+   "av_crashes": 2,
+   "av_per_1000_av_h": 7.39,
+   "av_ci": [
+    0.89,
+    26.69
+   ],
+   "types": {
+    "rear-end": 3,
+    "angle": 0,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 3,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 18.0,
+   "mean_speed_kmh": 15.66,
+   "sim_crashes": 9,
+   "sim_types": {
+    "rear-end": 3,
+    "angle": 0,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 3,
+    "bicycle": 0
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 9,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "paris",
+   "name": "Op\u00e9ra and the Grands Boulevards, Paris",
+   "condition": "dry",
+   "veh_hours": 703.3,
+   "av_hours": 155.2,
+   "crashes": 20,
+   "per_1000_veh_h": 28.44,
+   "ci": [
+    17.37,
+    43.92
+   ],
+   "av_crashes": 7,
+   "av_per_1000_av_h": 45.11,
+   "av_ci": [
+    18.14,
+    92.95
+   ],
+   "types": {
+    "rear-end": 3,
+    "angle": 1,
+    "left-turn": 7,
+    "sideswipe": 0,
+    "merge": 5,
+    "pedestrian": 4,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 29.8,
+   "mean_speed_kmh": 14.68,
+   "sim_crashes": 20,
+   "sim_types": {
+    "rear-end": 3,
+    "angle": 0,
+    "left-turn": 8,
+    "sideswipe": 0,
+    "merge": 5,
+    "pedestrian": 4,
+    "bicycle": 0
+   },
+   "type_mismatch": 2,
+   "scenarios_cut": 20,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "phoenix",
+   "name": "downtown Phoenix",
+   "condition": "dry",
+   "veh_hours": 1019.7,
+   "av_hours": 217.2,
+   "crashes": 26,
+   "per_1000_veh_h": 25.5,
+   "ci": [
+    16.66,
+    37.36
+   ],
+   "av_crashes": 4,
+   "av_per_1000_av_h": 18.42,
+   "av_ci": [
+    5.02,
+    47.15
+   ],
+   "types": {
+    "rear-end": 1,
+    "angle": 1,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 1,
+    "pedestrian": 22,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 34.1,
+   "mean_speed_kmh": 17.18,
+   "sim_crashes": 26,
+   "sim_types": {
+    "rear-end": 1,
+    "angle": 1,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 1,
+    "pedestrian": 22,
+    "bicycle": 0
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 26,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "san_francisco",
+   "name": "SoMa and the Financial District, San Francisco",
+   "condition": "dry",
+   "veh_hours": 1325.6,
+   "av_hours": 287.5,
+   "crashes": 11,
+   "per_1000_veh_h": 8.3,
+   "ci": [
+    4.14,
+    14.85
+   ],
+   "av_crashes": 4,
+   "av_per_1000_av_h": 13.91,
+   "av_ci": [
+    3.79,
+    35.62
+   ],
+   "types": {
+    "rear-end": 6,
+    "angle": 1,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 2,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 20.1,
+   "mean_speed_kmh": 12.34,
+   "sim_crashes": 11,
+   "sim_types": {
+    "rear-end": 6,
+    "angle": 1,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 2,
+    "bicycle": 0
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 11,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "squirrel_hill",
+   "name": "Squirrel Hill, Pittsburgh",
+   "condition": "dry",
+   "veh_hours": 809.7,
+   "av_hours": 167.9,
+   "crashes": 7,
+   "per_1000_veh_h": 8.65,
+   "ci": [
+    3.48,
+    17.81
+   ],
+   "av_crashes": 2,
+   "av_per_1000_av_h": 11.91,
+   "av_ci": [
+    1.44,
+    43.04
+   ],
+   "types": {
+    "rear-end": 0,
+    "angle": 1,
+    "left-turn": 4,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 0,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 23.4,
+   "mean_speed_kmh": 16.51,
+   "sim_crashes": 7,
+   "sim_types": {
+    "rear-end": 0,
+    "angle": 0,
+    "left-turn": 5,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 0,
+    "bicycle": 0
+   },
+   "type_mismatch": 2,
+   "scenarios_cut": 7,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "austin",
+   "name": "downtown Austin",
+   "condition": "wet",
+   "veh_hours": 1125.9,
+   "av_hours": 242.9,
+   "crashes": 68,
+   "per_1000_veh_h": 60.4,
+   "ci": [
+    46.9,
+    76.57
+   ],
+   "av_crashes": 21,
+   "av_per_1000_av_h": 86.45,
+   "av_ci": [
+    53.52,
+    132.15
+   ],
+   "types": {
+    "rear-end": 23,
+    "angle": 1,
+    "left-turn": 2,
+    "sideswipe": 0,
+    "merge": 6,
+    "pedestrian": 35,
+    "bicycle": 1
+   },
+   "median_impact_kmh": 20.1,
+   "mean_speed_kmh": 16.14,
+   "sim_crashes": 69,
+   "sim_types": {
+    "rear-end": 23,
+    "angle": 1,
+    "left-turn": 2,
+    "sideswipe": 0,
+    "merge": 6,
+    "pedestrian": 36,
+    "bicycle": 1
+   },
+   "type_mismatch": 1,
+   "scenarios_cut": 68,
+   "lost_at_edges": 1
+  },
+  {
+   "city": "boston",
+   "name": "Back Bay to Downtown Crossing, Boston",
+   "condition": "wet",
+   "veh_hours": 643.8,
+   "av_hours": 139.2,
+   "crashes": 54,
+   "per_1000_veh_h": 83.88,
+   "ci": [
+    63.01,
+    109.44
+   ],
+   "av_crashes": 15,
+   "av_per_1000_av_h": 107.79,
+   "av_ci": [
+    60.33,
+    177.79
+   ],
+   "types": {
+    "rear-end": 4,
+    "angle": 2,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 11,
+    "pedestrian": 36,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 27.6,
+   "mean_speed_kmh": 14.27,
+   "sim_crashes": 55,
+   "sim_types": {
+    "rear-end": 4,
+    "angle": 2,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 11,
+    "pedestrian": 37,
+    "bicycle": 0
+   },
+   "type_mismatch": 1,
+   "scenarios_cut": 54,
+   "lost_at_edges": 1
+  },
+  {
+   "city": "chicago",
+   "name": "the Loop, Chicago",
+   "condition": "wet",
+   "veh_hours": 844.6,
+   "av_hours": 185.3,
+   "crashes": 33,
+   "per_1000_veh_h": 39.07,
+   "ci": [
+    26.9,
+    54.87
+   ],
+   "av_crashes": 10,
+   "av_per_1000_av_h": 53.96,
+   "av_ci": [
+    25.88,
+    99.24
+   ],
+   "types": {
+    "rear-end": 8,
+    "angle": 3,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 16,
+    "bicycle": 4
+   },
+   "median_impact_kmh": 27.4,
+   "mean_speed_kmh": 15.58,
+   "sim_crashes": 34,
+   "sim_types": {
+    "rear-end": 8,
+    "angle": 3,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 2,
+    "pedestrian": 17,
+    "bicycle": 4
+   },
+   "type_mismatch": 1,
+   "scenarios_cut": 33,
+   "lost_at_edges": 1
+  },
+  {
+   "city": "downtown",
+   "name": "Downtown, Pittsburgh",
+   "condition": "wet",
+   "veh_hours": 529.4,
+   "av_hours": 110.0,
+   "crashes": 42,
+   "per_1000_veh_h": 79.34,
+   "ci": [
+    57.18,
+    107.24
+   ],
+   "av_crashes": 15,
+   "av_per_1000_av_h": 136.36,
+   "av_ci": [
+    76.32,
+    224.9
+   ],
+   "types": {
+    "rear-end": 4,
+    "angle": 7,
+    "left-turn": 10,
+    "sideswipe": 0,
+    "merge": 11,
+    "pedestrian": 9,
+    "bicycle": 1
+   },
+   "median_impact_kmh": 27.7,
+   "mean_speed_kmh": 13.06,
+   "sim_crashes": 42,
+   "sim_types": {
+    "rear-end": 4,
+    "angle": 7,
+    "left-turn": 10,
+    "sideswipe": 0,
+    "merge": 11,
+    "pedestrian": 9,
+    "bicycle": 1
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 42,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "los_angeles",
+   "name": "downtown Los Angeles",
+   "condition": "wet",
+   "veh_hours": 1878.3,
+   "av_hours": 410.1,
+   "crashes": 165,
+   "per_1000_veh_h": 87.85,
+   "ci": [
+    74.95,
+    102.32
+   ],
+   "av_crashes": 52,
+   "av_per_1000_av_h": 126.8,
+   "av_ci": [
+    94.7,
+    166.29
+   ],
+   "types": {
+    "rear-end": 33,
+    "angle": 19,
+    "left-turn": 10,
+    "sideswipe": 0,
+    "merge": 27,
+    "pedestrian": 68,
+    "bicycle": 8
+   },
+   "median_impact_kmh": 25.7,
+   "mean_speed_kmh": 14.5,
+   "sim_crashes": 167,
+   "sim_types": {
+    "rear-end": 34,
+    "angle": 20,
+    "left-turn": 9,
+    "sideswipe": 0,
+    "merge": 27,
+    "pedestrian": 69,
+    "bicycle": 8
+   },
+   "type_mismatch": 4,
+   "scenarios_cut": 165,
+   "lost_at_edges": 2
+  },
+  {
+   "city": "new_york",
+   "name": "Midtown Manhattan, New York (Times Square to Grand Central)",
+   "condition": "wet",
+   "veh_hours": 643.5,
+   "av_hours": 137.8,
+   "crashes": 12,
+   "per_1000_veh_h": 18.65,
+   "ci": [
+    9.63,
+    32.57
+   ],
+   "av_crashes": 5,
+   "av_per_1000_av_h": 36.27,
+   "av_ci": [
+    11.78,
+    84.65
+   ],
+   "types": {
+    "rear-end": 3,
+    "angle": 0,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 6,
+    "pedestrian": 3,
+    "bicycle": 0
+   },
+   "median_impact_kmh": 16.3,
+   "mean_speed_kmh": 18.44,
+   "sim_crashes": 13,
+   "sim_types": {
+    "rear-end": 4,
+    "angle": 0,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 6,
+    "pedestrian": 3,
+    "bicycle": 0
+   },
+   "type_mismatch": 1,
+   "scenarios_cut": 12,
+   "lost_at_edges": 1
+  },
+  {
+   "city": "oakland",
+   "name": "Oakland, Pittsburgh",
+   "condition": "wet",
+   "veh_hours": 1250.2,
+   "av_hours": 268.8,
+   "crashes": 39,
+   "per_1000_veh_h": 31.19,
+   "ci": [
+    22.18,
+    42.64
+   ],
+   "av_crashes": 10,
+   "av_per_1000_av_h": 37.2,
+   "av_ci": [
+    17.84,
+    68.42
+   ],
+   "types": {
+    "rear-end": 5,
+    "angle": 0,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 8,
+    "pedestrian": 16,
+    "bicycle": 10
+   },
+   "median_impact_kmh": 23.5,
+   "mean_speed_kmh": 15.66,
+   "sim_crashes": 39,
+   "sim_types": {
+    "rear-end": 5,
+    "angle": 0,
+    "left-turn": 0,
+    "sideswipe": 0,
+    "merge": 8,
+    "pedestrian": 16,
+    "bicycle": 10
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 39,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "paris",
+   "name": "Op\u00e9ra and the Grands Boulevards, Paris",
+   "condition": "wet",
+   "veh_hours": 704.6,
+   "av_hours": 155.3,
+   "crashes": 49,
+   "per_1000_veh_h": 69.54,
+   "ci": [
+    51.45,
+    91.94
+   ],
+   "av_crashes": 10,
+   "av_per_1000_av_h": 64.37,
+   "av_ci": [
+    30.87,
+    118.38
+   ],
+   "types": {
+    "rear-end": 8,
+    "angle": 1,
+    "left-turn": 5,
+    "sideswipe": 0,
+    "merge": 15,
+    "pedestrian": 17,
+    "bicycle": 3
+   },
+   "median_impact_kmh": 29.3,
+   "mean_speed_kmh": 14.36,
+   "sim_crashes": 49,
+   "sim_types": {
+    "rear-end": 8,
+    "angle": 1,
+    "left-turn": 5,
+    "sideswipe": 0,
+    "merge": 15,
+    "pedestrian": 17,
+    "bicycle": 3
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 49,
+   "lost_at_edges": 0
+  },
+  {
+   "city": "phoenix",
+   "name": "downtown Phoenix",
+   "condition": "wet",
+   "veh_hours": 1017.5,
+   "av_hours": 216.2,
+   "crashes": 109,
+   "per_1000_veh_h": 107.12,
+   "ci": [
+    87.96,
+    129.22
+   ],
+   "av_crashes": 31,
+   "av_per_1000_av_h": 143.41,
+   "av_ci": [
+    97.44,
+    203.56
+   ],
+   "types": {
+    "rear-end": 5,
+    "angle": 1,
+    "left-turn": 2,
+    "sideswipe": 0,
+    "merge": 9,
+    "pedestrian": 86,
+    "bicycle": 6
+   },
+   "median_impact_kmh": 36.2,
+   "mean_speed_kmh": 17.14,
+   "sim_crashes": 112,
+   "sim_types": {
+    "rear-end": 5,
+    "angle": 1,
+    "left-turn": 2,
+    "sideswipe": 0,
+    "merge": 9,
+    "pedestrian": 89,
+    "bicycle": 6
+   },
+   "type_mismatch": 3,
+   "scenarios_cut": 109,
+   "lost_at_edges": 3
+  },
+  {
+   "city": "san_francisco",
+   "name": "SoMa and the Financial District, San Francisco",
+   "condition": "wet",
+   "veh_hours": 1325.4,
+   "av_hours": 286.8,
+   "crashes": 61,
+   "per_1000_veh_h": 46.02,
+   "ci": [
+    35.2,
+    59.12
+   ],
+   "av_crashes": 18,
+   "av_per_1000_av_h": 62.77,
+   "av_ci": [
+    37.2,
+    99.2
+   ],
+   "types": {
+    "rear-end": 20,
+    "angle": 8,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 4,
+    "pedestrian": 23,
+    "bicycle": 5
+   },
+   "median_impact_kmh": 23.1,
+   "mean_speed_kmh": 12.27,
+   "sim_crashes": 63,
+   "sim_types": {
+    "rear-end": 21,
+    "angle": 9,
+    "left-turn": 1,
+    "sideswipe": 0,
+    "merge": 4,
+    "pedestrian": 23,
+    "bicycle": 5
+   },
+   "type_mismatch": 2,
+   "scenarios_cut": 61,
+   "lost_at_edges": 2
+  },
+  {
+   "city": "squirrel_hill",
+   "name": "Squirrel Hill, Pittsburgh",
+   "condition": "wet",
+   "veh_hours": 803.9,
+   "av_hours": 166.4,
+   "crashes": 19,
+   "per_1000_veh_h": 23.63,
+   "ci": [
+    14.23,
+    36.91
+   ],
+   "av_crashes": 3,
+   "av_per_1000_av_h": 18.03,
+   "av_ci": [
+    3.72,
+    52.68
+   ],
+   "types": {
+    "rear-end": 3,
+    "angle": 2,
+    "left-turn": 2,
+    "sideswipe": 0,
+    "merge": 3,
+    "pedestrian": 5,
+    "bicycle": 4
+   },
+   "median_impact_kmh": 21.5,
+   "mean_speed_kmh": 16.64,
+   "sim_crashes": 19,
+   "sim_types": {
+    "rear-end": 3,
+    "angle": 2,
+    "left-turn": 2,
+    "sideswipe": 0,
+    "merge": 3,
+    "pedestrian": 5,
+    "bicycle": 4
+   },
+   "type_mismatch": 0,
+   "scenarios_cut": 19,
+   "lost_at_edges": 0
+  }
+ ],
+ "wet_over_dry": [
+  {
+   "city": "austin",
+   "wet_over_dry": 1.55,
+   "ci": [
+    1.05,
+    2.32
+   ],
+   "p": 0.02332755713277332
+  },
+  {
+   "city": "boston",
+   "wet_over_dry": 3.19,
+   "ci": [
+    1.82,
+    5.87
+   ],
+   "p": 7.835764870152305e-06
+  },
+  {
+   "city": "chicago",
+   "wet_over_dry": 6.61,
+   "ci": [
+    2.56,
+    21.68
+   ],
+   "p": 2.3970332664487736e-06
+  },
+  {
+   "city": "downtown",
+   "wet_over_dry": 3.77,
+   "ci": [
+    1.91,
+    8.12
+   ],
+   "p": 2.2883395014849024e-05
+  },
+  {
+   "city": "los_angeles",
+   "wet_over_dry": 2.04,
+   "ci": [
+    1.55,
+    2.69
+   ],
+   "p": 6.750939887747591e-08
+  },
+  {
+   "city": "new_york",
+   "wet_over_dry": 1.71,
+   "ci": [
+    0.62,
+    5.12
+   ],
+   "p": 0.35930863005249897
+  },
+  {
+   "city": "oakland",
+   "wet_over_dry": 4.35,
+   "ci": [
+    2.07,
+    10.2
+   ],
+   "p": 9.02850770228067e-06
+  },
+  {
+   "city": "paris",
+   "wet_over_dry": 2.45,
+   "ci": [
+    1.43,
+    4.34
+   ],
+   "p": 0.0006364021480884762
+  },
+  {
+   "city": "phoenix",
+   "wet_over_dry": 4.2,
+   "ci": [
+    2.72,
+    6.72
+   ],
+   "p": 1.6171884946704258e-13
+  },
+  {
+   "city": "san_francisco",
+   "wet_over_dry": 5.55,
+   "ci": [
+    2.89,
+    11.69
+   ],
+   "p": 9.064930012943634e-10
+  },
+  {
+   "city": "squirrel_hill",
+   "wet_over_dry": 2.73,
+   "ci": [
+    1.1,
+    7.7
+   ],
+   "p": 0.018753433591910243
+  }
+ ]
+}

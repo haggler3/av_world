@@ -512,6 +512,19 @@
     </div>
 
     <div class="result">
+      <figure><img width="632" height="520" src="img/failures_atlas.gif" alt="Animation: six bird's-eye replays of crashes in Pittsburgh, San Francisco, Los Angeles, Chicago and Paris, one per city, from 8 seconds before the crash to 3 seconds after" loading="lazy"></figure>
+      <div class="text">
+        <div><h3>Failure logs across 11 city areas, in 10 AV tool formats</h3>
+          <p>Every crash becomes an 11&nbsp;s scenario in one schema, under the same drivers, AVs and settings in every city. Each is exported as Waymo Open Motion (proto JSON and TFRecord), Argoverse&nbsp;2, ScenarioNet, GPUDrive, CommonRoad, OpenSCENARIO&nbsp;+ OpenDRIVE, CARLA, BEV tensors and Parquet.
+            <a href="https://github.com/haggler3/av_world/blob/main/docs/FAILURE_LOGS.md">formats, checks and rates</a> &middot; <a href="img/failures_rates.png">figure</a>.</p></div>
+        <ul>
+          <li>889 scenarios from 21,543 vehicle-hours, 260 with an AV; every one passes Waymo's protos, the <code>av2</code> API, MetaDrive's sanity check and CommonRoad's reader.</li>
+          <li>Dry crash rates differ 7-fold between cities (5.9 to 43.1 per 1000 vehicle-hours); wet roads give 2.74&times; (95&nbsp;% 2.36&ndash;3.19).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="result">
       <figure><img width="691" height="309" src="img/simagents_rollout.gif" alt="Animation: from one shared start in Oakland, three 20-second futures; with the real drivers and with the DAgger-trained model a queue flows normally; with the imitation-only model the queue piles up in a chain of crashes" loading="lazy"></figure>
       <div class="text">
         <div><h3>Learned sim agents for a whole city</h3>

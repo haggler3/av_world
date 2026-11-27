@@ -94,7 +94,39 @@ Changes that add a capability. Several earlier ideas were dropped because one of
     collision term in the realism metric; closed-loop fine-tuning (CAT-K); token patches; run the sim agents in the new cities.
     See the roadmap in [WORLD_MODELS_RESEARCH.md](WORLD_MODELS_RESEARCH.md).
 
+32. **Failure logs** (2026-11-27, third run): 889 cross-city scenarios in 10 formats. Next: per-policy failure sets (learned
+    AVs, latency, sensor noise), near misses as events, GPUDrive / esmini load tests.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-27 (third run) - cross-comparable failure logs in 10 AV tool formats
+
+**What changed.** New `avlab/failurelog.py` (simulate a city with a 30 s history ring and cut every crash into an 11 s, 10 Hz
+scenario in one schema), `avlab/failure_export.py` (Waymo Open Motion proto JSON and TFRecord, Argoverse 2, ScenarioNet,
+GPUDrive, CommonRoad, OpenSCENARIO + OpenDRIVE, CARLA replay, BEV tensors, Parquet), `avlab/failure_dataset.py` (index, rates,
+exports, figure, atlas GIF), `tests/test_failurelog.py` (4 tests), [FAILURE_LOGS.md](FAILURE_LOGS.md). `xnet/` is untouched.
+
+**How it works.** The same settings run in every city: 16 copies × 600 s, calibrated humans, 25 % rule-based AVs, dry (friction
+1.0) and wet (0.5). Each new wreck is grouped into an event (25 m chain). The event is typed with the simulator's own rules,
+including the network's conflict type for junction hits. Its window [−8 s, +3 s] is interpolated to 10 Hz, with tracks within 60 m
+and the map within 120 m. Each format crops the window to its own convention.
+
+**Result.** 889 scenarios (260 with an AV) from 21,543 vehicle-hours over 11 city areas. The types match the simulator's counters
+to within 21 (15 are uncut edge crashes). Every scenario passes Waymo's protos (strict parse), the official `av2` loaders,
+MetaDrive's sanity check, CommonRoad's reader and an XML parse. Dry crash rates differ 7-fold between cities (Chicago Loop 5.9, downtown
+Los Angeles 43.1 per 1000 vehicle-hours). Wet roads give 2.74 times the dry rate (95 % 2.36-3.19); after a Holm correction it is
+significant in 8 of 11 cities.
+
+**Limits.** City differences come from geometry and inferred control under one US-calibrated behaviour model. GPUDrive,
+OpenSCENARIO and CARLA files were not run in those tools.
+
+**Next.** Run the cut with learned AV policies and the perception-fault models (latency, sensor noise) to get policy-specific
+failure sets; near misses (time-to-collision under 1 s) as a second event class; load the GPUDrive and OpenSCENARIO exports in
+their simulators.
+
+Figures: `docs/img/failures_atlas.gif`, `docs/img/failures_rates.png`.
 
 ---
 
