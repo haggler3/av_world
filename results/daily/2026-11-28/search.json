@@ -1,0 +1,16 @@
+{"date": "2026-11-28",
+ "formula": "Q = U*R*p/sqrt(b+e); select argmax Q + 1.2*p~*sqrt(N)/(1+n), 3 rounds",
+ "candidates": [
+  {"id": "reflexfault", "idea": "imperfect reflex sensor: bursty misses and range noise (DAILY next 30a)", "b": 10, "e": 10, "U": 4, "R": 4, "p": 0.7, "Q": 2.50, "n": 2, "probes": ["grep: avlab.reflex.fuse and avlab.tracker Markov chain reusable", "quick run 2 copies x 40 s: runs in 15 s"], "kept": true},
+  {"id": "rangedelay", "idea": "range-delay map: smallest reflex range that matches clean sensors at 1.0/1.4 s", "b": 5, "e": 15, "U": 3, "R": 4, "p": 0.5, "Q": 1.34, "n": 1, "probes": ["saved comp1.0 = 41, comp1.4 = 73 AV crashes; a 5 m cell would leave ~7-12 crashes, too few to separate the two theories"], "kept": false, "why": "underpowered with 16 copies per cell"},
+  {"id": "reflexped", "idea": "reflex for pedestrians and junction conflicts", "b": 25, "e": 10, "U": 4, "R": 4, "p": 0.4, "Q": 1.08, "n": 0, "kept": false, "why": "build > 25 min (pedestrian features are separate columns)"},
+  {"id": "cem", "idea": "cross-entropy scenario generator for AV failures (backlog 7)", "b": 30, "e": 10, "U": 5, "R": 4, "p": 0.4, "Q": 1.26, "n": 0, "kept": false, "why": "does not fit today's 60 min with the experiment"},
+  {"id": "speedtest", "idea": "speed regression test (backlog 5)", "b": 10, "e": 5, "U": 3, "R": 2, "p": 0.6, "Q": 0.93, "n": 1, "probes": ["avlab.speedcheck exists; wall-clock tests are flaky on shared CPUs"], "kept": false, "why": "flaky as a unit test"},
+  {"id": "seeds", "idea": "AVBench rows with seeds and intervals (backlog 6)", "b": 5, "e": 45, "U": 4, "R": 3, "p": 0.6, "Q": 1.02, "n": 0, "kept": false, "why": "> 40 min compute"},
+  {"id": "sighthuman", "idea": "sight limits for human drivers (default-off xnet field)", "b": 30, "e": 10, "U": 5, "R": 4, "p": 0.4, "Q": 1.26, "n": 0, "kept": false, "why": "xnet change + regression + speed check do not fit"},
+  {"id": "leaderswap", "idea": "leader identity in avlab.latencyattr (swap vs braking)", "b": 10, "e": 5, "U": 2, "R": 3, "p": 0.6, "Q": 0.93, "n": 0, "kept": false, "why": "analysis only, no new capability"},
+  {"id": "guard", "idea": "delay-aware guard on downward gap jumps", "b": 10, "e": 5, "U": 3, "R": 3, "p": 0.4, "Q": 0.93, "n": 0, "kept": false, "why": "the reflex already solves the same failure"},
+  {"id": "knee6", "idea": "friction knee: sixth stream at 0.9/0.95", "b": 2, "e": 10, "U": 1, "R": 2, "p": 0.6, "Q": 0.35, "n": 0, "kept": false, "why": "re-runs an old analysis on new seeds"}
+ ],
+ "prior_art": ["https://arxiv.org/abs/2504.13420", "https://arxiv.org/abs/2506.05780"],
+ "kept": ["reflexfault"]}

@@ -15,7 +15,7 @@ Changes that add a capability. Several earlier ideas were dropped because one of
    (`avlab.visibility`, the AV's leader is hidden beyond sight, optional phantom obstacle at the sight edge; no `xnet/` change).
    Still open: human drivers (needs a default-off `xnet/` change), and sight limits on signals, stop lines and pedestrians.
 4. ~~**AV sensor noise**~~ (done 2026-11-20, second run: `avlab.sensornoise`, range / speed error and missed detections on the leader,
-   per step, fixed seed; the envelope absorbs it). ~~Correlated misses~~ (done 2026-11-21: `avlab.tracker`, memory in the policy slot through `aux`, Markov misses and a hold tracker). ~~Latency~~ (done 2026-11-22: `avlab.latency`, a ring of delayed leader observations plus constant-velocity prediction). Backlog 4 is closed. Short-range zero-delay fusion added 2026-11-27 (`avlab.reflex`).
+   per step, fixed seed; the envelope absorbs it). ~~Correlated misses~~ (done 2026-11-21: `avlab.tracker`, memory in the policy slot through `aux`, Markov misses and a hold tracker). ~~Latency~~ (done 2026-11-22: `avlab.latency`, a ring of delayed leader observations plus constant-velocity prediction). Backlog 4 is closed. Short-range zero-delay fusion added 2026-11-27 (`avlab.reflex`); its faults (bursty misses, range noise) 2026-11-28 (`avlab.reflexfault`).
 5. **A speed benchmark** (timing tool `avlab.speedcheck` added 2026-11-18; still to do: the failing test) in `tests/` that fails when 200 steps of 16 Oakland copies get more than 5 % slower.
 6. **Seeds on every AVBench row**: the leaderboard with 95 % intervals from several random streams.
 7. **A scenario generator** that searches behaviour parameters for AV failures (cross-entropy method), with a replay GIF per failure.
@@ -90,7 +90,77 @@ Changes that add a capability. Several earlier ideas were dropped because one of
 30. **Reflex sensor** (2026-11-27): a perfect 10 m zero-delay sensor cut 2.0 s-delay crashes 272 -> 7. Next: give the reflex
     noise and misses; map the smallest range that matches clean sensors per delay; extend it to pedestrians and junctions.
 
+31. **Imperfect reflex** (2026-11-28): bursty reflex misses cost 3.6x the crashes of a perfect reflex, independent misses
+    about 1.3x; the bursty reflex still cuts the no-reflex crash rate by 91 %. Next: a hold that bridges reflex bursts; a burst-length dose
+    curve; a systematic range bias; the reflex for pedestrians and junctions.
+
 9. **Mini-benchmark with more drivers**: the 4-scenario subset (rush_hour, squirrel_hill, downtown, cut_in) beats random subsets only because 15 drivers are few; rerun the nested test when the board has seeds (step 2).
+
+---
+
+## 2026-11-28 - a reflex sensor that misses and misreads
+
+**What changed.** New `avlab/reflexfault.py`: the 10 m zero-delay reflex of `avlab.reflex` with bursty missed detections
+(the Markov chain of `avlab.tracker`) and relative range noise, fused with the same 2.0 s delayed view. New:
+`avlab/reflexfaultbench.py` (cells and tests), `avlab/reflexfault_plot.py` (scripted-outage GIF, figure),
+`tests/test_reflexfault.py` (3 tests: no faults equals `avlab.reflex` step for step; a reflex that is always blind equals the
+delayed view; the stationary miss share is 0.15 and the reading spread is about $0.2\,g$). `xnet/` and `avlab.reflex` are untouched.
+
+**Why.** On 2026-11-27 a perfect 10 m reflex removed 97.5 % of long-delay crashes. Real short-range sensors drop out and
+misread, and fault-injection studies of fusion stacks find that single-sensor faults cause safety violations
+([arXiv 2504.13420](https://arxiv.org/abs/2504.13420)); stale inputs to a fusion model degrade it sharply
+([arXiv 2506.05780](https://arxiv.org/abs/2506.05780)). We needed to know whether the reflex result survives a faulty reflex.
+
+**How it works.** Per AV row and per 0.2 s step, with true gap $g$, leader speed $v_\ell$ and delayed view $(\hat g, \hat v_\ell)$:
+
+```
+obs_lr, mem_lr = latency.perceive(obs_true, mem_lr)      # 2.0 s delay, constant-velocity prediction
+miss_t = Markov chain: P(miss | miss before) = 1 - 1/L, P(miss | none before) = q,  L = burst_s / 0.2,
+         q = p_miss / (L (1 - p_miss))
+g_r    = g * (1 + sigma * z), z ~ N(0, 1)                # reflex reading
+use    = true leader and g <= 10 and not miss_t and (obs_lr shows no leader or g_r < g_hat)
+leader columns = simulator formulas for (g_r, v_l) where use, else obs_lr's
+```
+
+**Experiment** (pre-registered in `results/daily/2026-11-28/predictions.md`). Setup and keys of 2026-11-27 (Oakland, 16 copies,
+keys 43000+i, half AVs, friction 1.0, envelope off, IDM, 120 s warm-up, 600 s), so the saved perfect-reflex cell `rf10` is the
+reference. $\lambda$ = AV crashes per AV-hour. H1: with 15 % reflex misses in bursts of mean 1.0 s,
+$\mathrm{RR} = \lambda_\text{fb} / \lambda_\text{rf10} > 1$, exact conditional Poisson test, two-sided $p < 0.05$, expected RR about 3.
+Power: the fixed reference arm has 7 crashes, so power was about 0.7 at RR 3 (0.8 at RR 3.5), stated before the run.
+Secondary (Holm, $m = 3$): S1 independent misses vs perfect (expected about 1); S2 range noise $\sigma = 0.2$ vs perfect
+(expected about 1); S3 bursty reflex vs no reflex (expected about 0.08).
+
+**Result** (`results/reflexfault/reflexfault.json`).
+
+| cell | AV crashes / AV-hours | per AV-hour (95 %) | AV speed (km/h) |
+|---|---|---|---|
+| clean sensors (saved) | 5 / 582.4 | 0.009 (0.003-0.020) | 14.44 |
+| 2.0 s delay, no reflex (saved) | 272 / 576.7 | 0.472 (0.417-0.531) | 13.67 |
+| + perfect 10 m reflex (saved) | 7 / 587.1 | 0.012 (0.005-0.025) | 14.13 |
+| + reflex, 15 % independent misses | 9 / 586.9 | 0.015 (0.007-0.029) | 14.17 |
+| + reflex, 15 % misses in 1 s bursts | 25 / 586.2 | 0.043 (0.028-0.063) | 14.10 |
+| + reflex, 20 % range noise | 14 / 585.0 | 0.024 (0.013-0.040) | 14.15 |
+
+| test | RR (95 %) | p |
+|---|---|---|
+| **H1: bursty misses / perfect** | **3.58 (1.50-9.79)** | **0.0013** |
+| S1: independent misses / perfect | 1.29 (0.43-4.06) | Holm 0.63 |
+| S2: range noise / perfect | 2.01 (0.76-5.88) | Holm 0.27 |
+| S3: bursty misses / no reflex | 0.090 (0.057-0.136) | Holm 4e-54 |
+
+**Successful**: H1 met its bar and the no-fault test reproduces `avlab.reflex` exactly. Misses at the same 15 % share cost
+little when they are independent and 3.6 times the crashes when they come in 1 s bursts, because a single missed step is
+bridged at the next 0.2 s step while a burst leaves the AV on the delayed view through a cut-in. The bursty reflex still cuts
+the no-reflex crash rate by 91 % (S3). In the scripted cut-in (GIF) the AV still stops with a 2.9 m margin after 1.0 s of blindness and
+makes contact once the reflex is blind for 1.6 s or more.
+
+**Limits.** One random stream and a reference arm of 7 crashes, so S1 and S2 cannot rule out ratios up to 4-6. The range noise is
+independent per step; a biased (always long) reading was not tested. The reflex still covers only the same-lane leader.
+
+**Next.** A range bias (systematic over-reading) instead of zero-mean noise; a hold on the reflex reading (`avlab.tracker`-style)
+to bridge bursts; burst length as a dose curve (0.4, 1.0, 1.6, 2.0 s) on more streams.
+
+Figures: `docs/img/reflexfault_cutin.gif`, `docs/img/reflexfault.png`. Results: `results/reflexfault/*.json`.
 
 ---
 
